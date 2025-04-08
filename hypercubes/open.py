@@ -1,22 +1,26 @@
 from PyQt5.QtWidgets import QApplication, QFileDialog,QMessageBox
 import h5py
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-
 
 def open_hyp(default_dir=""):
 
+    app=QApplication([])
     filepath, _ = QFileDialog.getOpenFileName(None,"Ouvrir un hypercube",default_dir)
     print(filepath)
     if filepath[-3:] == 'mat':
+        try :
+            with h5py.File(filepath, 'r') as file:
+                cube=file['cube']
+                wavelengths = file['#refs#/d'][:].flatten()
+                hypercube = file['#refs#/c'][:]  # shape: (121, 900, 500)
+                hypercube = hypercube.transpose(2, 1, 0)  # -> (500, 900, 121)
+                return wavelengths, hypercube
 
-        with h5py.File(filepath, 'r') as file:
-            cube=file['cube']
-            wavelengths = file['#refs#/d'][:].flatten()
-            hypercube = file['#refs#/c'][:]  # shape: (121, 900, 500)
-            hypercube = hypercube.transpose(2, 1, 0)  # -> (500, 900, 121)
-            return wavelengths,hypercube
+        except:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setText("Matlab file save mode not supported \n Please contact us")
+            msg_box.exec_()
 
     elif filepath[-3:] == '.h5':
         with h5py.File(filepath, 'r') as f:
@@ -32,10 +36,16 @@ def open_hyp(default_dir=""):
         msg_box.exec_()
 
 if __name__ == "__main__":
-    app=QApplication([])
-    filepath=r'C:\Users\Usuario\Downloads/A4_2.mat'
+    import matplotlib.pyplot as plt
+    folder=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria/'
+    spec_range='VNIR'
+    sample='pleito_52a.mat'
+    filepath=folder+spec_range+'/mat/'+sample
+    # filepath=r'C:\Users\Usuario\Downloads/A4_2.mat'
     try:
         wl,hyp=open_hyp(filepath)
-        plt.imshow(hyp[:, :, [10, 10, 50]]/np.max(hyp[:, :, [10, 10, 50]]))
+        plt.imshow(hyp[:, :, [10, 30, 50]]/np.max(hyp[:, :, [10, 30, 50]]))
+        plt.axis('off')
+        plt.title(f'{sample} - {spec_range}')
     except: print('Hyp not loaded')
 
