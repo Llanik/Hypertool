@@ -699,6 +699,12 @@
      <height>27</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuMeu">
+    <property name="title">
+     <string>Outils</string>
+    </property>
+   </widget>
+   <addaction name="menuMeu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

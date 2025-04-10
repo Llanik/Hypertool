@@ -2,11 +2,15 @@ from PyQt5.QtWidgets import QApplication, QFileDialog,QMessageBox
 import h5py
 import numpy as np
 
-def open_hyp(default_dir=""):
+def open_hyp(default_path="",open_window=True):
 
-    app=QApplication([])
-    filepath, _ = QFileDialog.getOpenFileName(None,"Ouvrir un hypercube",default_dir)
-    print(filepath)
+    if open_window:
+        app=QApplication([])
+        filepath, _ = QFileDialog.getOpenFileName(None,"Ouvrir un hypercube",default_path)
+        print(filepath)
+    else:
+        filepath=default_path
+
     if filepath[-3:] == 'mat':
         try :
             with h5py.File(filepath, 'r') as file:
