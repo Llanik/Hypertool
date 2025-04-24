@@ -1,10 +1,11 @@
-# cd C:\Users\Usuario\Documents\GitHub\Hyperspectral_Yannick\HyperdocApp
+# cd C:\Users\Usuario\Documents\GitHub\Hypertool
 # python -m PyQt5.uic.pyuic -o Hyperdoc_GUI_design.py Hyperdoc_GUI_design.ui
 # G:\Mi unidad\CIMLab\Proyectos y OTRI\Hyperdoc\Datos\Database_samples_paper\minicubes
 # pyinstaller --noconsole --onefile --icon="hyperdoc_logo_transparente.ico" --add-data "Hyperdoc_logo_transparente_CIMLab.png:." HyperdocApp_core_v3.5.1.py
 # G:\Mi unidad\CIMLab\Proyectos y OTRI\Hyperdoc\Datos\Database_samples\HYPERDOC Database\Samples
 
 '''
+IMPORTANTE : reescribir por mas de dos cubos : 3 por lo menos O uno a la vez solo
 Hacer : Bajar tamaño de icono y talla fonts por baja resolution : Problema con la de Fran
 si no encuentra un minicubo o un GT, que no aperezca el la figura
 los filename de GT seran como los minicubos +'_GT.png' -> OK
@@ -1005,7 +1006,6 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.showMaximized()
-
 
     update_font(app)
     app.setStyle('Fusion')

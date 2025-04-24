@@ -1,3 +1,6 @@
+# cd C:\Users\Usuario\Documents\GitHub\Hypertool
+# python -m PyQt5.uic.pyuic -o Hyperdoc_GUI_design.py Hyperdoc_GUI_design.ui
+
 import sys
 import numpy as np
 import cv2
@@ -20,15 +23,13 @@ def np_to_qpixmap(img):
         qimg = QImage(rgb_image.data, rgb_image.shape[1], rgb_image.shape[0], rgb_image.strides[0], QImage.Format_RGB888)
     return QPixmap.fromImage(qimg)
 
-
 def overlay_color_blend(fixed, aligned):
     blended = cv2.merge([
         cv2.normalize(fixed, None, 0, 255, cv2.NORM_MINMAX),
         cv2.normalize(aligned, None, 0, 255, cv2.NORM_MINMAX),
-        np.zeros_like(fixed)
+        cv2.normalize(fixed, None, 0, 255, cv2.NORM_MINMAX)
     ])
     return blended
-
 
 def overlay_checkerboard(fixed, aligned, tile_size=20):
     result = np.zeros_like(fixed)
