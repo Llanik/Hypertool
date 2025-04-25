@@ -4,6 +4,7 @@
 import sys
 import numpy as np
 import cv2
+from IPython.core.display_functions import update_display
 from PyQt5.QtWidgets import (
     QApplication, QWidget,QMainWindow, QVBoxLayout, QPushButton,
     QLabel, QFileDialog, QHBoxLayout, QMessageBox, QComboBox,
@@ -15,14 +16,21 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from registration.registration_window import*
+from hypercubes.open import*
 
 def np_to_qpixmap(img):
     if len(img.shape) == 2:
-        qimg = QImage(img.data, img.shape[1], img.shape[0], img.strides[0], QImage.Format_Grayscale8)
+        try:
+            qimg = QImage(img.data, img.shape[1], img.shape[0], img.strides[0], QImage.Format_Grayscale8)
+        except:
+            if img.dtype != np.uint8:
+                img = img.astype(np.uint8)
+            qimg = QImage(img.tobytes(), img.shape[1], img.shape[0],img.shape[1], QImage.Format_Grayscale8)
+
     else:
         rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         qimg = QImage(rgb_image.data, rgb_image.shape[1], rgb_image.shape[0], rgb_image.strides[0], QImage.Format_RGB888)
-    return QPixmap.fromImage(qimg)
+    return QPixmap.fromImage(qimg).copy()
 
 def overlay_color_blend(fixed, aligned):
     blended = cv2.merge([
@@ -67,12 +75,23 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("Image Registration")
 
+        self.fixed_cube = None
+        self.moving_cube = None
+        self.aligned_cube= None
         self.fixed_img = None
         self.moving_img = None
         self.aligned_img = None
         self.kp1 = None
         self.kp2 = None
         self.show_features = False
+
+        self.cube=[self.fixed_cube,self.moving_cube]
+        self.img=[self.fixed_img,self.moving_img]
+        self.radioButton_one=[self.radioButton_one_ref,self.radioButton_one_mov]
+        self.radioButton_whole=[self.radioButton_whole_ref,self.radioButton_whole_mov]
+        self.slider_channel=[self.horizontalSlider_ref_channel,self.horizontalSlider_mov_channel]
+        self.spinBox_channel=[self.spinBox_ref_channel,self.spinBox_mov_channel]
+        self.label_img=[self.label_fixed,self.label_moving]
 
         self.pushButton_open_ref_hypercube.clicked.connect(self.load_fixed)
         self.pushButton_open_mov_hypercube.clicked.connect(self.load_moving)
@@ -87,17 +106,96 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.label_fixed.setAlignment(Qt.AlignCenter)
         self.label_moving.setAlignment(Qt.AlignCenter)
 
-    def load_fixed(self):
-        fname, _ = QFileDialog.getOpenFileName(self, 'Load Fixed Image')
+        self.horizontalSlider_ref_channel.setEnabled(False)
+        self.horizontalSlider_mov_channel.setEnabled(False)
+        self.spinBox_ref_channel.setEnabled(False)
+        self.spinBox_mov_channel.setEnabled(False)
+
+        self.horizontalSlider_ref_channel.valueChanged.connect(self.update_images)
+        self.horizontalSlider_mov_channel.valueChanged.connect(self.update_images)
+
+
+        self.radioButton_whole_ref.toggled.connect(self.update_sliders)
+        self.radioButton_whole_mov.toggled.connect(self.update_sliders)
+
+    def update_sliders(self):
+        if self.radioButton_whole_ref.isChecked():
+            self.horizontalSlider_ref_channel.setEnabled(False)
+            self.spinBox_ref_channel.setEnabled(False)
+        else:
+            self.horizontalSlider_ref_channel.setEnabled(True)
+            self.spinBox_ref_channel.setEnabled(True)
+
+        if self.radioButton_whole_mov.isChecked():
+            self.horizontalSlider_mov_channel.setEnabled(False)
+            self.spinBox_mov_channel.setEnabled(False)
+
+        else:
+            self.horizontalSlider_mov_channel.setEnabled(True)
+            self.spinBox_mov_channel.setEnabled(True)
+
+        self.update_images()
+
+    def update_images(self):
+
+        for i_mov in [0,1]:
+            cube=self.cube[i_mov]
+            if cube is not None:
+                mode = ['one', 'whole'][self.radioButton_whole[i_mov].isChecked()]
+                chan = self.slider_channel[i_mov].value()
+                img = self.cube_to_img(cube, mode, chan)
+                img = (img * 256 / np.max(img)).astype('uint8')
+
+                if i_mov:
+                    self.moving_img = img
+                else:
+                    self.fixed_img = img
+                self.img = [self.fixed_img, self.moving_img]
+
+                self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
+
+    def load_cube(self,i_mov):
+
+        fname, _ = QFileDialog.getOpenFileName(self, ['Load Fixed Cube','Load Moving Cube'][i_mov])
         if fname:
-            self.fixed_img = cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
-            self.label_fixed.setPixmap(np_to_qpixmap(self.fixed_img).scaled(300, 300, Qt.KeepAspectRatio))
+            if fname[-3:] in['mat', '.h5']:
+                _, cube = open_hyp(fname, open_window=False)
+                if i_mov:
+                    self.moving_cube = cube
+                else:
+                    self.fixed_cube = cube
+
+                self.cube = [self.fixed_cube, self.moving_cube]
+                self.slider_channel[i_mov].setMaximum(cube.shape[2]-1)
+                self.spinBox_channel[i_mov].setMaximum(cube.shape[2]-1)
+
+                mode = ['one', 'whole'][self.radioButton_whole[i_mov].isChecked()]
+                chan = self.slider_channel[i_mov].value()
+                img = self.cube_to_img(cube, mode, chan)
+                img =(img * 256 / np.max(img)).astype('uint8')
+            else:
+                img = cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
+
+            if i_mov:
+                self.moving_img=img
+            else:
+                self.fixed_img = img
+
+            self.img = [self.fixed_img, self.moving_img]
+
+            self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
+
+    def load_fixed(self):
+        self.load_cube(0)
 
     def load_moving(self):
-        fname, _ = QFileDialog.getOpenFileName(self, 'Load Moving Image')
-        if fname:
-            self.moving_img = cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
-            self.label_moving.setPixmap(np_to_qpixmap(self.moving_img).scaled(300, 300, Qt.KeepAspectRatio))
+        self.load_cube(1)
+
+    def cube_to_img(self,cube,mode,chan):
+        if mode=='whole':
+            return np.mean(cube, axis=2).astype(np.float32)
+        elif mode=='one':
+            return cube[:,:,chan]
 
     def register_images(self):
         if self.fixed_img is None or self.moving_img is None:
@@ -139,9 +237,18 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         if transform_type == "Affine":
             matrix, _ = cv2.estimateAffinePartial2D(src_pts, dst_pts)
             self.aligned_img = cv2.warpAffine(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+            self.aligned_cube = np.zeros_like(self.fixed_cube, dtype=np.float32)
+            for k in range(self.moving_cube.shape[2]):
+                self.aligned_cube[:,:,k] = cv2.warpAffine(self.moving_cube[:,:,k], matrix,
+                                                  (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+
         elif transform_type == "Perspective":
             matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
             self.aligned_img = cv2.warpPerspective(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+            self.aligned_cube = np.zeros_like(self.fixed_cube, dtype=np.float32)
+            for k in range(self.moving_cube.shape[2]):
+                self.aligned_cube[:,:,k] = cv2.warpPerspective(self.moving_cube[:,:,k], matrix,
+                                                  (self.fixed_img.shape[1], self.fixed_img.shape[0]))
         else:
             QMessageBox.warning(self, "Error", "Unsupported transformation.")
             return
@@ -181,6 +288,9 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
     window = RegistrationApp()
     window.show()
+    app.setStyle('Fusion')
+
     sys.exit(app.exec_())

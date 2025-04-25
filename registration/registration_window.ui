@@ -103,7 +103,7 @@
                <item row="2" column="0">
                 <widget class="QPushButton" name="pushButton_open_ref_hypercube">
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">background-color: rgb(150, 150, 150);</string>
                  </property>
                  <property name="text">
                   <string>Open Reference Cubes</string>
@@ -115,6 +115,9 @@
                </item>
                <item row="2" column="1">
                 <widget class="QPushButton" name="pushButton_open_mov_hypercube">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(150, 150, 150);</string>
+                 </property>
                  <property name="text">
                   <string>Open Moving Cubes</string>
                  </property>
@@ -242,11 +245,64 @@
                  <property name="title">
                   <string>Registration parameters</string>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout_3">
+                 <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1">
+                  <item row="8" column="0">
+                   <widget class="QLabel" name="label_feature">
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;% keypoint to keep&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_2">
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Transformation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label">
                     <property name="text">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Features extraction&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QComboBox" name="method_selector">
+                    <property name="currentText">
+                     <string notr="true">AKAZE</string>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>AKAZE</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>ORB</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>ECC</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="8" column="1">
+                   <widget class="QSlider" name="features_slider">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="10" column="0" colspan="2">
+                   <widget class="QPushButton" name="pushButton_register">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(150, 150, 150);</string>
+                    </property>
+                    <property name="text">
+                     <string>Register image</string>
                     </property>
                    </widget>
                   </item>
@@ -267,64 +323,17 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_2">
+                  <item row="9" column="1">
+                   <widget class="QCheckBox" name="checkBox_crop">
                     <property name="text">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Transformation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>Only selected zone ?</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <spacer name="verticalSpacer">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QComboBox" name="method_selector">
-                    <property name="currentText">
-                     <string notr="true">AKAZE</string>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>AKAZE</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>ORB</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>SIFT</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>ECC</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QPushButton" name="pushButton_viz_matches">
+                  <item row="9" column="0">
+                   <widget class="QPushButton" name="pushButton_selectZone">
                     <property name="text">
-                     <string>Visualize matches</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QPushButton" name="pushButton_register">
-                    <property name="text">
-                     <string>Register image</string>
+                     <string>Select zone</string>
                     </property>
                    </widget>
                   </item>
@@ -346,10 +355,77 @@
                <item>
                 <widget class="QGroupBox" name="groupBox_2">
                  <property name="title">
-                  <string>Results</string>
+                  <string>Visualization</string>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout_2">
+                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1">
+                  <item row="7" column="0">
+                   <widget class="QPushButton" name="pushButton_save_image">
+                    <property name="text">
+                     <string>Save Image</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QSlider" name="horizontalSlider">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="tickPosition">
+                     <enum>QSlider::NoTicks</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_4">
+                    <property name="text">
+                     <string>#packets to show</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="QPushButton" name="pushButton_save_cube">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(150, 150, 150);</string>
+                    </property>
+                    <property name="text">
+                     <string>Save Registered Cube</string>
+                    </property>
+                    <property name="autoExclusive">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QSpinBox" name="spinBox">
+                    <property name="wrapping">
+                     <bool>false</bool>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="0">
+                   <widget class="QLabel" name="label_3">
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;keypoints per packet&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>Results view :</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
                    <widget class="QComboBox" name="overlay_selector">
                     <item>
                      <property name="text">
@@ -368,23 +444,10 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="3" column="0">
-                   <widget class="QPushButton" name="pushButton_save_image">
+                  <item row="2" column="0" colspan="2">
+                   <widget class="QPushButton" name="pushButton_viz_matches">
                     <property name="text">
-                     <string>Save Image</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QPushButton" name="pushButton_save_cube">
-                    <property name="styleSheet">
-                     <string notr="true"/>
-                    </property>
-                    <property name="text">
-                     <string>Save Registered Cube</string>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>false</bool>
+                     <string>Visualize matches</string>
                     </property>
                    </widget>
                   </item>
@@ -450,7 +513,7 @@
                  <item>
                   <layout class="QHBoxLayout" name="image_layout">
                    <item>
-                    <layout class="QVBoxLayout" name="left_layout" stretch="1,4,1,4">
+                    <layout class="QVBoxLayout" name="left_layout" stretch="1,0,1,4">
                      <item>
                       <widget class="QLabel" name="label_fixed_title">
                        <property name="text">
@@ -513,9 +576,7 @@
   <tabstop>spinBox_mov_channel</tabstop>
   <tabstop>transform_selector</tabstop>
   <tabstop>method_selector</tabstop>
-  <tabstop>pushButton_viz_matches</tabstop>
   <tabstop>pushButton_register</tabstop>
-  <tabstop>overlay_selector</tabstop>
   <tabstop>pushButton_save_image</tabstop>
   <tabstop>pushButton_save_cube</tabstop>
  </tabstops>
