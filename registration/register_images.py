@@ -15,6 +15,8 @@ from PyQt5.QtCore import Qt, QPointF, QRectF
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+import random
+
 from registration.registration_window import*
 from hypercubes.open import*
 
@@ -84,7 +86,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.kp1 = None
         self.kp2 = None
         self.show_features = False
-
+        self.matches= None
 
 
         self.cube=[self.fixed_cube,self.moving_cube]
@@ -126,9 +128,12 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.horizontalSlider_ref_channel.valueChanged.connect(self.update_images)
         self.horizontalSlider_mov_channel.valueChanged.connect(self.update_images)
 
-
         self.radioButton_whole_ref.toggled.connect(self.update_sliders)
         self.radioButton_whole_mov.toggled.connect(self.update_sliders)
+
+        self.checkBox_showKeypoints.stateChanged.connect(self.update_keypoints_display)
+        self.spinBox_keypointPerPacket.valueChanged.connect(self.update_keypoints_display)
+        self.horizontalSlider_keyPacketToShow.valueChanged.connect(self.update_keypoints_display)
 
     def update_sliders(self):
         if self.radioButton_whole_ref.isChecked():
@@ -243,6 +248,14 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         matches = matcher.match(des1, des2)
         matches = sorted(matches, key=lambda x: x.distance)
 
+        # keep only %best matches
+        keep_percent = self.features_slider.value() / 100
+        num_keep = int(len(matches) * keep_percent)
+        matches = matches[:num_keep]
+
+        self.matches = matches
+        self.update_keypoints_display()
+
         src_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
         dst_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
 
@@ -310,6 +323,79 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         # Display the final aligned image
         self.viewer_aligned.setImage(np_to_qpixmap(img))
+
+    def update_keypoints_display(self):
+
+        keypoints_per_packet = self.spinBox_keypointPerPacket.value()
+        packet_idx = self.horizontalSlider_keyPacketToShow.value()
+
+        start_idx = packet_idx * keypoints_per_packet
+        end_idx = start_idx + keypoints_per_packet
+        selected_matches = self.matches[start_idx:end_idx]
+
+        matched_kp1 = [self.kp1[m.queryIdx] for m in selected_matches]
+        matched_kp2 = [self.kp2[m.trainIdx] for m in selected_matches]
+
+        fixed_img_vis = self.fixed_img.copy()
+        moving_img_vis = self.moving_img.copy()
+
+        fixed_img_vis=cv2.cvtColor(self.fixed_img, cv2.COLOR_GRAY2BGR) if len(self.fixed_img.shape) == 2 else self.fixed_img.copy()
+        moving_img_vis = cv2.cvtColor(self.moving_img, cv2.COLOR_GRAY2BGR) if len(self.moving_img.shape) == 2 else self.moving_img.copy()
+
+        if not(not self.checkBox_showKeypoints.isChecked() or self.kp1 is None or self.kp2 is None):
+                       
+            for i, (kp1, kp2) in enumerate(zip(matched_kp1, matched_kp2)):
+                # Couleur unique pour chaque paire
+                color = tuple(np.random.randint(0, 255, 3).tolist())
+
+                # Dessiner les keypoints (cercles)
+                pt1 = tuple(np.round(kp1.pt).astype(int))
+                pt2 = tuple(np.round(kp2.pt).astype(int))
+                cv2.circle(fixed_img_vis, pt1, 5, color, 2)
+                cv2.circle(moving_img_vis, pt2, 5, color, 2)
+
+                # Dessiner les numéros
+                cv2.putText(fixed_img_vis, str(i), (pt1[0] + 6, pt1[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1,
+                            cv2.LINE_AA)
+                cv2.putText(moving_img_vis, str(i), (pt2[0] + 6, pt2[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1,
+                            cv2.LINE_AA)
+
+            self.viewer_fixed.setImage(np_to_qpixmap(fixed_img_vis))
+            self.viewer_moving.setImage(np_to_qpixmap(moving_img_vis))
+
+        if self.overlay_selector.currentText() == "View Matches":
+            # Créer une image combinée côte à côte
+            fixed_img_vis = cv2.cvtColor(self.fixed_img, cv2.COLOR_GRAY2BGR) if len(
+                self.fixed_img.shape) == 2 else self.fixed_img.copy()
+            moving_img_vis = cv2.cvtColor(self.moving_img, cv2.COLOR_GRAY2BGR) if len(
+                self.moving_img.shape) == 2 else self.moving_img.copy()
+
+            # S'assurer que les deux images ont la même hauteur
+            max_height = max(fixed_img_vis.shape[0], moving_img_vis.shape[0])
+            fixed_img_vis = cv2.copyMakeBorder(fixed_img_vis, 0, max_height - fixed_img_vis.shape[0], 0, 0,
+                                               cv2.BORDER_CONSTANT)
+            moving_img_vis = cv2.copyMakeBorder(moving_img_vis, 0, max_height - moving_img_vis.shape[0], 0, 0,
+                                                cv2.BORDER_CONSTANT)
+
+            combined = np.hstack((fixed_img_vis, moving_img_vis))
+
+            for i, m in enumerate(selected_matches):
+                kp1 = self.kp1[m.queryIdx]
+                kp2 = self.kp2[m.trainIdx]
+
+                pt1 = tuple(np.round(kp1.pt).astype(int))
+                pt2 = tuple(np.round(kp2.pt).astype(int))
+                pt2_shifted = (int(pt2[0] + fixed_img_vis.shape[1]), pt2[1])  # Décalage pour image de droite
+
+                color = tuple(np.random.randint(0, 255, 3).tolist())
+                cv2.circle(combined, pt1, 5, color, 2)
+                cv2.circle(combined, pt2_shifted, 5, color, 2)
+                cv2.line(combined, pt1, pt2_shifted, color, 1)
+                cv2.putText(combined, str(i), (pt1[0] + 6, pt1[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+                cv2.putText(combined, str(i), (pt2_shifted[0] + 6, pt2_shifted[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                            color, 1)
+
+            self.viewer_aligned.setImage(np_to_qpixmap(combined))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

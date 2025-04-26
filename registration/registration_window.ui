@@ -291,6 +291,12 @@
                   </item>
                   <item row="8" column="1">
                    <widget class="QSlider" name="features_slider">
+                    <property name="maximum">
+                     <number>100</number>
+                    </property>
+                    <property name="value">
+                     <number>100</number>
+                    </property>
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -379,6 +385,11 @@
                     </item>
                     <item>
                      <property name="text">
+                      <string>View Matches</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
                       <string>Only aligned</string>
                      </property>
                     </item>
@@ -431,6 +442,12 @@
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="maximum">
+                     <number>100</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
                     </property>
                    </widget>
                   </item>
