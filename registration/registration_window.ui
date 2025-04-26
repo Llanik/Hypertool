@@ -263,7 +263,7 @@
                   <item row="0" column="0">
                    <widget class="QLabel" name="label">
                     <property name="text">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Features extraction&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Matching Method&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                    </widget>
                   </item>
@@ -357,71 +357,11 @@
                  <property name="title">
                   <string>Visualization</string>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1">
-                  <item row="7" column="0">
-                   <widget class="QPushButton" name="pushButton_save_image">
-                    <property name="text">
-                     <string>Save Image</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QSlider" name="horizontalSlider">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="tickPosition">
-                     <enum>QSlider::NoTicks</enum>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_4">
-                    <property name="text">
-                     <string>#packets to show</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="1">
-                   <widget class="QPushButton" name="pushButton_save_cube">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(150, 150, 150);</string>
-                    </property>
-                    <property name="text">
-                     <string>Save Registered Cube</string>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QSpinBox" name="spinBox">
-                    <property name="wrapping">
-                     <bool>false</bool>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
+                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0">
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_3">
                     <property name="text">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;keypoints per packet&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_5">
-                    <property name="text">
-                     <string>Results view :</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -444,10 +384,70 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="2" column="0" colspan="2">
-                   <widget class="QPushButton" name="pushButton_viz_matches">
+                  <item row="7" column="1">
+                   <widget class="QPushButton" name="pushButton_save_cube">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(150, 150, 150);</string>
+                    </property>
                     <property name="text">
-                     <string>Visualize matches</string>
+                     <string>Save Registered Cube</string>
+                    </property>
+                    <property name="autoExclusive">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QSlider" name="horizontalSlider_keyPacketToShow">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="tickPosition">
+                     <enum>QSlider::NoTicks</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>Results view :</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="QPushButton" name="pushButton_save_image">
+                    <property name="text">
+                     <string>Save Image</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QSpinBox" name="spinBox_keypointPerPacket">
+                    <property name="wrapping">
+                     <bool>false</bool>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_4">
+                    <property name="text">
+                     <string>#packets to show</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QCheckBox" name="checkBox_showKeypoints">
+                    <property name="text">
+                     <string>Show keypoints</string>
                     </property>
                    </widget>
                   </item>
@@ -511,38 +511,16 @@
                   <number>0</number>
                  </property>
                  <item>
-                  <layout class="QHBoxLayout" name="image_layout">
+                  <layout class="QHBoxLayout" name="image_layout" stretch="0,0">
                    <item>
-                    <layout class="QVBoxLayout" name="left_layout" stretch="1,0,1,4">
-                     <item>
-                      <widget class="QLabel" name="label_fixed_title">
-                       <property name="text">
-                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Fixed Image&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="label_fixed">
-                       <property name="text">
-                        <string>TextLabel</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="label_moving_title">
-                       <property name="text">
-                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Moving Image&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="label_moving">
-                       <property name="text">
-                        <string>TextLabel</string>
-                       </property>
-                      </widget>
-                     </item>
+                    <layout class="QVBoxLayout" name="left_layout">
+                     <property name="sizeConstraint">
+                      <enum>QLayout::SetDefaultConstraint</enum>
+                     </property>
                     </layout>
+                   </item>
+                   <item>
+                    <layout class="QVBoxLayout" name="right_layout"/>
                    </item>
                   </layout>
                  </item>

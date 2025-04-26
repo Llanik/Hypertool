@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="registration_images OK for grey image&#10;to do : &#10;- load hypercubes&#10;- save transformed hypercube">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="OK for hypercube channel select&#10;Mixed in list [fixed,moving] objects&#10;to do : &#10;- save&#10;- features viz abd select">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/autres/Matlab_App_Migue.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registerHypercubes.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registerHypercubes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/registration/register_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_images.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/registration/registration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/registration/registration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.ui" afterDir="false" />
@@ -175,7 +173,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745496299070</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="registration_images OK for grey image&#10;to do : &#10;- load hypercubes&#10;- save transformed hypercube">
+      <option name="closed" value="true" />
+      <created>1745598050547</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1745598050547</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

@@ -85,13 +85,14 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.kp2 = None
         self.show_features = False
 
+
+
         self.cube=[self.fixed_cube,self.moving_cube]
         self.img=[self.fixed_img,self.moving_img]
         self.radioButton_one=[self.radioButton_one_ref,self.radioButton_one_mov]
         self.radioButton_whole=[self.radioButton_whole_ref,self.radioButton_whole_mov]
         self.slider_channel=[self.horizontalSlider_ref_channel,self.horizontalSlider_mov_channel]
         self.spinBox_channel=[self.spinBox_ref_channel,self.spinBox_mov_channel]
-        self.label_img=[self.label_fixed,self.label_moving]
 
         self.pushButton_open_ref_hypercube.clicked.connect(self.load_fixed)
         self.pushButton_open_mov_hypercube.clicked.connect(self.load_moving)
@@ -100,7 +101,18 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.overlay_selector.currentIndexChanged.connect(self.update_display)
 
         self.viewer_aligned = ZoomableGraphicsView()
-        self.image_layout.addWidget(self.viewer_aligned, stretch=1)
+        self.right_layout.addWidget(self.viewer_aligned, stretch=1)
+
+        self.label_fixed = QLabel("Fixed Image")
+        self.left_layout.addWidget(self.label_fixed)
+        self.viewer_fixed = ZoomableGraphicsView()
+        self.left_layout.addWidget(self.viewer_fixed, stretch=1)
+        self.label_moving = QLabel("Moving Image")
+        self.left_layout.addWidget(self.label_moving)
+        self.viewer_moving = ZoomableGraphicsView()
+        self.left_layout.addWidget(self.viewer_moving, stretch=1)
+        self.viewer_img=[self.viewer_fixed,self.viewer_moving]
+
         self.setLayout(self.main_layout)
 
         self.label_fixed.setAlignment(Qt.AlignCenter)
@@ -152,7 +164,8 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                     self.fixed_img = img
                 self.img = [self.fixed_img, self.moving_img]
 
-                self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
+                # self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
+                self.viewer_img[i_mov].setImage(np_to_qpixmap(img))
 
     def load_cube(self,i_mov):
 
@@ -183,7 +196,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
             self.img = [self.fixed_img, self.moving_img]
 
-            self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
+            self.viewer_img[i_mov].setImage(np_to_qpixmap(img))
 
     def load_fixed(self):
         self.load_cube(0)
@@ -243,6 +256,18 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                                                   (self.fixed_img.shape[1], self.fixed_img.shape[0]))
 
         elif transform_type == "Perspective":
+            # Check if there are enough matches to compute homography
+            if len(matches) >= 4:
+                matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
+            else:
+                # Show a popup warning if not enough matches are found
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setWindowTitle("Registration Error")
+                msg.setText("Not enough matches to compute homography.\nPlease try again with better images.")
+                msg.exec_()
+                matrix = None
+                return
             matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
             self.aligned_img = cv2.warpPerspective(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
             self.aligned_cube = np.zeros_like(self.fixed_cube, dtype=np.float32)
