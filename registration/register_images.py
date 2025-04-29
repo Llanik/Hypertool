@@ -8,10 +8,10 @@ from IPython.core.display_functions import update_display
 from PyQt5.QtWidgets import (
     QApplication, QWidget,QMainWindow, QVBoxLayout, QPushButton,
     QLabel, QFileDialog, QHBoxLayout, QMessageBox, QComboBox,
-    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,QRubberBand
 )
-from PyQt5.QtGui import QPixmap, QImage, QTransform
-from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtGui import QPixmap, QImage, QTransform,  QPen, QColor
+from PyQt5.QtCore import Qt, QPointF, QRectF, QRect, QPoint,QSize
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -53,11 +53,20 @@ def overlay_checkerboard(fixed, aligned, tile_size=20):
     return result
 
 class ZoomableGraphicsView(QGraphicsView):
+    # TODO: rewrite rectangle
     def __init__(self):
         super().__init__()
         self.setScene(QGraphicsScene())
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.pixmap_item = None  # check if image loaded
+
+        # Rubber band selection
+        self.origin = QPoint()
+        self.rubber_band = QRubberBand(QRubberBand.Rectangle, self)
+        self._selecting = False
+        self.last_rect_item = None
+        self.rect_coords = None
 
     def setImage(self, pixmap):
         self.scene().clear()
@@ -71,7 +80,75 @@ class ZoomableGraphicsView(QGraphicsView):
         zoom = zoom_in_factor if event.angleDelta().y() > 0 else zoom_out_factor
         self.scale(zoom, zoom)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton and self.pixmap_item:
+            self.origin = event.pos()
+            self.rubber_band.setGeometry(QRect(self.origin, QSize()))
+            self.rubber_band.show()
+            self._selecting = True
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._selecting:
+            rect = QRect(self.origin, event.pos()).normalized()
+            self.rubber_band.setGeometry(rect)
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.RightButton and self.pixmap_item and self._selecting:
+            self.rubber_band.hide()
+            self._selecting = False
+
+            # Convert view coords to scene coords
+            start_scene = self.mapToScene(self.origin)
+            end_scene = self.mapToScene(event.pos())
+
+            # Convert scene coords to pixmap (image) coords
+            p1 = self.pixmap_item.mapFromScene(start_scene)
+            p2 = self.pixmap_item.mapFromScene(end_scene)
+
+            x1, y1 = int(p1.x()), int(p1.y())
+            x2, y2 = int(p2.x()), int(p2.y())
+
+
+            # Limite aux bords de l'image
+            w, h = self.pixmap_item.pixmap().width(), self.pixmap_item.pixmap().height()
+            if all(0 <= v < w for v in [x1, x2]) and all(0 <= v < h for v in [y1, y2]):
+
+                # Erase previous rectangle
+                self.clear_rectangle()
+
+                # add new rectangle
+                # Crée un rectangle normalisé avec les coins (x1, y1) et (x2, y2)
+                x_min, x_max = sorted([x1, x2])
+                y_min, y_max = sorted([y1, y2])
+                width = x_max - x_min
+                height = y_max - y_min
+
+                if width<2 or height<2:
+                    self.rect_coords=None
+                    self.last_rect_item = None
+                    return
+
+                self.rect_coords = [x_min, y_min, width, height]
+                self.last_rect_item = self.scene().addRect(x_min, y_min, width, height, QPen(QColor("red")))
+
+        super().mouseReleaseEvent(event)
+
+    def get_rect_coords(self):
+        return self.rect_coords
+
+    def clear_rectangle(self):
+        if self.last_rect_item:
+            try:
+                self.scene().removeItem(self.last_rect_item)
+            except:
+                None
+        self.rect_coords=None
+
 class RegistrationApp(QMainWindow, Ui_MainWindow):
+    # TODO: show number of features found
+    # TODO : save cube with option of minicubes (selected zone)
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -83,11 +160,15 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.fixed_img = None
         self.moving_img = None
         self.aligned_img = None
-        self.kp1 = None
+        self.kp1 = None # features positions
         self.kp2 = None
-        self.show_features = False
-        self.matches= None
+        self.show_features = False #show features in small images
+        self.matches= None # only %selected matches
+        self.matches_all=None #all matches list
 
+        self.manual_feature_modif=False #to see if manual have been made in features selection
+        self.selected_zone=[0,0]
+        self.selected_rect_coords=None
 
         self.cube=[self.fixed_cube,self.moving_cube]
         self.img=[self.fixed_img,self.moving_img]
@@ -98,7 +179,9 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         self.pushButton_open_ref_hypercube.clicked.connect(self.load_fixed)
         self.pushButton_open_mov_hypercube.clicked.connect(self.load_moving)
-        self.pushButton_register.clicked.connect(self.register_images)
+        self.pushButton_getFeatures.clicked.connect(self.choose_register_method)
+        self.pushButton_register.clicked.connect(self.register_imageAndCube)
+        self.checkBox_crop.clicked.connect(self.check_selected_zones)
 
         self.overlay_selector.currentIndexChanged.connect(self.update_display)
 
@@ -113,7 +196,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.left_layout.addWidget(self.label_moving)
         self.viewer_moving = ZoomableGraphicsView()
         self.left_layout.addWidget(self.viewer_moving, stretch=1)
-        self.viewer_img=[self.viewer_fixed,self.viewer_moving]
+        self.viewer_img=[self.viewer_fixed,self.viewer_moving,self.viewer_aligned]
 
         self.setLayout(self.main_layout)
 
@@ -131,9 +214,9 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.radioButton_whole_ref.toggled.connect(self.update_sliders)
         self.radioButton_whole_mov.toggled.connect(self.update_sliders)
 
-        self.checkBox_showKeypoints.stateChanged.connect(self.update_keypoints_display)
         self.spinBox_keypointPerPacket.valueChanged.connect(self.update_keypoints_display)
         self.horizontalSlider_keyPacketToShow.valueChanged.connect(self.update_keypoints_display)
+        self.features_slider.valueChanged.connect(self.update_slider_packet)
 
     def update_sliders(self):
         if self.radioButton_whole_ref.isChecked():
@@ -172,9 +255,11 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 # self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
                 self.viewer_img[i_mov].setImage(np_to_qpixmap(img))
 
-    def load_cube(self,i_mov):
+    def load_cube(self,i_mov,fname=None):
 
-        fname, _ = QFileDialog.getOpenFileName(self, ['Load Fixed Cube','Load Moving Cube'][i_mov])
+        if fname is None:
+            fname, _ = QFileDialog.getOpenFileName(self, ['Load Fixed Cube','Load Moving Cube'][i_mov])
+
         if fname:
             if fname[-3:] in['mat', '.h5']:
                 _, cube = open_hyp(fname, open_window=False)
@@ -186,6 +271,13 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 self.cube = [self.fixed_cube, self.moving_cube]
                 self.slider_channel[i_mov].setMaximum(cube.shape[2]-1)
                 self.spinBox_channel[i_mov].setMaximum(cube.shape[2]-1)
+
+                if cube.shape[2]==121:
+                    self.slider_channel[i_mov].setValue(60)
+                    self.spinBox_channel[i_mov].setValue(60)
+                elif cube.shape[2]==161:
+                    self.slider_channel[i_mov].setValue(10)
+                    self.spinBox_channel[i_mov].setValue(10)
 
                 mode = ['one', 'whole'][self.radioButton_whole[i_mov].isChecked()]
                 chan = self.slider_channel[i_mov].value()
@@ -203,6 +295,8 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
             self.viewer_img[i_mov].setImage(np_to_qpixmap(img))
 
+        self.pushButton_register.setEnabled(False)
+
     def load_fixed(self):
         self.load_cube(0)
 
@@ -215,27 +309,48 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         elif mode=='one':
             return cube[:,:,chan]
 
-    def register_images(self):
+    def choose_register_method(self):
         if self.fixed_img is None or self.moving_img is None:
             QMessageBox.warning(self, "Error", "Please load both images first.")
             return
 
         method = self.method_selector.currentText()
-
         if method == "ORB":
-            self.register_features(cv2.ORB_create(5000))
+            self.get_features(cv2.ORB_create(5000))
         elif method == "AKAZE":
-            self.register_features(cv2.AKAZE_create())
+            self.get_features(cv2.AKAZE_create())
         elif method == "SIFT":
-            self.register_features(cv2.SIFT_create())
-        elif method == "ECC":
-            self.register_images_ecc()
+            self.get_features(cv2.SIFT_create())
         else:
             QMessageBox.warning(self, "Error", "Unknown method.")
 
-    def register_features(self, detector):
-        kp1, des1 = detector.detectAndCompute(self.fixed_img, None)
-        kp2, des2 = detector.detectAndCompute(self.moving_img, None)
+    def get_features(self, detector):
+
+        crop = False
+        fixed = self.fixed_img
+        moving = self.moving_img
+        if self.checkBox_crop.isChecked():
+            self.check_selected_zones()
+            if self.selected_zone.count(1)==0:
+                return
+            else:
+                crop=True
+                if self.selected_zone[0]==1:
+                    y, x, dy, dx=self.viewer_img[0].get_rect_coords()
+                    fixed = self.fixed_img[x:x + dx, y:y + dy]
+                    kp1, des1 = detector.detectAndCompute(fixed, None)
+                    for kp in kp1:
+                        kp.pt = (kp.pt[0] + y, kp.pt[1] + x)
+                if self.selected_zone[1] == 1:
+                    y, x, dy, dx = self.viewer_img[1].get_rect_coords()
+                    moving = self.moving_img[x:x + dx, y:y + dy]
+                    kp2, des2 = detector.detectAndCompute(moving, None)
+                    for kp in kp2:
+                        kp.pt = (kp.pt[0] + y, kp.pt[1] + x)
+
+        if not crop :
+            kp1, des1 = detector.detectAndCompute(fixed, None)
+            kp2, des2 = detector.detectAndCompute(moving, None)
 
         if des1 is None or des2 is None:
             QMessageBox.warning(self, "Error", "Feature detection failed.")
@@ -243,34 +358,38 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         self.kp1, self.kp2 = kp1, kp2
 
-        matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True) if detector != cv2.SIFT_create() else cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+        matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
         matches = matcher.match(des1, des2)
-        matches = sorted(matches, key=lambda x: x.distance)
+        self.matches_all = sorted(matches, key=lambda x: x.distance)
+
+        self.pushButton_register.setEnabled(True)
+
+        self.register_imageAndCube()
+        # self.update_keypoints_display()
+
+    def register_imageAndCube(self):
 
         # keep only %best matches
         keep_percent = self.features_slider.value() / 100
-        num_keep = int(len(matches) * keep_percent)
-        matches = matches[:num_keep]
+        num_keep = int(len(self.matches_all) * keep_percent)
+        self.matches = self.matches_all[:num_keep]
 
-        self.matches = matches
-        self.update_keypoints_display()
-
-        src_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
-        dst_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
+        src_pts = np.float32([self.kp2[m.trainIdx].pt for m in self.matches]).reshape(-1, 1, 2)
+        dst_pts = np.float32([self.kp1[m.queryIdx].pt for m in self.matches]).reshape(-1, 1, 2)
 
         transform_type = self.transform_selector.currentText()
         if transform_type == "Affine":
             matrix, _ = cv2.estimateAffinePartial2D(src_pts, dst_pts)
             self.aligned_img = cv2.warpAffine(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
-            self.aligned_cube = np.zeros_like(self.fixed_cube, dtype=np.float32)
+            self.aligned_cube = np.zeros((self.fixed_cube.shape[0],self.fixed_cube.shape[1],self.moving_cube.shape[2]), dtype=np.float32)
             for k in range(self.moving_cube.shape[2]):
                 self.aligned_cube[:,:,k] = cv2.warpAffine(self.moving_cube[:,:,k], matrix,
                                                   (self.fixed_img.shape[1], self.fixed_img.shape[0]))
 
         elif transform_type == "Perspective":
             # Check if there are enough matches to compute homography
-            if len(matches) >= 4:
+            if len(self.matches) >= 4:
                 matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
             else:
                 # Show a popup warning if not enough matches are found
@@ -283,7 +402,8 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 return
             matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
             self.aligned_img = cv2.warpPerspective(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
-            self.aligned_cube = np.zeros_like(self.fixed_cube, dtype=np.float32)
+            self.aligned_cube = np.zeros((self.fixed_cube.shape[0],self.fixed_cube.shape[1],self.moving_cube.shape[2]), dtype=np.float32)
+
             for k in range(self.moving_cube.shape[2]):
                 self.aligned_cube[:,:,k] = cv2.warpPerspective(self.moving_cube[:,:,k], matrix,
                                                   (self.fixed_img.shape[1], self.fixed_img.shape[0]))
@@ -293,7 +413,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         self.update_display()
 
-    def register_images_ecc(self):
+    def choose_register_method_ecc(self):
         try:
             fixed_f = self.fixed_img.astype(np.float32) / 255
             moving_f = self.moving_img.astype(np.float32) / 255
@@ -314,88 +434,95 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
             return
 
         display_mode = self.overlay_selector.currentText()
+        img=None
         if display_mode == "Color":
             img = overlay_color_blend(self.fixed_img, self.aligned_img)
         elif display_mode == "Checkboard":
             img = overlay_checkerboard(self.fixed_img, self.aligned_img)
-        else:
+        elif display_mode == "View Matches":
+            self.update_keypoints_display()
+        elif display_mode == "Only aligned":
             img = self.aligned_img
 
         # Display the final aligned image
-        self.viewer_aligned.setImage(np_to_qpixmap(img))
+        if img is not None:
+            self.viewer_aligned.setImage(np_to_qpixmap(img))
 
     def update_keypoints_display(self):
+
+        self.update_slider_packet()
 
         keypoints_per_packet = self.spinBox_keypointPerPacket.value()
         packet_idx = self.horizontalSlider_keyPacketToShow.value()
 
         start_idx = packet_idx * keypoints_per_packet
         end_idx = start_idx + keypoints_per_packet
-        selected_matches = self.matches[start_idx:end_idx]
+        selected_matches = self.matches_all[start_idx:end_idx]
 
-        matched_kp1 = [self.kp1[m.queryIdx] for m in selected_matches]
-        matched_kp2 = [self.kp2[m.trainIdx] for m in selected_matches]
+        # Créer une image combinée côte à côte
+        fixed_img_vis = cv2.cvtColor(self.fixed_img, cv2.COLOR_GRAY2BGR) if len(
+            self.fixed_img.shape) == 2 else self.fixed_img.copy()
+        moving_img_vis = cv2.cvtColor(self.moving_img, cv2.COLOR_GRAY2BGR) if len(
+            self.moving_img.shape) == 2 else self.moving_img.copy()
 
-        fixed_img_vis = self.fixed_img.copy()
-        moving_img_vis = self.moving_img.copy()
+        # S'assurer que les deux images ont la même hauteur
+        max_height = max(fixed_img_vis.shape[0], moving_img_vis.shape[0])
+        fixed_img_vis = cv2.copyMakeBorder(fixed_img_vis, 0, max_height - fixed_img_vis.shape[0], 0, 0,
+                                           cv2.BORDER_CONSTANT)
+        moving_img_vis = cv2.copyMakeBorder(moving_img_vis, 0, max_height - moving_img_vis.shape[0], 0, 0,
+                                            cv2.BORDER_CONSTANT)
 
-        fixed_img_vis=cv2.cvtColor(self.fixed_img, cv2.COLOR_GRAY2BGR) if len(self.fixed_img.shape) == 2 else self.fixed_img.copy()
-        moving_img_vis = cv2.cvtColor(self.moving_img, cv2.COLOR_GRAY2BGR) if len(self.moving_img.shape) == 2 else self.moving_img.copy()
+        combined = np.hstack((fixed_img_vis, moving_img_vis))
 
-        if not(not self.checkBox_showKeypoints.isChecked() or self.kp1 is None or self.kp2 is None):
-                       
-            for i, (kp1, kp2) in enumerate(zip(matched_kp1, matched_kp2)):
-                # Couleur unique pour chaque paire
-                color = tuple(np.random.randint(0, 255, 3).tolist())
+        for i, m in enumerate(selected_matches):
+            kp1 = self.kp1[m.queryIdx]
+            kp2 = self.kp2[m.trainIdx]
 
-                # Dessiner les keypoints (cercles)
-                pt1 = tuple(np.round(kp1.pt).astype(int))
-                pt2 = tuple(np.round(kp2.pt).astype(int))
-                cv2.circle(fixed_img_vis, pt1, 5, color, 2)
-                cv2.circle(moving_img_vis, pt2, 5, color, 2)
+            pt1 = tuple(np.round(kp1.pt).astype(int))
+            pt2 = tuple(np.round(kp2.pt).astype(int))
+            pt2_shifted = (int(pt2[0] + fixed_img_vis.shape[1]), pt2[1])  # Décalage pour image de droite
 
-                # Dessiner les numéros
-                cv2.putText(fixed_img_vis, str(i), (pt1[0] + 6, pt1[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1,
-                            cv2.LINE_AA)
-                cv2.putText(moving_img_vis, str(i), (pt2[0] + 6, pt2[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1,
-                            cv2.LINE_AA)
+            color = tuple(np.random.randint(0, 255, 3).tolist())
+            cv2.circle(combined, pt1, 5, color, thickness = 2)
+            cv2.circle(combined, pt2_shifted, 5, color, thickness = 2)
+            cv2.line(combined, pt1, pt2_shifted, color, thickness = 2)
+            cv2.putText(combined, str(i), (pt1[0] + 6, pt1[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+            cv2.putText(combined, str(i), (pt2_shifted[0] + 6, pt2_shifted[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        color, 1)
 
-            self.viewer_fixed.setImage(np_to_qpixmap(fixed_img_vis))
-            self.viewer_moving.setImage(np_to_qpixmap(moving_img_vis))
+        self.viewer_aligned.setImage(np_to_qpixmap(combined))
 
-        if self.overlay_selector.currentText() == "View Matches":
-            # Créer une image combinée côte à côte
-            fixed_img_vis = cv2.cvtColor(self.fixed_img, cv2.COLOR_GRAY2BGR) if len(
-                self.fixed_img.shape) == 2 else self.fixed_img.copy()
-            moving_img_vis = cv2.cvtColor(self.moving_img, cv2.COLOR_GRAY2BGR) if len(
-                self.moving_img.shape) == 2 else self.moving_img.copy()
+    def update_slider_packet(self):
+        # update max slider
+        n_packet=int(len(self.matches_all)/self.spinBox_keypointPerPacket.value())
+        if len(self.matches_all)%self.spinBox_keypointPerPacket.value() !=0:
+            n_packet+=1
+        self.horizontalSlider_keyPacketToShow.setMaximum(n_packet)
+        # update label
+        packet_show=self.horizontalSlider_keyPacketToShow.value()
+        self.label_packetToShow.setText(f'packet {packet_show +1}/{n_packet}')
+        if packet_show>n_packet*self.features_slider.value()/ 100:
+            self.label_packetToShow.setStyleSheet(u"color: rgb(255, 0, 0);")
+        else:
+            self.label_packetToShow.setStyleSheet(u"color: rgb(0, 0, 0);")
 
-            # S'assurer que les deux images ont la même hauteur
-            max_height = max(fixed_img_vis.shape[0], moving_img_vis.shape[0])
-            fixed_img_vis = cv2.copyMakeBorder(fixed_img_vis, 0, max_height - fixed_img_vis.shape[0], 0, 0,
-                                               cv2.BORDER_CONSTANT)
-            moving_img_vis = cv2.copyMakeBorder(moving_img_vis, 0, max_height - moving_img_vis.shape[0], 0, 0,
-                                                cv2.BORDER_CONSTANT)
+    def check_selected_zones(self):
+        if self.checkBox_crop.isChecked():
+            for i in range(2):
+                    self.selected_zone[i]=(self.viewer_img[i].get_rect_coords() is not None)
 
-            combined = np.hstack((fixed_img_vis, moving_img_vis))
+            n_selected_zone = self.selected_zone.count(1)
 
-            for i, m in enumerate(selected_matches):
-                kp1 = self.kp1[m.queryIdx]
-                kp2 = self.kp2[m.trainIdx]
+            if  n_selected_zone==0:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setWindowTitle("Error")
+                msg.setText("No zone selected. Please select a rectangle.")
+                msg.exec_()
+                self.checkBox_crop.setChecked(False)
 
-                pt1 = tuple(np.round(kp1.pt).astype(int))
-                pt2 = tuple(np.round(kp2.pt).astype(int))
-                pt2_shifted = (int(pt2[0] + fixed_img_vis.shape[1]), pt2[1])  # Décalage pour image de droite
+                return
 
-                color = tuple(np.random.randint(0, 255, 3).tolist())
-                cv2.circle(combined, pt1, 5, color, 2)
-                cv2.circle(combined, pt2_shifted, 5, color, 2)
-                cv2.line(combined, pt1, pt2_shifted, color, 1)
-                cv2.putText(combined, str(i), (pt1[0] + 6, pt1[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-                cv2.putText(combined, str(i), (pt2_shifted[0] + 6, pt2_shifted[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            color, 1)
-
-            self.viewer_aligned.setImage(np_to_qpixmap(combined))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -403,5 +530,11 @@ if __name__ == '__main__':
     window = RegistrationApp()
     window.show()
     app.setStyle('Fusion')
+
+    folder_cube=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria/'
+    path_fixed_cube=folder_cube+'MPD41a_SWIR.mat'
+    path_moving_cube=folder_cube+'MPD41a_VNIR.mat'
+    window.load_cube(0,path_fixed_cube)
+    window.load_cube(1,path_moving_cube)
 
     sys.exit(app.exec_())

@@ -246,20 +246,6 @@
                   <string>Registration parameters</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1">
-                  <item row="8" column="0">
-                   <widget class="QLabel" name="label_feature">
-                    <property name="text">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;% keypoint to keep&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_2">
-                    <property name="text">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Transformation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label">
                     <property name="text">
@@ -282,33 +268,12 @@
                       <string>ORB</string>
                      </property>
                     </item>
-                    <item>
-                     <property name="text">
-                      <string>ECC</string>
-                     </property>
-                    </item>
                    </widget>
                   </item>
-                  <item row="8" column="1">
-                   <widget class="QSlider" name="features_slider">
-                    <property name="maximum">
-                     <number>100</number>
-                    </property>
-                    <property name="value">
-                     <number>100</number>
-                    </property>
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="10" column="0" colspan="2">
-                   <widget class="QPushButton" name="pushButton_register">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(150, 150, 150);</string>
-                    </property>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_2">
                     <property name="text">
-                     <string>Register image</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Transformation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                    </widget>
                   </item>
@@ -329,17 +294,56 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="9" column="1">
-                   <widget class="QCheckBox" name="checkBox_crop">
+                  <item row="12" column="0">
+                   <widget class="QPushButton" name="pushButton_register">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true"/>
+                    </property>
                     <property name="text">
-                     <string>Only selected zone ?</string>
+                     <string>Re-register</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="9" column="0">
-                   <widget class="QPushButton" name="pushButton_selectZone">
+                  <item row="12" column="1">
+                   <widget class="QPushButton" name="pushButton_getFeatures">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(150, 150, 150);</string>
+                    </property>
                     <property name="text">
-                     <string>Select zone</string>
+                     <string>Get features</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="QLabel" name="label_feature">
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;% keypoints to keep&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="1">
+                   <widget class="QSlider" name="features_slider">
+                    <property name="maximum">
+                     <number>100</number>
+                    </property>
+                    <property name="pageStep">
+                     <number>1</number>
+                    </property>
+                    <property name="value">
+                     <number>50</number>
+                    </property>
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="10" column="0">
+                   <widget class="QCheckBox" name="checkBox_crop">
+                    <property name="text">
+                     <string>Only selected zone ?</string>
                     </property>
                    </widget>
                   </item>
@@ -359,11 +363,41 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
-                <widget class="QGroupBox" name="groupBox_2">
+                <widget class="QGroupBox" name="groupBox_Visualization">
                  <property name="title">
                   <string>Visualization</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0">
+                  <item row="7" column="1">
+                   <widget class="QPushButton" name="pushButton_save_cube">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(150, 150, 150);</string>
+                    </property>
+                    <property name="text">
+                     <string>Save Registered Cube</string>
+                    </property>
+                    <property name="autoExclusive">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="QPushButton" name="pushButton_save_image">
+                    <property name="text">
+                     <string>Save Image</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_packetToShow">
+                    <property name="text">
+                     <string>#packets to show</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_3">
                     <property name="text">
@@ -395,43 +429,16 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="7" column="1">
-                   <widget class="QPushButton" name="pushButton_save_cube">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(150, 150, 150);</string>
-                    </property>
-                    <property name="text">
-                     <string>Save Registered Cube</string>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="1">
                    <widget class="QSlider" name="horizontalSlider_keyPacketToShow">
+                    <property name="pageStep">
+                     <number>1</number>
+                    </property>
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
                     <property name="tickPosition">
                      <enum>QSlider::NoTicks</enum>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_5">
-                    <property name="text">
-                     <string>Results view :</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="0">
-                   <widget class="QPushButton" name="pushButton_save_image">
-                    <property name="text">
-                     <string>Save Image</string>
                     </property>
                    </widget>
                   </item>
@@ -451,10 +458,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_4">
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_5">
                     <property name="text">
-                     <string>#packets to show</string>
+                     <string>Results view :</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -462,11 +469,17 @@
                    </widget>
                   </item>
                   <item row="2" column="1">
-                   <widget class="QCheckBox" name="checkBox_showKeypoints">
-                    <property name="text">
-                     <string>Show keypoints</string>
+                   <spacer name="verticalSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
                     </property>
-                   </widget>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </widget>
@@ -494,57 +507,23 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
+           <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <item>
-               <widget class="QFrame" name="frame">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>200</height>
-                 </size>
+             <widget class="QSplitter" name="splitter">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <widget class="QWidget" name="">
+               <layout class="QVBoxLayout" name="left_layout">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SetDefaultConstraint</enum>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true"/>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::StyledPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_6">
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <layout class="QHBoxLayout" name="image_layout" stretch="0,0">
-                   <item>
-                    <layout class="QVBoxLayout" name="left_layout">
-                     <property name="sizeConstraint">
-                      <enum>QLayout::SetDefaultConstraint</enum>
-                     </property>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QVBoxLayout" name="right_layout"/>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="">
+               <layout class="QVBoxLayout" name="right_layout"/>
+              </widget>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -571,7 +550,6 @@
   <tabstop>spinBox_mov_channel</tabstop>
   <tabstop>transform_selector</tabstop>
   <tabstop>method_selector</tabstop>
-  <tabstop>pushButton_register</tabstop>
   <tabstop>pushButton_save_image</tabstop>
   <tabstop>pushButton_save_cube</tabstop>
  </tabstops>
