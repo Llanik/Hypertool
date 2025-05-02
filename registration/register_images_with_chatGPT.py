@@ -14,7 +14,6 @@ from PyQt5.QtCore import Qt, QPointF, QRectF
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
 def np_to_qpixmap(img):
     if len(img.shape) == 2:
         qimg = QImage(img.data, img.shape[1], img.shape[0], img.strides[0], QImage.Format_Grayscale8)

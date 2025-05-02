@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Save_Window</class>
+ <widget class="QWidget" name="Save_Window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>423</width>
+    <height>303</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Saving options</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="4" column="1">
+    <widget class="QPushButton" name="pushButton_save_cube_final">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(150, 150, 150);</string>
+     </property>
+     <property name="text">
+      <string>Save cube(s)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QPushButton" name="pushButton_Cancel">
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QGroupBox" name="groupBox_hypercube_save_option">
+     <property name="title">
+      <string>Hypercube save options</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="radioButton_only_aligned_save">
+        <property name="text">
+         <string>Only Aligned</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QRadioButton" name="radioButton_both_cube_save">
+        <property name="text">
+         <string>Both Cubes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="checkBox_minicube_save">
+        <property name="text">
+         <string>Croped cubes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="comboBox_cube_format">
+        <item>
+         <property name="text">
+          <string>HDF5 </string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ENVI</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>MATLAB</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QGroupBox" name="groupBox_images_save_options">
+     <property name="title">
+      <string>Images exportation</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="checkBox_export_images">
+        <property name="text">
+         <string>Export Images</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="radioButton_gray_save_image">
+        <property name="text">
+         <string>Gray</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="radioButton_RGB_save_image">
+        <property name="text">
+         <string>RGB (default)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboBox_image_format">
+        <item>
+         <property name="text">
+          <string>PNG</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>JPG</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBox_modif_metadata">
+     <property name="text">
+      <string>Add/Change Metadatas before saving</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

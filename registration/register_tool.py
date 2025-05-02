@@ -7,18 +7,21 @@ import cv2
 from IPython.core.display_functions import update_display
 from PyQt5.QtWidgets import (
     QApplication, QWidget,QMainWindow, QVBoxLayout, QPushButton,
-    QLabel, QFileDialog, QHBoxLayout, QMessageBox, QComboBox,
+    QLabel, QFileDialog, QHBoxLayout, QMessageBox, QComboBox, QDialog,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,QRubberBand
 )
 from PyQt5.QtGui import QPixmap, QImage, QTransform,  QPen, QColor
 from PyQt5.QtCore import Qt, QPointF, QRectF, QRect, QPoint,QSize
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+import os
 
 import random
 
+# TODO : switch button to make function
+
 from registration.registration_window import*
-from hypercubes.open import*
+from hypercubes.openSave import*
 
 def np_to_qpixmap(img):
     if len(img.shape) == 2:
@@ -53,7 +56,7 @@ def overlay_checkerboard(fixed, aligned, tile_size=20):
     return result
 
 class ZoomableGraphicsView(QGraphicsView):
-    # TODO: rewrite rectangle
+    # TODO: add file title above image
     def __init__(self):
         super().__init__()
         self.setScene(QGraphicsScene())
@@ -182,6 +185,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.pushButton_getFeatures.clicked.connect(self.choose_register_method)
         self.pushButton_register.clicked.connect(self.register_imageAndCube)
         self.checkBox_crop.clicked.connect(self.check_selected_zones)
+        self.pushButton_save_cube.clicked.connect(self.open_save_dialog)
 
         self.overlay_selector.currentIndexChanged.connect(self.update_display)
 
@@ -262,7 +266,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         if fname:
             if fname[-3:] in['mat', '.h5']:
-                _, cube = open_hyp(fname, open_window=False)
+                _, cube,_ = open_hyp(fname, open_dialog=False)
                 if i_mov:
                     self.moving_cube = cube
                 else:
@@ -285,6 +289,8 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 img =(img * 256 / np.max(img)).astype('uint8')
             else:
                 img = cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
+
+            self.viewer_img[i_mov].clear_rectangle()
 
             if i_mov:
                 self.moving_img=img
@@ -363,10 +369,9 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         matches = matcher.match(des1, des2)
         self.matches_all = sorted(matches, key=lambda x: x.distance)
 
-        self.pushButton_register.setEnabled(True)
-
         self.register_imageAndCube()
-        # self.update_keypoints_display()
+        self.pushButton_register.setEnabled(True)
+        self.pushButton_save_cube.setEnabled(True)
 
     def register_imageAndCube(self):
 
@@ -523,6 +528,145 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
                 return
 
+    def save_cube(self):
+
+        save_both=False
+
+        # Ouvre un QFileDialog pour sélectionner un dossier
+        save_dir = QFileDialog.getExistingDirectory(self, "Choisir un dossier de sauvegarde")
+        if not save_dir:
+            return  # L'utilisateur a annulé
+
+        y, x, dy, dx = self.viewer_aligned.get_rect_coords()
+        x, y, dx, dy = int(x), int(y), int(dx), int(dy)
+
+        # Rogner les images
+        fixed_crop = self.fixed_img[y:y + dy, x:x + dx]
+        aligned_crop = self.aligned_img[y:y + dy, x:x + dx]
+
+        cv2.imwrite(os.path.join(save_dir, "fixed_crop.png"), fixed_crop)
+        cv2.imwrite(os.path.join(save_dir, "aligned_crop.png"), aligned_crop)
+
+        # Rogner et sauvegarder les cubes
+        if hasattr(self, "aligned_cube"):
+            aligned_cube_crop = self.aligned_cube[y:y + dy, x:x + dx, :]
+            np.save(os.path.join(save_dir, "aligned_cube_crop.npy"), aligned_cube_crop)
+
+        if hasattr(self, "fixed_cube"):
+            fixed_cube_crop = self.fixed_cube[y:y + dy, x:x + dx, :]
+            np.save(os.path.join(save_dir, "fixed_cube_crop.npy"), fixed_cube_crop)
+
+        QMessageBox.information(self, "Succès", f"Images et cubes rognés sauvegardés dans:\n{save_dir}")
+
+    def open_save_dialog(self):
+        """Ouvre la dialog SaveWindow, récupère les options et déclenche la sauvegarde."""
+        dlg = SaveWindow(self)
+        # Affiche en modal : si OK, on récupère les options
+        if dlg.exec_() == QDialog.Accepted:
+            opts = dlg.get_options()
+            self.save_cube_with_options(opts)
+
+    def save_cube_with_options(self, opts):
+        """
+        Sauvegarde les cubes et images selon le dict opts retourné par SaveWindow.get_options().
+        """
+        # 1) Choix de dossier
+        save_dir = QFileDialog.getExistingDirectory(self, "Choisir un dossier de sauvegarde")
+        if not save_dir:
+            return
+
+        # 2) Rogner si nécessaire
+        if opts['crop_cube']:
+            y, x, dy, dx = self.viewer_aligned.get_rect_coords()
+            y, x, dy, dx = map(int, (y, x, dy, dx))
+            fixed_cube = self.fixed_cube[y:y + dy, x:x + dx, :]
+            aligned_cube = self.aligned_cube[y:y + dy, x:x + dx, :]
+            if opts['export_images']:
+                fixed_img = self.fixed_img[x:x + dx, y:y + dy]
+                aligned_img = self.aligned_img[x:x + dx, y:y + dy]
+        else:
+            fixed_cube = self.fixed_cube
+            aligned_cube = self.aligned_cube
+            if opts['export_images']:
+                fixed_img = self.fixed_img
+                aligned_img = self.aligned_img
+
+        # 3) Export images 2D
+        if opts['export_images']:
+            ext = opts['image_format'].lower()
+            fixed_fn = os.path.join(save_dir, f"fixed_crop.{ext}")
+            aligned_fn = os.path.join(save_dir, f"aligned_crop.{ext}")
+            cv2.imwrite(fixed_fn, fixed_img)
+            cv2.imwrite(aligned_fn, aligned_img)
+
+        # 4) Export cubes
+        fmt = opts['cube_format']
+        save_both = opts['save_both']
+        if fmt == "HDF5":
+            import h5py
+            if save_both:
+                with h5py.File(os.path.join(save_dir, "fixed_cube.h5"), "w") as f:
+                    f.create_dataset("data", data=fixed_cube)
+            with h5py.File(os.path.join(save_dir, "aligned_cube.h5"), "w") as f:
+                f.create_dataset("data", data=aligned_cube)
+
+        elif fmt == "ENVI":
+            from spectral.io import envi
+            meta = {
+                "lines": aligned_cube.shape[0],
+                "samples": aligned_cube.shape[1],
+                "bands": aligned_cube.shape[2],
+                "data type": 4,
+                "interleave": "bil"
+            }
+            if save_both:
+                envi.save_image(os.path.join(save_dir, "fixed_cube.hdr"),
+                                fixed_cube.astype(np.float32), metadata=meta)
+            envi.save_image(os.path.join(save_dir, "aligned_cube.hdr"),
+                            aligned_cube.astype(np.float32), metadata=meta)
+
+        elif fmt == "MATLAB":
+            from scipy.io import savemat
+            tosave = {"aligned_cube": aligned_cube}
+            if save_both:
+                tosave["fixed_cube"] = fixed_cube
+            savemat(os.path.join(save_dir, "hypercubes.mat"), tosave)
+
+        else:
+            QMessageBox.warning(self, "Format non supporté", fmt)
+            return
+
+        QMessageBox.information(self, "Succès", f"Cubes sauvegardés en {fmt} dans :\n{save_dir}")
+
+# TODO : clean different load and save function in data_viz and register and openSave
+
+def save_cropped_registered_images(self):
+    if self.fixed_img is None or self.aligned_img is None:
+        QMessageBox.warning(self, "Erreur", "Les images ne sont pas prêtes.")
+        return
+
+    if not hasattr(self.viewer_aligned, 'get_rect_coords'):
+        QMessageBox.warning(self, "Erreur", "Aucune sélection trouvée dans viewer_aligned.")
+        return
+
+    # Ouvre un QFileDialog pour sélectionner un dossier
+    save_dir = QFileDialog.getExistingDirectory(self, "Choisir un dossier de sauvegarde")
+    if not save_dir:
+        return  # L'utilisateur a annulé
+
+    y, x, dy, dx = self.viewer_aligned.get_rect_coords()
+    x, y, dx, dy = int(x), int(y), int(dx), int(dy)
+
+    # Rogner et sauvegarder les cubes
+    if hasattr(self, "aligned_cube"):
+        aligned_cube_crop = self.aligned_cube[y:y+dy, x:x+dx, :]
+        np.save(os.path.join(save_dir, "aligned_cube_crop.npy"), aligned_cube_crop)
+
+    if hasattr(self, "fixed_cube"):
+        fixed_cube_crop = self.fixed_cube[y:y+dy, x:x+dx, :]
+        np.save(os.path.join(save_dir, "fixed_cube_crop.npy"), fixed_cube_crop)
+
+    QMessageBox.information(self, "Succès", f"Images et cubes rognés sauvegardés dans:\n{save_dir}")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

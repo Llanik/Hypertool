@@ -1,7 +1,17 @@
-# cd C:\Users\Usuario\Documents\GitHub\Hyperspectral_Yannick\HyperdocApp
+# cd C:\Users\Usuario\Documents\GitHub\Hypertool
 # python -m PyQt5.uic.pyuic -o Hyperdoc_GUI_design.py Hyperdoc_GUI_design.ui
 # G:\Mi unidad\CIMLab\Proyectos y OTRI\Hyperdoc\Datos\Database_samples_paper\minicubes
-# pyinstaller --noconsole --onefile --add-data "Hyperdoc_logo_transparente_CIMLab.png:." HyperdocApp_core_v3.2.py
+# pyinstaller --noconsole --onefile --icon="hyperdoc_logo_transparente.ico" --add-data "Hyperdoc_logo_transparente_CIMLab.png:." HyperdocApp_core_v3.5.1.py
+# G:\Mi unidad\CIMLab\Proyectos y OTRI\Hyperdoc\Datos\Database_samples\HYPERDOC Database\Samples
+
+'''
+IMPORTANTE : reescribir por mas de dos cubos : 3 por lo menos O uno a la vez solo
+Hacer : Bajar tamaño de icono y talla fonts por baja resolution : Problema con la de Fran
+si no encuentra un minicubo o un GT, que no aperezca el la figura
+los filename de GT seran como los minicubos +'_GT.png' -> OK
+poner la opccion de abrir a mano cada minicubo y cada GT -> OK
+set reflectance axis to 0-1 always -> OK
+'''
 
 import sys
 import traceback
@@ -16,7 +26,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap,QPainter,QIcon,QFont
 from PIL import Image
 
-from PyQt5.QtCore import Qt,QTimer
+from PyQt5.QtCore import Qt,QTimer,QEvent
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
@@ -24,19 +34,41 @@ import matplotlib.text
 import os
 
 from matplotlib.pyplot import fill_between
+from data_vizualisation.data_vizualisation_window import*
 
-from Hyperdoc_GUI_design import*
+class Hypercube:
+    def __init__(self, filepath=None):
+        self.filepath = filepath
+        self.data = None
+        self.wl = None
+        self.metadata = None
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+        if  self.filepath:
+            self.load_hypercube( self.filepath)
+
+    def load_hypercube(self, filepath):
+        """ Charge un fichier .h5 et extrait l'hypercube et evalue les longueurs d'onde. """
+        with h5py.File(filepath, 'r') as f:
+            self.data = np.array(f['DataCube']).T
+            self.metadata = {attr: f.attrs[attr] for attr in f.attrs}
+            self.wl = self.metadata['wl']
+
+    def get_rgb_image(self, indices):
+        if self.data is None:
+            return None
+        return self.data[:, :, indices]
+
+class Data_Viz_Window(QWidget,Ui_DataVizualisation):
+    #TODO : make a widget window to edit metadata and add a button on all windows of the app
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
         self.hyps = [Hypercube(),Hypercube()] # create hypercubes objects[VNIR,SWIR]
-        self.cubes_path=None
         self.folder_GT=None
+        self.GTexist = True
         self.folder_app=os.path.dirname(__file__)
-
+        self.cubes_path=os.path.dirname(__file__)
 
         self.hyps_rgb_chan_DEFAULT=[[610, 540, 435],[1605, 1205, 1005]]   # defaults channels for hypercubes images
         self.hyps_rgb_chan=self.hyps_rgb_chan_DEFAULT.copy()  # channels for hypercubes images, initialiser aux DEFAULT
@@ -89,8 +121,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for elem in [self.pushButton_next_cube,self.pushButton_prev_cube,self.pushButton_save_image,self.horizontalSlider_red_channel,self.horizontalSlider_green_channel,self.horizontalSlider_blue_channel,self.spinBox_red_channel,self.spinBox_green_channel,self.spinBox_blue_channel,self.checkBox_std,self.pushButton_save_spectra,self.horizontalSlider_transparency_GT,self.radioButton_VNIR,self.radioButton_rgb_user,self.radioButton_rgb_default,self.radioButton_SWIR,self.radioButton_grayscale]:
             elem.setEnabled(False)
-        # path_icon=self.folder_app+'/HyperdocApp/Hyperdoc_logo_transparente_CIMLab.png'
-        path_icon=os.path.join(os.path.dirname(__file__), "Hyperdoc_logo_transparente_CIMLab.png")
+        BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+        path_icon = os.path.join(BASE_DIR, "interface", "Hyperdoc_logo_transparente_CIMLab.png")
 
         self.pixmap = QPixmap(path_icon)
         self.setWindowIcon(QIcon(path_icon))
@@ -138,7 +170,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         file_init = last_hyp_path.split('/')[-1]
         last_num=file_init.split('-')[0]
 
-        files = os.listdir(init_dir_hyp)
+        files = sorted(os.listdir(init_dir_hyp))
         index_init = files.index(file_init)
 
         file_new = files[(index_init + prev_next) % len(files)]
@@ -153,7 +185,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def open_hypercubes_and_GT(self,filepath=None):
         """ open .h5 et initialise les sliders. """
 
+        self.image_loaded=[0,0,0]
         default_dir = self.cubes_path
+        if filepath:quick_change=True
+        else : quick_change=False
+
 
         if not filepath:
             filepath, _ = QFileDialog.getOpenFileName(self, "Ouvrir un hypercube", default_dir, "Fichiers HDF5 (*.h5)")
@@ -162,6 +198,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         self.cubes_path=filepath
+
+        if 'UVIS' in filepath:
+            self.open_UVIS(filepath)
+            return
 
         path_VNIR = filepath
         path_SWIR = filepath
@@ -179,17 +219,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.hyps[0].load_hypercube(path_VNIR)
             self.image_loaded[0] = True
         except:
-            print('No VNIR')
             self.image_loaded[0] = False
 
         try:
             self.hyps[1].load_hypercube(path_SWIR)
             self.image_loaded[1] = True
         except:
-            print('No SWIR')
             self.image_loaded[1] = False
 
-        file_GT=((path_VNIR[:-3] + '_GT.png').replace("-VNIR", "")).split('/')[-1]
+
+        if self.image_loaded[0]:
+            file_GT=(path_VNIR[:-3] + '_GT.png').split('/')[-1]
+        elif self.image_loaded[1]:
+            file_GT=(path_SWIR[:-3] + '_GT.png').split('/')[-1]
 
         if self.folder_GT:
             try:
@@ -202,14 +244,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.image_loaded[2] == False:
 
             try:
-                path_GT = path_VNIR[:-3] + '_GT.png'
-                path_GT = path_GT.replace("-VNIR", "")
+                if self.image_loaded[0]:
+                    path_GT = path_VNIR[:-3] + '_GT.png'
+                elif self.image_loaded[1]:
+                    path_GT = path_SWIR[:-3] + '_GT.png'
                 self.GT.load_image(path_GT)
                 self.image_loaded[2]=True
-
             except:
                 self.image_loaded[2] = False
-
 
         if self.image_loaded[2] == False:
             try:
@@ -219,24 +261,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.GT.load_image(path_GT)
                 self.image_loaded[2] = True
             except:
-                print('No GT in folder "../GT/" ')
                 self.image_loaded[2] = False
-                qm=QMessageBox()
-                ans=qm.question(self, 'No GT found', "No Ground Truth found for this minicube.\n Are the Ground Truth stored in another directory ?", qm.Yes | qm.No)
-                if ans==qm.Yes:
-                    folder = QFileDialog.getExistingDirectory(self, "Open Ground Truth Directory")
-                    try:
-                        path_GT = folder + '/' + file
-                        self.GT.load_image(path_GT)
-                        self.image_loaded[2] = True
-                        self.folder_GT=folder
-                    except:
-                        msg = QMessageBox()
-                        msg.setIcon(QMessageBox.Icon.Warning)
-                        msg.setText("No Ground Truth found for this minicube in the folder")
-                        msg.setWindowTitle("GT not found")
-                        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-                        msg.exec()
+                if not quick_change:
+                    qm=QMessageBox()
+                    ans=qm.question(self, 'No GT found', "No Ground Truth found for this minicube.\nDo you want to open the Ground Truth manually ?", qm.Yes | qm.No)
+                    if ans==qm.Yes:
+                        filepath, _ = QFileDialog.getOpenFileName(self, "Open Ground Truth PNG image",path_VNIR,
+                                                                  "PNG (*.png)")
+                        try:
+                            path_GT = filepath
+                            self.GT.load_image(path_GT)
+                            self.image_loaded[2] = True
+                            self.folder_GT=('/').join(filepath.split('/')[:-1])
+                        except:
+                            msg = QMessageBox()
+                            msg.setIcon(QMessageBox.Icon.Warning)
+                            msg.setText("No Ground Truth found.")
+                            msg.setWindowTitle("GT not found")
+                            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+                            msg.exec()
 
         for elem in [self.pushButton_next_cube,self.pushButton_prev_cube,self.pushButton_save_image,self.horizontalSlider_red_channel,self.horizontalSlider_green_channel,self.horizontalSlider_blue_channel,self.spinBox_red_channel,self.spinBox_green_channel,self.spinBox_blue_channel,self.checkBox_std,self.pushButton_save_spectra,self.horizontalSlider_transparency_GT,self.radioButton_VNIR,self.radioButton_rgb_user,self.radioButton_rgb_default,self.radioButton_SWIR,self.radioButton_grayscale]:
             elem.setEnabled(True)
@@ -261,8 +304,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.modif_sliders(default=True)
         self.horizontalSlider_transparency_GT.setValue(0)
         self.update_image(load=True)
-        self.update_spectra(load=True)
         self.update_combo_meta(init=True)
+
+        hyp = self.hyps[self.radioButton_SWIR.isChecked()]
+        try:
+            len(hyp.metadata['GTLabels'])
+            self.GTexist = True
+        except:
+            self.GTexist=False
+
+        if self.GTexist:
+            self.update_spectra(load=True)
+            self.checkBox_std.setEnabled(True)
+            self.pushButton_save_spectra.setEnabled(True)
+        else:
+            self.canvas_spectra.clear_spectra()
+            self.checkBox_std.setEnabled(False)
+            self.pushButton_save_spectra.setEnabled(False)
 
         message=''
         if self.image_loaded[0]:message+='VNIR found \n'
@@ -273,6 +331,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else : message+='GT NOT FOUND'
 
         self.label_general_message.setText(message)
+
+    def open_UVIS(self,filepath):
+
+        self.image_loaded[1] = False
+        self.image_loaded[2] = False
+
+        try:
+            self.hyps[0].load_hypercube(filepath)
+            self.image_loaded[0] = True
+            self.label_general_message.setText('UV-VIS minicube of substrate')
+        except:
+            self.image_loaded[0] = False
+            self.label_general_message.setText('UV-VIS minicube NOT LOADED')
+            return
+
+        self.radioButton_VNIR.setAutoExclusive(False)
+        self.radioButton_SWIR.setAutoExclusive(False)
+        self.radioButton_VNIR.setChecked(False)
+        self.radioButton_SWIR.setChecked(False)
+        self.radioButton_VNIR.setEnabled(False)
+        self.radioButton_SWIR.setEnabled(False)
+
+        self.horizontalSlider_transparency_GT.setEnabled(False)
+
+        self.radioButton_grayscale.setChecked(True)
+
+        self.modif_sliders(default=True)
+        self.horizontalSlider_transparency_GT.setValue(0)
+        self.update_image(load=True,UV=True)
+        self.update_combo_meta(init=True)
+
+        self.canvas_spectra.clear_spectra()
 
     def update_combo_meta(self,init=False):
         hyp = self.hyps[self.radioButton_SWIR.isChecked()]
@@ -286,9 +376,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if hyp.metadata is not None:
             for key in hyp.metadata.keys():
                 if key not in ['wl','GT_cmap','spectra_mean','spectra_std']:
-                    self.comboBox_metadata.addItem(f"{key}")
-                    if key==last_key:
-                        self.comboBox_metadata.setCurrentText(key)
+                    if key in ['GTLabels','pixels_averaged']:
+                        try:
+                            len(hyp.metadata[key])
+                            self.comboBox_metadata.addItem(f"{key}")
+                        except:
+                            a=0
+
+                    else:
+                        self.comboBox_metadata.addItem(f"{key}")
+                        if key==last_key:
+                            self.comboBox_metadata.setCurrentText(key)
 
             self.update_metadata_label()
 
@@ -300,7 +398,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         raw = hyp.metadata[key]
         match key:
             case 'GTLabels':
-                st=f'GT indexes : <b>{(' , ').join(raw[0])}</b>  <br>  GT names : <b>{(' , ').join(raw[1])}</b>'
+                if len(raw.shape)==2:
+                    st=f'GT indexes : <b>{(' , ').join(raw[0])}</b>  <br>  GT names : <b>{(' , ').join(raw[1])}</b>'
+                elif len(raw.shape)==1:
+                    st=f'GT indexes : <b>{(raw[0])}</b>  <br>  GT names : <b>{raw[1]}</b>'
 
             case 'aged':
                 st=f'The sample has been aged ? <br> <b>{raw}</b>'
@@ -309,7 +410,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 st=f'The camera have <b>{raw[0]}</b> spectral bands.'
 
             case 'date':
-                st=f'Date of the sample : <b>{raw[0]}</b>'
+                if len(raw)>1:info=raw
+                else: info=raw[0]
+                st=f'Date of the sample : <b>{info}</b>'
 
             case 'device':
                 st=f'Capture made with the device : <br> <b>{raw}</b>'
@@ -441,11 +544,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.update_image(index=1)
         except: return
 
-    def update_image(self,index=None,load=False):
+    def update_image(self,index=None,load=False,UV=False):
         """ Met à jour l’image affichée en fonction des sliders. """
 
         if load:
-
+            self.canvas_image.create_axis(self.image_loaded)
             rgb_images = []
             title=''
             for i, hyp in enumerate(self.hyps):
@@ -454,8 +557,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         channels_index = [np.argmin(np.abs(self.hyps_rgb_chan[i][2] - hyp.wl)) for j in range(3)]
                     else:
                         channels_index = [np.argmin(np.abs(self.hyps_rgb_chan[i][j] - hyp.wl)) for j in range(3)]
-
-                    rgb_images.append(hyp.get_rgb_image(channels_index))
+                    rgb_image= hyp.get_rgb_image(channels_index)
+                    rgb_image/=np.max(rgb_image)
+                    rgb_images.append(rgb_image)
                     title=f'{hyp.metadata['number']} - {hyp.metadata['parent_cube']}'
                 else:
                     rgb_images.append(None)
@@ -465,7 +569,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 rgb_images.append(None)
 
-            self.canvas_image.load_image(rgb_images,title=title)
+            self.canvas_image.load_image(rgb_images,title=title,UV=UV)
 
         else:
             if index==1 or index ==0:
@@ -476,7 +580,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         channels_index = [np.argmin(np.abs(self.hyps_rgb_chan[index][j] - hyp.wl)) for j in range(3)]
                     rgb_image=hyp.get_rgb_image(channels_index)
-                    self.canvas_image.update_image(rgb_image,index)
+                    self.canvas_image.update_image(rgb_image/np.max(rgb_image),index)
 
     def update_spectra(self,load=False):
 
@@ -484,14 +588,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if load :
             hyp = self.hyps[self.radioButton_SWIR.isChecked()]
-            GT_index = [int(i) for i in hyp.metadata['GTLabels'][0]]
-            GT_material = [i for i in hyp.metadata['GTLabels'][1]]
-            GT_colors = hyp.metadata['GT_cmap'][:, GT_index]
+            try :
+                len(hyp.metadata['GTLabels'])
+            except:
+                return
 
             hyps_loaded=[self.hyps[i] for i in [0,1] if self.image_loaded[i]]
             wls = [hyp.metadata['wl'] for hyp in hyps_loaded]
-            spectra_mean = [hyp.metadata['spectra_mean'] for hyp in hyps_loaded]
-            spectra_std = [hyp.metadata['spectra_std'] for hyp in hyps_loaded]
+
+            if len(hyp.metadata['GTLabels'].shape)==2:
+                GT_index = [[int(i),int(i)-1][int(i)==255] for i in hyp.metadata['GTLabels'][0]]
+                GT_material = [i for i in hyp.metadata['GTLabels'][1]]
+                GT_colors = hyp.metadata['GT_cmap'][:, GT_index]
+                spectra_mean = [hyp.metadata['spectra_mean'] for hyp in hyps_loaded]
+                spectra_std = [hyp.metadata['spectra_std'] for hyp in hyps_loaded]
+            elif len(hyp.metadata['GTLabels'].shape)==1:
+                GT_index=int(hyp.metadata['GTLabels'][0])
+                if GT_index==255:GT_index=254
+                GT_material = [hyp.metadata['GTLabels'][1]]
+                GT_colors = np.array([hyp.metadata['GT_cmap'][:, GT_index]]).T
+                spectra_mean =[[hyp.metadata['spectra_mean'] for hyp in hyps_loaded]]
+                spectra_std = [[hyp.metadata['spectra_std'] for hyp in hyps_loaded]]
+
+            else:
+                return
 
             self.canvas_spectra.load_spectra(wls,spectra_mean,spectra_std,GT_material,GT_colors,std,self.image_loaded)
 
@@ -543,43 +663,63 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except:
             self.label_general_message.setText('Saving spectra FAILED')
 
-class Hypercube:
-    def __init__(self, filepath=None):
-        self.filepath = filepath
-        self.data = None
-        self.wl = None
-        self.metadata = None
-
-        if  self.filepath:
-            self.load_hypercube( self.filepath)
-
-    def load_hypercube(self, filepath):
-        """ Charge un fichier .h5 et extrait l'hypercube et evalue les longueurs d'onde. """
-        with h5py.File(filepath, 'r') as f:
-            self.data = np.array(f['DataCube']).T
-            self.metadata = {attr: f.attrs[attr] for attr in f.attrs}
-            self.wl = self.metadata['wl']
-
-    def get_rgb_image(self, indices):
-        if self.data is None:
-            return None
-        return self.data[:, :, indices]
-
 class Canvas_Image(FigureCanvas):
     def __init__(self):
         self.fig=Figure(facecolor=(1, 1, 1, 0.1))
-        gs = GridSpec(2, 2, figure=self.fig)
-        self.ax0=self.fig.add_subplot(gs[0, 0]) #VNIR
-        self.ax1 = self.fig.add_subplot(gs[1, 0]) #SWIR
-        self.ax2=self.fig.add_subplot(gs[:,1]) #GT
-        self.axs=[self.ax0,self.ax1,self.ax2]
+        self.gs = GridSpec(2, 2, figure=self.fig)
+        self.ax0 = self.fig.add_subplot(self.gs[0, 0])  # VNIR
+        self.ax1 = self.fig.add_subplot(self.gs[1, 0])  # SWIR
+        self.ax2 = self.fig.add_subplot(self.gs[:, 1])  # GT
+        self.axs = [self.ax0, self.ax1, self.ax2]
         for ax in self.axs: ax.set_axis_off()
         self.images=[] #pour les 3 images de bases
         self.gt_overlays = []  # Pour stocker l'image GT en superposition
 
         super().__init__(self.fig)
+        self.fig.subplots_adjust(left=0.01, bottom=0.05, right=0.99, top=0.85)
 
-    def load_image(self,rgb_images,title=None):
+
+    def create_axis(self,images=[False,False,False]):
+        self.fig.clear()
+        if images==[False,False,False]:
+            self.ax0 = self.fig.add_subplot(self.gs[0, 0])  # VNIR
+            self.ax1 = self.fig.add_subplot(self.gs[1, 0])  # SWIR
+            self.ax2 = self.fig.add_subplot(self.gs[:, 1])  # GT
+        elif images==[True,False,False]:
+            self.ax1 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax2 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax0 = self.fig.add_subplot(self.gs[:, :]) # VNIR
+
+        elif images==[False, True, False]:
+            self.ax0 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax2 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax1 = self.fig.add_subplot(self.gs[:, :])  # SWIR
+
+        elif images==[True, True, False]:
+            self.ax2 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax0 = self.fig.add_subplot(self.gs[0, :])  # VNIR
+            self.ax1 = self.fig.add_subplot(self.gs[1, :])  # SWIR
+
+
+        elif images==[True, False, True]:
+            self.ax1 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax0 = self.fig.add_subplot(self.gs[:, 0])  # VNIR
+            self.ax2 = self.fig.add_subplot(self.gs[:, 1])  # GT
+
+        elif images==[False, True, True]:
+            self.ax0 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax1 = self.fig.add_subplot(self.gs[:, 0])  # SWIR
+            self.ax2 = self.fig.add_subplot(self.gs[:, 1])  # GT
+
+        elif images==[True, True, True]:
+            self.ax0 = self.fig.add_subplot(self.gs[0, 0])
+            self.ax1 = self.fig.add_subplot(self.gs[1, 0])  # SWIR
+            self.ax2 = self.fig.add_subplot(self.gs[:, 1])  # GT
+
+        self.axs = [self.ax0, self.ax1, self.ax2]
+        for ax in self.axs: ax.set_axis_off()
+
+    def load_image(self,rgb_images,title=None,UV=False):
 
         self.images=[]
 
@@ -589,25 +729,20 @@ class Canvas_Image(FigureCanvas):
             if rgb_image is not None:
                 im=self.axs[i].imshow(rgb_image)
                 self.images.append(im)
+
+                if not UV :
+                    self.axs[i].set_title(['VNIR','SWIR','Ground Truth'][i])
+                else :
+                    self.axs[i].set_title(['UVIS', 'SWIR', 'Ground Truth'][i])
                 # Superposition GT sur VNIR et SWIR
 
                 if i < 2 and rgb_images[2] is not None:  # VNIR (i=0) et SWIR (i=1)
                     gt_overlay = self.axs[i].imshow(rgb_images[2], alpha=0)
                     self.gt_overlays.append(gt_overlay)
-            else:
-                self.axs[i].set_frame_on(False)
-                im=self.axs[i].text(0.5, 0.5, "File not found",
-                    horizontalalignment='center',
-                    verticalalignment='center',
-                    font='Arial',
-                    fontsize=20,
-                    color='red',
-                    transform=self.axs[i].transAxes)
-                self.images.append(im)
 
-        self.ax0.set_title('VNIR')
-        self.ax1.set_title('SWIR')
-        self.ax2.set_title('Ground Truth')
+            else:
+                self.images.append(None)
+
         self.fig.suptitle(title)
         self.draw()
 
@@ -649,21 +784,35 @@ class Canvas_Spectra(FigureCanvas):
         self.map_legend_to_ax=[]
         self.std_visible=None
 
+    def clear_spectra(self):
+        self.ax.clear()
+        self.ax.set_axis_off()
+        self.draw()
+
     def load_spectra(self,wls, spectra_mean, spectra_std, GT_material, GT_colors,std=False,image_loaded=[False,False,False]):
         # for i, spectrum in enumerate(spectra):
         self.ax.clear()
         self.ax.set_xlabel("Wavelength (nm)")
         self.ax.set_ylabel("Reflectance")
         self.ax.set_title("Average reflectance spectra of Ground Truth material")
+
         self.wl=wls
         self.spectra_mean= spectra_mean
         self.spectra_std = spectra_std
+        maxR=1
+        for spec in spectra_mean:
+            if np.max(spec)>maxR:maxR=np.max(spec)
+        self.ax.set_ylim((0, 0.05+maxR))
         self.colors=GT_colors.T
         self.material=GT_material
         self.lines_list = []
         self.fill_between_list = []
         self.std_visible=std
-        n_mat=len(self.material)
+
+        if isinstance(self.material , str):
+            n_mat=1
+        else :
+            n_mat=len(self.material)
 
         for i in range(n_mat):
             label_i = self.cut_long_string(self.material[i], 25)
@@ -806,7 +955,7 @@ class GroundTruth:
         self.cmap=None
 
     def load_image(self,filepath):
-        self.image=np.array(Image.open(filepath).convert('RGB'))
+        self.image=np.array((Image.open(filepath)).convert('RGB'))
 
 def excepthook(exc_type, exc_value, exc_traceback):
     """Capture les exceptions et les affiche dans une boîte de dialogue."""
@@ -818,13 +967,52 @@ def excepthook(exc_type, exc_value, exc_traceback):
     msg_box.setInformativeText(error_msg)
     msg_box.exec_()
 
+def update_font(_app,width=None,_font="Segoe UI",):
+    global window
+
+    if not width:
+        screen = _app.primaryScreen()
+        screen_size = screen.size()
+        screen_width = screen_size.width()
+
+    else:
+        screen_width=width
+
+    if screen_width < 1280:
+        font_size = 7
+    elif screen_width < 1920:
+        font_size = 8
+    else:
+        font_size = 9
+
+    _app.setFont(QFont(_font, font_size))
+    plt.rcParams.update({"font.size": font_size + 3, "font.family": _font})
+
+def check_resolution_change():
+    """ Vérifie si la résolution a changé et met à jour la police si besoin """
+    global last_width  # On garde la dernière largeur connue
+    screen = app.screenAt(window.geometry().center())
+    current_width = screen.size().width()
+
+    if current_width != last_width:
+        update_font(app,current_width)
+        last_width = current_width
+
 if __name__ == "__main__":
+
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')
-    font = QFont("Segoe UI", 10)
-    app.setFont(font)
-    plt.rcParams.update({"font.size": 14,"font.family": "Arial"})
-    window = MainWindow()
+
+    window = Data_Viz_Window()
     window.showMaximized()
+
+    update_font(app)
+    app.setStyle('Fusion')
+
+    # Timer for screen resolution check
+    last_width = app.primaryScreen().size().width()
+    timer = QTimer()
+    timer.timeout.connect(check_resolution_change)
+    timer.start(500)  # Vérifie toutes les 500 ms
+
     sys.exit(app.exec_())

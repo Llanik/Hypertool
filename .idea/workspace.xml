@@ -4,9 +4,39 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="matching OK&#10;adapt slider maxVal #packet and show #/total">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Selection Zone OK&#10;Matching features viz OK">
+      <change afterPath="$PROJECT_DIR$/data_vizualisation/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_window.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_window.ui" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hypercubes/openSave.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hypercubes/save_window.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hypercubes/save_window.ui" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/registration/registrartion_icon.svg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/register_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_images.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HyperdocApp_main_.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Hyperdoc_GUI_design.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.2.spec" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.4.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.4.spec" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.5.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Old_Versions/HyperdocApp_core_v3.spec" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/CIL_icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/CIL_icon.qrc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/HyperdocApp_Instruct.odg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/HyperdocApp_Instruct.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/HyperdocApp_core_v3.4.spec" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/Hyperdoc_logo_transparente.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/hyperdoc_logo_transparente.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/autres/usage_notes_Python_AnaBelen.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hypercubes/open.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/registration/registerHypercubes.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registerHypercubes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/registration/register_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/registration/register_images_with_chatGPT.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_images_with_chatGPT.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/registration/registration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/registration/registration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.ui" afterDir="false" />
     </list>
@@ -61,13 +91,14 @@
     "Python.Run in console.executor": "Run",
     "Python.Test_update.executor": "Run",
     "Python.Unnamed.executor": "Run",
+    "Python.hypercube_app_v26.executor": "Run",
     "Python.open.executor": "Run",
     "Python.register_images.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/Usuario/Documents/GitHub/Hypertool",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+    "last_opened_file_path": "C:/Users/Usuario/Documents/GitHub/Hyperspectral_Yannick",
+    "settings.editor.selected.configurable": "preferences.externalTools"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -197,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745649575870</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Selection Zone OK&#10;Matching features viz OK">
+      <option name="closed" value="true" />
+      <created>1745940770594</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1745940770594</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -248,6 +287,7 @@
     <MESSAGE value="registration_images OK for grey image&#10;to do : &#10;- load hypercubes&#10;- save transformed hypercube" />
     <MESSAGE value="scrolable images OK" />
     <MESSAGE value="matching OK&#10;adapt slider maxVal #packet and show #/total" />
-    <option name="LAST_COMMIT_MESSAGE" value="matching OK&#10;adapt slider maxVal #packet and show #/total" />
+    <MESSAGE value="Selection Zone OK&#10;Matching features viz OK" />
+    <option name="LAST_COMMIT_MESSAGE" value="Selection Zone OK&#10;Matching features viz OK" />
   </component>
 </project>

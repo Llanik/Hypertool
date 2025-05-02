@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1053</width>
-    <height>829</height>
+    <width>1162</width>
+    <height>1088</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -72,7 +72,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1,1">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,1">
             <property name="spacing">
              <number>0</number>
             </property>
@@ -99,30 +99,7 @@
               <property name="frameShadow">
                <enum>QFrame::Raised</enum>
               </property>
-              <layout class="QGridLayout" name="gridLayout">
-               <item row="2" column="0">
-                <widget class="QPushButton" name="pushButton_open_ref_hypercube">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(150, 150, 150);</string>
-                 </property>
-                 <property name="text">
-                  <string>Open Reference Cubes</string>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QPushButton" name="pushButton_open_mov_hypercube">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(150, 150, 150);</string>
-                 </property>
-                 <property name="text">
-                  <string>Open Moving Cubes</string>
-                 </property>
-                </widget>
-               </item>
+              <layout class="QGridLayout" name="gridLayout" columnstretch="1,1">
                <item row="3" column="0">
                 <widget class="QGroupBox" name="groupBox_image_ref">
                  <property name="title">
@@ -223,6 +200,36 @@
                    </layout>
                   </item>
                  </layout>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QPushButton" name="pushButton_open_mov_hypercube">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(150, 150, 150);</string>
+                 </property>
+                 <property name="text">
+                  <string>Open Moving Cubes</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QPushButton" name="pushButton_open_ref_hypercube">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(150, 150, 150);</string>
+                 </property>
+                 <property name="text">
+                  <string>Open Reference Cubes</string>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0" colspan="2">
+                <widget class="QPushButton" name="pushButton_switch_images">
+                 <property name="text">
+                  <string>Switch Reference &lt;-&gt; Moving</string>
+                 </property>
                 </widget>
                </item>
               </layout>
@@ -367,27 +374,7 @@
                  <property name="title">
                   <string>Visualization</string>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0">
-                  <item row="7" column="1">
-                   <widget class="QPushButton" name="pushButton_save_cube">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(150, 150, 150);</string>
-                    </property>
-                    <property name="text">
-                     <string>Save Registered Cube</string>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="0">
-                   <widget class="QPushButton" name="pushButton_save_image">
-                    <property name="text">
-                     <string>Save Image</string>
-                    </property>
-                   </widget>
-                  </item>
+                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1">
                   <item row="0" column="1">
                    <widget class="QLabel" name="label_packetToShow">
                     <property name="text">
@@ -481,6 +468,22 @@
                     </property>
                    </spacer>
                   </item>
+                  <item row="7" column="0" colspan="2">
+                   <widget class="QPushButton" name="pushButton_save_cube">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(150, 150, 150);</string>
+                    </property>
+                    <property name="text">
+                     <string>Save Registered Cube</string>
+                    </property>
+                    <property name="autoExclusive">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </widget>
                </item>
@@ -513,14 +516,14 @@
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
-              <widget class="QWidget" name="">
+              <widget class="QWidget" name="layoutWidget">
                <layout class="QVBoxLayout" name="left_layout">
                 <property name="sizeConstraint">
                  <enum>QLayout::SetDefaultConstraint</enum>
                 </property>
                </layout>
               </widget>
-              <widget class="QWidget" name="">
+              <widget class="QWidget" name="layoutWidget">
                <layout class="QVBoxLayout" name="right_layout"/>
               </widget>
              </widget>
@@ -550,7 +553,6 @@
   <tabstop>spinBox_mov_channel</tabstop>
   <tabstop>transform_selector</tabstop>
   <tabstop>method_selector</tabstop>
-  <tabstop>pushButton_save_image</tabstop>
   <tabstop>pushButton_save_cube</tabstop>
  </tabstops>
  <resources/>
