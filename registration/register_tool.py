@@ -60,6 +60,7 @@ class ZoomableGraphicsView(QGraphicsView):
         super().__init__()
         self.setScene(QGraphicsScene())
         self.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.setCursor(Qt.OpenHandCursor)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.pixmap_item = None  # check if image loaded
 
@@ -71,6 +72,7 @@ class ZoomableGraphicsView(QGraphicsView):
         self.rect_coords = None
 
     def setImage(self, pixmap):
+        self.clear_rectangle()
         self.scene().clear()
         self.pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene().addItem(self.pixmap_item)
@@ -84,6 +86,7 @@ class ZoomableGraphicsView(QGraphicsView):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and self.pixmap_item:
+            self.viewport().setCursor(Qt.CrossCursor)
             self.origin = event.pos()
             self.rubber_band.setGeometry(QRect(self.origin, QSize()))
             self.rubber_band.show()
@@ -92,13 +95,18 @@ class ZoomableGraphicsView(QGraphicsView):
 
     def mouseMoveEvent(self, event):
         if self._selecting:
-            rect = QRect(self.origin, event.pos()).normalized()
+            max_w = self.viewport().width() - 1
+            max_h = self.viewport().height() - 1
+            x = min(max(event.pos().x(), 0), max_w)
+            y = min(max(event.pos().y(), 0), max_h)
+            rect = QRect(self.origin, QPoint(x, y)).normalized()
             self.rubber_band.setGeometry(rect)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.RightButton and self.pixmap_item and self._selecting:
             self.rubber_band.hide()
+            self.viewport().setCursor(Qt.OpenHandCursor)
             self._selecting = False
 
             # Convert view coords to scene coords
@@ -112,29 +120,30 @@ class ZoomableGraphicsView(QGraphicsView):
             x1, y1 = int(p1.x()), int(p1.y())
             x2, y2 = int(p2.x()), int(p2.y())
 
-
-            # Limite aux bords de l'image
+            # Clamp aux bords de l'image
             w, h = self.pixmap_item.pixmap().width(), self.pixmap_item.pixmap().height()
-            if all(0 <= v < w for v in [x1, x2]) and all(0 <= v < h for v in [y1, y2]):
+            x1 = max(0, min(x1, w - 1))
+            x2 = max(0, min(x2, w - 1))
+            y1 = max(0, min(y1, h - 1))
+            y2 = max(0, min(y2, h - 1))
 
-                # Erase previous rectangle
-                self.clear_rectangle()
+            # Erase previous rectangle
+            self.clear_rectangle()
 
-                # add new rectangle
-                # Crée un rectangle normalisé avec les coins (x1, y1) et (x2, y2)
-                x_min, x_max = sorted([x1, x2])
-                y_min, y_max = sorted([y1, y2])
-                width = x_max - x_min
-                height = y_max - y_min
+            # Création du rectangle avec coins clampés
+            x_min, x_max = sorted([x1, x2])
+            y_min, y_max = sorted([y1, y2])
+            width, height = x_max - x_min, y_max - y_min
 
-                if width<2 or height<2:
-                    self.rect_coords=None
-                    self.last_rect_item = None
-                    return
+            if width < 2 or height < 2:
+                self.rect_coords = None
+                self.last_rect_item = None
+                return
 
-                self.rect_coords = [x_min, y_min, width, height]
-                self.last_rect_item = self.scene().addRect(x_min, y_min, width, height, QPen(QColor("red")))
-
+            self.rect_coords = [x_min, y_min, width, height]
+            self.last_rect_item = self.scene().addRect(
+                x_min, y_min, width, height, QPen(QColor("red"))
+            )
         super().mouseReleaseEvent(event)
 
     def get_rect_coords(self):
@@ -146,6 +155,7 @@ class ZoomableGraphicsView(QGraphicsView):
                 self.scene().removeItem(self.last_rect_item)
             except:
                 None
+        self.last_rect_item = None
         self.rect_coords=None
 
 class RegistrationApp(QMainWindow, Ui_MainWindow):
@@ -414,8 +424,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.pushButton_save_cube.setEnabled(True)
 
     def register_imageAndCube(self):
-
-        # keep only %best matches
+        # Keep only the top percentage of matches
         keep_percent = self.features_slider.value() / 100
         num_keep = int(len(self.matches_all) * keep_percent)
         self.matches = self.matches_all[:num_keep]
@@ -425,33 +434,110 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         transform_type = self.transform_selector.currentText()
         if transform_type == "Affine":
-            matrix, _ = cv2.estimateAffinePartial2D(src_pts, dst_pts)
-            self.aligned_img = cv2.warpAffine(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
-            self.aligned_cube = np.zeros((self.fixed_cube.data.shape[0],self.fixed_cube.data.shape[1],self.moving_cube.data.shape[2]), dtype=np.float32)
-            for k in range(self.moving_cube.data.shape[2]):
-                self.aligned_cube[:,:,k] = cv2.warpAffine(self.moving_cube.data[:,:,k], matrix,
-                                                  (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+            # Need at least 3 point pairs for affine
+            if len(self.matches) < 3:
+                QMessageBox.warning(self, "Error",
+                                    "At least 3 matches are required for an affine transform.")
+                return
+
+            try:
+                matrix, inliers = cv2.estimateAffinePartial2D(src_pts, dst_pts)
+            except cv2.error as e:
+                QMessageBox.warning(self, "OpenCV Error",
+                                    f"Affine estimation failed:\n{e}")
+                return
+
+            # Check matrix validity
+            if matrix is None or matrix.shape != (2, 3):
+                QMessageBox.warning(self, "Error",
+                                    "Failed to compute a valid affine matrix.")
+                return
+
+            # Ensure correct dtype for warpAffine
+            matrix = matrix.astype(np.float32)
+
+            # Warp the moving image
+            self.aligned_img = cv2.warpAffine(self.moving_img, matrix,
+                                              (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+
+            # Prepare an empty numpy array for the aligned cube
+            h, w = self.fixed_img.shape[:2]
+            depth = self.moving_cube.data.shape[2]
+            aligned_arr = np.zeros((h, w, depth), dtype=np.float32)
+
+            # Convert each slice out of the memoryview and warp it
+            for k in range(depth):
+                slice_k = np.asarray(self.moving_cube.data[:, :, k])
+                aligned_arr[:, :, k] = cv2.warpAffine(slice_k, matrix, (w, h))
+
+            # Replace aligned_cube with a proper Hypercube
+            self.aligned_cube = Hypercube(data=aligned_arr,
+                                          wl=self.moving_cube.wl,
+                                          metadata=self.moving_cube.metadata)
+
+
 
         elif transform_type == "Perspective":
-            # Check if there are enough matches to compute homography
-            if len(self.matches) >= 4:
-                matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
-            else:
-                # Show a popup warning if not enough matches are found
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setWindowTitle("Registration Error")
-                msg.setText("Not enough matches to compute homography.\nPlease try again with better images.")
-                msg.exec_()
-                matrix = None
-                return
-            matrix, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
-            self.aligned_img = cv2.warpPerspective(self.moving_img, matrix, (self.fixed_img.shape[1], self.fixed_img.shape[0]))
-            self.aligned_cube.data = np.zeros((self.fixed_cube.data.shape[0],self.fixed_cube.data.shape[1],self.moving_cube.data.shape[2]), dtype=np.float32)
 
-            for k in range(self.moving_cube.data.shape[2]):
-                self.aligned_cube.data[:,:,k] = cv2.warpPerspective(self.moving_cube.data[:,:,k], matrix,
-                                                  (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+            # Need at least 4 point pairs for homography
+
+            if len(self.matches) < 4:
+                QMessageBox.warning(self, "Registration Error",
+
+                                    "At least 4 matches are required for a homography.\n"
+
+                                    "Please try again with better images.")
+
+                return
+
+            try:
+
+                matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
+
+            except cv2.error as e:
+
+                QMessageBox.warning(self, "OpenCV Error",
+
+                                    f"Homography estimation failed:\n{e}")
+
+                return
+
+            if matrix is None or matrix.shape != (3, 3):
+                QMessageBox.warning(self, "Error",
+
+                                    "Failed to compute a valid homography matrix.")
+
+                return
+
+            # Warp the moving image
+
+            self.aligned_img = cv2.warpPerspective(self.moving_img, matrix,
+
+                                                   (self.fixed_img.shape[1], self.fixed_img.shape[0]))
+
+            # Prepare an empty numpy array for the aligned cube
+
+            h, w = self.fixed_img.shape[:2]
+
+            depth = self.moving_cube.data.shape[2]
+
+            aligned_arr = np.zeros((h, w, depth), dtype=np.float32)
+
+            # Convert each slice out of the memoryview and warp it
+
+            for k in range(depth):
+                slice_k = np.asarray(self.moving_cube.data[:, :, k])
+
+                aligned_arr[:, :, k] = cv2.warpPerspective(slice_k, matrix, (w, h))
+
+            # Replace aligned_cube with a proper Hypercube
+
+            self.aligned_cube = Hypercube(data=aligned_arr,
+
+                                          wl=self.moving_cube.wl,
+
+                                          metadata=self.moving_cube.metadata)
+
         else:
             QMessageBox.warning(self, "Error", "Unsupported transformation.")
             return
@@ -622,7 +708,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         if save_both:
             save_path_fixed, _ = QFileDialog.getSaveFileName(
                 parent=None,
-                caption="ALIGNED cube Save As…")
+                caption="FIXED cube Save As…")
 
         mini_fixed_cube=Hypercube(data=self.fixed_cube.data,wl=self.fixed_cube.wl,metadata=self.fixed_cube.metadata)
         mini_align_cube=Hypercube(data=self.moving_cube.data,wl=self.moving_cube.wl,metadata=self.moving_cube.metadata)
@@ -656,7 +742,10 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         # 4) Export cubes
         fmt = opts['cube_format']
-        mini_align_cube.save(save_path_align,fmt=fmt)
+        try : mini_align_cube.save(save_path_align,fmt=fmt)
+        except :
+            QMessageBox.warning(self, "Problem", f"Cube NOT SAVED as {fmt} in :\n{save_path_align}")
+
         if not save_both:
             QMessageBox.information(self, "Succès", f"Cube saved as {fmt} in :\n{save_path_align}")
         if save_both:

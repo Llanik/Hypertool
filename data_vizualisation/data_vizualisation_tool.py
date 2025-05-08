@@ -101,8 +101,7 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         for elem in [self.pushButton_next_cube,self.pushButton_prev_cube,self.pushButton_save_image,self.horizontalSlider_red_channel,self.horizontalSlider_green_channel,self.horizontalSlider_blue_channel,self.spinBox_red_channel,self.spinBox_green_channel,self.spinBox_blue_channel,self.checkBox_std,self.pushButton_save_spectra,self.horizontalSlider_transparency_GT,self.radioButton_VNIR,self.radioButton_rgb_user,self.radioButton_rgb_default,self.radioButton_SWIR,self.radioButton_grayscale]:
             elem.setEnabled(False)
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-        path_icon = os.path.join(BASE_DIR, "interface", "Hyperdoc_logo_transparente_CIMLab.png")
-
+        path_icon = os.path.join(BASE_DIR, "interface/icons", "Hyperdoc_logo_transparente_CIMLab.png")
         self.pixmap = QPixmap(path_icon)
         self.setWindowIcon(QIcon(path_icon))
 
