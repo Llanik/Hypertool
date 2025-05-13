@@ -2,7 +2,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer,QSize, Qt
 from PyQt5.QtGui import QFont,QIcon, QPalette, QColor
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import QStyleFactory, QToolBar,QAction,QComboBox,QLabel
+from PyQt5.QtWidgets import (QStyleFactory, QToolBar,QAction,QComboBox,
+                             QLabel,QToolButton,QMenu)
 
 import sys
 import os
@@ -11,7 +12,8 @@ import traceback
 # widgets import
 from hypercubes.hypercube      import HDF5BrowserWidget
 from data_vizualisation.data_vizualisation_tool import Data_Viz_Window
-from registration.register_tool          import RegistrationApp
+from registration.register_tool        import RegistrationApp
+from interface.HypercubeManager import HypercubeManager
 
 # TODO : initier dans MainWindow les hypercubes et connecter les champs de chaque widget (yeah...big deal)
 
@@ -68,7 +70,6 @@ def apply_fusion_border_highlight(app,
     }}
     """)
 
-
 class MainApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -119,10 +120,30 @@ class MainApp(QtWidgets.QMainWindow):
 
         toolbar.addSeparator()
 
-        # Action Open File and previous next
-        act_open_file = QAction("Open file", self)
-        act_reg.setToolTip("Open a file with hypercube")
-        toolbar.addAction(act_open_file)
+        # Cubes "list"
+        self.cubeBtn = QtWidgets.QToolButton(self)
+        self.cubeBtn.setText("Cubes list   ")
+        self.cubeBtn.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        # self.cubeBtn.setStyleSheet("QToolButton::menu-indicator { image: none; }")
+        toolbar.addWidget(self.cubeBtn)
+
+        # Création du menu hiérarchique
+        self.cubeMenu = QtWidgets.QMenu(self)
+        self.cubeBtn.setMenu(self.cubeMenu)
+
+        # Hypercube Manager
+        self.hc_manager = HypercubeManager()
+        reg_widget = self.reg_dock.widget()
+        reg_widget.alignedCubeReady.connect(self.hc_manager.addCube)  # get signal from register tool
+
+        # Action Add File in list of cubes
+        act_add = QAction("Add Cubes", self)
+        act_add.triggered.connect(self._on_add_cube)
+        toolbar.addAction(act_add)
+
+        # Mise à jour du menu à chaque modification
+        self.hc_manager.cubesChanged.connect(self._update_cube_menu)
+        self._update_cube_menu(self.hc_manager.paths)
 
         act_open_previous = QAction("<", self)
         act_open_previous.setToolTip("Open previous cube in current folder")
@@ -131,19 +152,6 @@ class MainApp(QtWidgets.QMainWindow):
         act_open_next = QAction(">", self)
         act_open_next.setToolTip("Open next cube in current folder")
         toolbar.addAction(act_open_next)
-
-        toolbar.addSeparator()
-
-        # Action Active Hyp : combobox
-        label_active_hyp=QLabel("Active cube :")
-        toolbar.addWidget(label_active_hyp)
-
-        combo = QComboBox()
-        combo.addItems(["Cube name 1", "Cube name 2"])
-        combo.setCurrentIndex(1)
-        act_reg.setToolTip("Active Cube")
-
-        toolbar.addWidget(combo)
 
         # tools to hide at opening
         self.file_browser_dock.hide()
@@ -155,6 +163,58 @@ class MainApp(QtWidgets.QMainWindow):
         dock.setWidget(widget)
         self.addDockWidget(area, dock)
         return dock
+
+    def _on_add_cube(self,paths=None):
+        if not isinstance(paths, (list, tuple)) or len(paths) == 0:
+            paths, _ = QtWidgets.QFileDialog.getOpenFileNames(
+                self,
+                "Select Hypercubes",
+                "",
+                "All files (*.*)"
+            )
+
+        if not paths:
+            return
+
+        for path in paths:
+            self.hc_manager.addCube(path)
+
+    def _update_cube_menu(self, paths):
+        """Met à jour le menu de cubes avec sous-menus et actions fonctionnelles."""
+        self.cubeMenu.clear()
+        for idx, path in enumerate(paths):
+            # Sous-menu pour chaque cube
+            sub = QtWidgets.QMenu(path, self)
+            # Envoyer au dock1
+            act1 = QtWidgets.QAction("Send to Vizualisation tool", self)
+            act1.triggered.connect(lambda checked, i=idx: self._send_to_dock(i, self.dock1))
+            sub.addAction(act1)
+            # Envoyer au dock2
+            menu_load_reg=QtWidgets.QMenu("Send to Register Tool", sub)
+            act_fix = QtWidgets.QAction("Fixed Cube", self)
+            act_fix.triggered.connect(
+                lambda _, i=idx: self.reg_dock.widget().load_cube(0,self.hc_manager.getCube_path(i))
+            )
+            menu_load_reg.addAction(act_fix)
+            # Action Moving
+            act_mov = QtWidgets.QAction("Moving Cube", self)
+            act_mov.triggered.connect(
+                lambda _, i=idx: self.reg_dock.widget().load_cube(1,self.hc_manager.getCube_path(i))
+            )
+            menu_load_reg.addAction(act_mov)
+            sub.addMenu(menu_load_reg)
+            # Envoyer au dock3
+            act_browser = QtWidgets.QAction("Send to File Browser", self)
+            act_browser.triggered.connect(lambda checked, i=idx: self.file_browser_dock.widget()._update(self.hc_manager.getCube_path(i)))
+            sub.addAction(act_browser)
+            # Séparateur
+            sub.addSeparator()
+            # Supprimer de la liste
+            act_rm = QtWidgets.QAction("Remove from list", self)
+            act_rm.triggered.connect(lambda checked, i=idx: self.hc_manager.removeCube(i))
+            sub.addAction(act_rm)
+            # Ajouter sous-menu au menu principal
+            self.cubeMenu.addMenu(sub)
 
 def excepthook(exc_type, exc_value, exc_traceback):
     """Capture les exceptions et les affiche dans une boîte de dialogue."""
@@ -207,6 +267,13 @@ if __name__ == "__main__":
 
     main = MainApp()
     main.show()
+
+    folder=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Samples\minicubes/'
+    cube_1='00001-VNIR-mock-up.h5'
+    cube_2='00002-VNIR-mock-up.h5'
+    paths=[folder+cube_1,folder+cube_2]
+
+    main._on_add_cube(paths)
 
     # Timer for screen resolution check
     last_width = app.primaryScreen().size().width()

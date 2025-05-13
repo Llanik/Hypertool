@@ -12,159 +12,14 @@ from PyQt5.QtCore    import pyqtSignal, QEventLoop
 from hypercubes.save_window import Ui_Save_Window
 from hypercubes.HDF5BrowserWidget import Ui_HDF5BrowserWidget
 
-# TODO : finish to check transpose at loading and add other classical open idem than saving option in matlab
 # TODO : sortir HDF5BrowserWidget du fichier de la classe hypercube ?
 # TODO : si metadata à la racine, alors on garde toute la racine sauf le cube (ou une selection ?)
-
-class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
-    """
-    Embeddable widget for browsing HDF5 / legacy MAT files.
-    Emits `accepted` when OK is clicked, `rejected` on Cancel.
-    """
-
-    accepted = pyqtSignal()
-    rejected = pyqtSignal()
-
-    def __init__(self, filepath=None, parent=None,closable=False):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.treeWidget.setColumnCount(3)
-        self.treeWidget.setHeaderLabels(['Name', 'Type', 'Path'])
-        self.filepath = filepath
-        self._accepted = False
-        self.closable=closable
-        if filepath is None:
-            return
-
-        # Connect buttons
-        self.btn_select_cube.clicked.connect(lambda: self._assign(self.le_cube))
-        self.btn_select_wl.clicked.connect(lambda: self._assign(self.le_wl))
-        self.btn_select_meta.clicked.connect(lambda: self._assign(self.le_meta))
-
-        self.btn_ok.clicked.connect(self._on_accept)
-        self.btn_cancel.clicked.connect(self._on_reject)
-
-        # Populate the tree
-        self._load_file()
-
-    def _is_hdf5_file(self, path: str) -> bool:
-        """True if `path` can be opened by h5py (including .mat v7.3)."""
-        try:
-            with h5py.File(path, 'r'):
-                return True
-        except (OSError, IOError):
-            return False
-
-    def _load_file(self):
-        """Fill the QTreeWidget with either legacy-MAT variables or HDF5 contents."""
-        self.treeWidget.clear()
-        root = self.treeWidget.invisibleRootItem()
-        ext = os.path.splitext(self.filepath)[1].lower()
-
-        is_mat     = (ext == '.mat')
-        is_hdf5    = (ext in ('.h5', '.hdf5')) or (is_mat and self._is_hdf5_file(self.filepath))
-
-        if is_mat and not is_hdf5:
-            # Legacy MATLAB (< v7.3) via mat4py
-            mat_dict = loadmat(self.filepath)
-            for name, val in mat_dict.items():
-                # skip Python‐side globals
-                # if name.startswith('__'):
-                #     continue
-                self._add_mat_node(name, val, root, name)
-        else:
-            # HDF5 or MATLAB v7.3 via h5py
-            with h5py.File(self.filepath, 'r') as f:
-                def recurse(group, parent, path):
-                    # show attributes
-                    if group.attrs:
-                        attrs_node = QTreeWidgetItem(['<Attributes>', 'Group', path or '/'])
-                        parent.addChild(attrs_node)
-                        for key in group.attrs:
-                            attrs_node.addChild(
-                                QTreeWidgetItem([key, 'Attribute', f"{path}@{key}"])
-                            )
-                    # show groups/datasets
-                    for name, obj in group.items():
-                        full  = f"{path}/{name}" if path else name
-                        kind  = 'Group'   if isinstance(obj, h5py.Group) else 'Dataset'
-                        node  = QTreeWidgetItem([name, kind, full])
-                        parent.addChild(node)
-                        if isinstance(obj, h5py.Group):
-                            recurse(obj, node, full)
-
-                recurse(f, root, "")
-
-        # expand everything so you immediately see the branches
-        self.treeWidget.expandAll()
-
-    def _add_mat_node(self, name, val, parent, path):
-        """
-        Recursively add legacy-MAT nodes:
-          • Struct → dive fields
-          • Variable → leaf
-        """
-        if isinstance(val, dict):
-            # mat4py represents structs as Python dicts
-            node = QTreeWidgetItem([name, 'Struct', path])
-            parent.addChild(node)
-            for field, fldval in val.items():
-                self._add_mat_node(field, fldval, node, f"{path}/{field}")
-        else:
-            # list, number, etc.
-            node = QTreeWidgetItem([name, 'Variable', path])
-            parent.addChild(node)
-
-    def _assign(self, line_edit):
-        """Copy the selected item's Path into the given QLineEdit."""
-        item = self.treeWidget.currentItem()
-        if item:
-            line_edit.setText(item.text(2))
-
-    def _on_accept(self):
-        self._accepted = True
-        self.accepted.emit()
-        if self.closable:
-            self.close()
-
-    def _on_reject(self):
-        self._accepted = False
-        self.rejected.emit()
-        if self.closable:
-            self.close()
-
-    def get_selection(self):
-        """Return {'cube_path','wl_path','meta_path'} (or None)."""
-        return {
-            'cube_path': self.le_cube.text() or None,
-            'wl_path':   self.le_wl.text()   or None,
-            'meta_path': self.le_meta.text() or None,
-            'wl_dim':self.comboBox_channel_wl.currentText()=='First' or None,
-        }
-
-    def load_file(self, filepath):
-        """
-        Point the browser at a new file and rebuild the tree.
-        """
-        self.filepath = filepath
-        self.le_cube.clear()
-        self.le_wl.clear()
-        self.le_meta.clear()
-        self._load_file()
-
-    def set_selection(self, cube_path=None, wl_path=None, meta_path=None):
-        """
-        Programmatically fill the three path‐fields.
-        """
-        self.le_cube.setText(cube_path or "")
-        self.le_wl.setText(wl_path or "")
-        self.le_meta.setText(meta_path or "")
 
 class Hypercube:
 
     """
     Hyperspectral cube loader supporting:
-      • Legacy .mat (<v7.3) via mat4py.loadmat
+      • Legacy .mat (<v7.3) via scipy.io.loadmat
       • HDF5 (.h5/.hdf5 or .mat v7.3) via h5py
       • ENVI (.hdr + raw) via spectral.io.envi
     """
@@ -182,8 +37,8 @@ class Hypercube:
         }
 
         if load_init:
-            if self.filepath:
-                self.open_hyp(self.filepath, open_dialog=False)
+            if self.filepath is not None:
+                self.open_hyp(default_path=self.filepath, open_dialog=False)
             else:
                 self.open_hyp(open_dialog=True)
 
@@ -215,6 +70,9 @@ class Hypercube:
           • .mat or .h5/.hdf5 → browser dialog to pick cube/wl/metadata
           • .hdr → ENVI reader
         """
+        if QApplication.instance() is None:
+            self._qt_app = QApplication([])
+
         # 1) File selection
         if open_dialog:
             app = QApplication.instance() or QApplication([])
@@ -227,6 +85,8 @@ class Hypercube:
             self.filepath = filepath
         else:
             filepath = default_path
+
+        self.filepath = filepath
 
         ext = os.path.splitext(filepath)[1].lower()
 
@@ -439,8 +299,6 @@ class Hypercube:
         )
         default_filter = "HDF5 files (*.h5)"
 
-
-
         if filepath is None:
             app = QApplication.instance() or QApplication([])
             filepath,selected_filter= QFileDialog.getSaveFileName(
@@ -586,6 +444,155 @@ class Hypercube:
         }
         savemat(filepath, tosave)
 
+class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
+    """
+    Embeddable widget for browsing HDF5 / legacy MAT files.
+    Emits `accepted` when OK is clicked, `rejected` on Cancel.
+    """
+
+    accepted = pyqtSignal()
+    rejected = pyqtSignal()
+
+    def __init__(self, filepath=None, parent=None,closable=False):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.treeWidget.setColumnCount(3)
+        self.treeWidget.setHeaderLabels(['Name', 'Type', 'Path'])
+        self.filepath = filepath
+        self._accepted = False
+        self.closable=closable
+
+        # Connect buttons
+        self.btn_select_cube.clicked.connect(lambda: self._assign(self.le_cube))
+        self.btn_select_wl.clicked.connect(lambda: self._assign(self.le_wl))
+        self.btn_select_meta.clicked.connect(lambda: self._assign(self.le_meta))
+
+        self.btn_ok.clicked.connect(self._on_accept)
+        self.btn_cancel.clicked.connect(self._on_reject)
+
+        # Populate the tree
+        if filepath is not None:
+            self._load_file()
+
+    def _is_hdf5_file(self, path: str) -> bool:
+        """True if `path` can be opened by h5py (including .mat v7.3)."""
+        try:
+            with h5py.File(path, 'r'):
+                return True
+        except (OSError, IOError):
+            return False
+
+    def _update(self,path=None):
+        if path is not None:
+            self.filepath=path
+            self._load_file()
+
+    def _load_file(self):
+        """Fill the QTreeWidget with either legacy-MAT variables or HDF5 contents."""
+        self.treeWidget.clear()
+        root = self.treeWidget.invisibleRootItem()
+        ext = os.path.splitext(self.filepath)[1].lower()
+        self.label_filename.setText(self.filepath.split('/')[-1])
+
+        is_mat     = (ext == '.mat')
+        is_hdf5    = (ext in ('.h5', '.hdf5')) or (is_mat and self._is_hdf5_file(self.filepath))
+
+        if is_mat and not is_hdf5:
+            # Legacy MATLAB (< v7.3) via mat4py
+            mat_dict = loadmat(self.filepath)
+            for name, val in mat_dict.items():
+                # skip Python‐side globals
+                # if name.startswith('__'):
+                #     continue
+                self._add_mat_node(name, val, root, name)
+        else:
+            # HDF5 or MATLAB v7.3 via h5py
+            with h5py.File(self.filepath, 'r') as f:
+                def recurse(group, parent, path):
+                    # show attributes
+                    if group.attrs:
+                        attrs_node = QTreeWidgetItem(['<Attributes>', 'Group', path or '/'])
+                        parent.addChild(attrs_node)
+                        for key in group.attrs:
+                            attrs_node.addChild(
+                                QTreeWidgetItem([key, 'Attribute', f"{path}@{key}"])
+                            )
+                    # show groups/datasets
+                    for name, obj in group.items():
+                        full  = f"{path}/{name}" if path else name
+                        kind  = 'Group'   if isinstance(obj, h5py.Group) else 'Dataset'
+                        node  = QTreeWidgetItem([name, kind, full])
+                        parent.addChild(node)
+                        if isinstance(obj, h5py.Group):
+                            recurse(obj, node, full)
+
+                recurse(f, root, "")
+
+        # expand everything so you immediately see the branches
+        self.treeWidget.expandAll()
+
+    def _add_mat_node(self, name, val, parent, path):
+        """
+        Recursively add legacy-MAT nodes:
+          • Struct → dive fields
+          • Variable → leaf
+        """
+        if isinstance(val, dict):
+            # mat4py represents structs as Python dicts
+            node = QTreeWidgetItem([name, 'Struct', path])
+            parent.addChild(node)
+            for field, fldval in val.items():
+                self._add_mat_node(field, fldval, node, f"{path}/{field}")
+        else:
+            # list, number, etc.
+            node = QTreeWidgetItem([name, 'Variable', path])
+            parent.addChild(node)
+
+    def _assign(self, line_edit):
+        """Copy the selected item's Path into the given QLineEdit."""
+        item = self.treeWidget.currentItem()
+        if item:
+            line_edit.setText(item.text(2))
+
+    def _on_accept(self):
+        self._accepted = True
+        self.accepted.emit()
+        if self.closable:
+            self.close()
+
+    def _on_reject(self):
+        self._accepted = False
+        self.rejected.emit()
+        if self.closable:
+            self.close()
+
+    def get_selection(self):
+        """Return {'cube_path','wl_path','meta_path'} (or None)."""
+        return {
+            'cube_path': self.le_cube.text() or None,
+            'wl_path':   self.le_wl.text()   or None,
+            'meta_path': self.le_meta.text() or None,
+            'wl_dim':self.comboBox_channel_wl.currentText()=='First' or None,
+        }
+
+    def load_file(self, filepath):
+        """
+        Point the browser at a new file and rebuild the tree.
+        """
+        self.filepath = filepath
+        self.le_cube.clear()
+        self.le_wl.clear()
+        self.le_meta.clear()
+        self._load_file()
+
+    def set_selection(self, cube_path=None, wl_path=None, meta_path=None):
+        """
+        Programmatically fill the three path‐fields.
+        """
+        self.le_cube.setText(cube_path or "")
+        self.le_wl.setText(wl_path or "")
+        self.le_meta.setText(meta_path or "")
+
 class SaveWindow(QDialog, Ui_Save_Window):
     """Dialog to configure saving options."""
     def __init__(self, parent=None):
@@ -635,24 +642,25 @@ def save_images(dirpath: str,
     write('aligned', aligned_img)
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
     import matplotlib
-    matplotlib.use('TkAgg')
+    matplotlib.use('Qt5Agg')  # backend matplotlib → Qt5
+    # matplotlib.use('TkAgg')
+    import matplotlib.pyplot as plt
 
     # Example usage:
     # sample   = '00001-VNIR-mock-up.mat'
     # folder   = r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Samples\minicubes'
-    # sample = 'jabon_guillermo_final.mat'
+    sample = 'jabon_guillermo_final.mat'
     # sample = 'jabon_2-04-2025.mat'
-    # folder = r'C:\Users\Usuario\Downloads'
+    folder = r'C:\Users\Usuario\Downloads'
     # sample = 'MPD41a_SWIR.mat'
     # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria'
-    # filepath = os.path.join(folder, sample)
+    filepath = os.path.join(folder, sample)
     # filepath='C:/Users/Usuario/Documents/DOC_Yannick/Hyperdoc_Test/Samples/minicubes/00001-VNIR-mock-up.h5'
-    filepath = None  # force dialog
+    # filepath = None  # force dialog
 
     try:
-        cube = Hypercube(filepath, load_init=True)
+        cube = Hypercube(filepath=filepath, load_init=True)
         if cube.data is not None:
             print('cube.data is not None')
             rgb_img = cube.get_rgb_image([50, 30, 10])
