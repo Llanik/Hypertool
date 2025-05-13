@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (QWidget,
 from PyQt5.QtCore    import pyqtSignal, QEventLoop
 from hypercubes.save_window import Ui_Save_Window
 from hypercubes.HDF5BrowserWidget import Ui_HDF5BrowserWidget
+import sys
 
 # TODO : sortir HDF5BrowserWidget du fichier de la classe hypercube ?
 # TODO : si metadata à la racine, alors on garde toute la racine sauf le cube (ou une selection ?)
@@ -456,8 +457,8 @@ class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
     def __init__(self, filepath=None, parent=None,closable=False):
         super().__init__(parent)
         self.setupUi(self)
-        self.treeWidget.setColumnCount(3)
-        self.treeWidget.setHeaderLabels(['Name', 'Type', 'Path'])
+        self.treeWidget.setColumnCount(4)
+        self.treeWidget.setHeaderLabels(['Name', 'Type', 'Path', 'Size'])
         self.filepath = filepath
         self._accepted = False
         self.closable=closable
@@ -502,8 +503,8 @@ class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
             mat_dict = loadmat(self.filepath)
             for name, val in mat_dict.items():
                 # skip Python‐side globals
-                # if name.startswith('__'):
-                #     continue
+                if name.startswith('__'):
+                    continue
                 self._add_mat_node(name, val, root, name)
         else:
             # HDF5 or MATLAB v7.3 via h5py
@@ -511,17 +512,21 @@ class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
                 def recurse(group, parent, path):
                     # show attributes
                     if group.attrs:
-                        attrs_node = QTreeWidgetItem(['<Attributes>', 'Group', path or '/'])
+                        attrs_node = QTreeWidgetItem(['<Attributes>', 'Group', path or '/', ''])
                         parent.addChild(attrs_node)
-                        for key in group.attrs:
+
+                        for key, val in group.attrs.items():
+                            size = self._format_bytes(self._get_attr_size(val))
                             attrs_node.addChild(
-                                QTreeWidgetItem([key, 'Attribute', f"{path}@{key}"])
+                                QTreeWidgetItem([key, 'Attribute', f"{path}@{key}", size])
                             )
                     # show groups/datasets
                     for name, obj in group.items():
                         full  = f"{path}/{name}" if path else name
                         kind  = 'Group'   if isinstance(obj, h5py.Group) else 'Dataset'
-                        node  = QTreeWidgetItem([name, kind, full])
+                        raw_size = self._get_obj_size(obj)
+                        size = self._format_bytes(raw_size)
+                        node = QTreeWidgetItem([name, kind, full, size])
                         parent.addChild(node)
                         if isinstance(obj, h5py.Group):
                             recurse(obj, node, full)
@@ -538,14 +543,13 @@ class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
           • Variable → leaf
         """
         if isinstance(val, dict):
-            # mat4py represents structs as Python dicts
-            node = QTreeWidgetItem([name, 'Struct', path])
+            node = QTreeWidgetItem([name, 'Struct', path, ''])
             parent.addChild(node)
             for field, fldval in val.items():
                 self._add_mat_node(field, fldval, node, f"{path}/{field}")
         else:
-            # list, number, etc.
-            node = QTreeWidgetItem([name, 'Variable', path])
+            size = self._format_bytes(self._get_attr_size(val))
+            node = QTreeWidgetItem([name, 'Variable', path, size])
             parent.addChild(node)
 
     def _assign(self, line_edit):
@@ -592,6 +596,34 @@ class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
         self.le_cube.setText(cube_path or "")
         self.le_wl.setText(wl_path or "")
         self.le_meta.setText(meta_path or "")
+
+    def _format_bytes(self, num, suffix='B'):
+        for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi']:
+            if abs(num) < 1024.0:
+                return f"{num:3.1f}{unit}{suffix}"
+            num /= 1024.0
+        return f"{num:.1f}Yi{suffix}"
+
+    def _get_obj_size(self, obj):
+        """Storage size for Group or Dataset via HDF5 API."""
+        try:
+            return obj.id.get_storage_size()
+        except Exception:
+            return 0
+
+    def _get_attr_size(self, val):
+        """Approximate byte-size for an HDF5 attribute value."""
+        try:
+            if isinstance(val, np.ndarray):
+                return val.nbytes
+            if isinstance(val, (bytes, bytearray)):
+                return len(val)
+            if isinstance(val, str):
+                return len(val.encode('utf-8'))
+            # pour int, float, bool, listes Python...
+            return sys.getsizeof(val)
+        except Exception:
+            return 0
 
 class SaveWindow(QDialog, Ui_Save_Window):
     """Dialog to configure saving options."""

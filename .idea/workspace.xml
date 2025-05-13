@@ -4,18 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Save H5% en new dataset OK">
-      <change afterPath="$PROJECT_DIR$/interface/HypercubeManager.py" afterDir="false" />
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Manager with filepath OK&#10;Get path of Registered cube in Main OK&#10;send to Register and File Browser OK">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/HDF5BrowserWidget.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/HDF5BrowserWidget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/HDF5BrowserWidget.ui" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/HDF5BrowserWidget.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/register_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -292,7 +283,15 @@
       <option name="project" value="LOCAL" />
       <updated>1747045822102</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Manager with filepath OK&#10;Get path of Registered cube in Main OK&#10;send to Register and File Browser OK">
+      <option name="closed" value="true" />
+      <created>1747145526456</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1747145526456</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -362,6 +361,7 @@
     <MESSAGE value="Dockable window started.&#10;toolbar ok" />
     <MESSAGE value="Registration saving OK&#10;look metadata size problem with .h5" />
     <MESSAGE value="Save H5% en new dataset OK" />
-    <option name="LAST_COMMIT_MESSAGE" value="Save H5% en new dataset OK" />
+    <MESSAGE value="Manager with filepath OK&#10;Get path of Registered cube in Main OK&#10;send to Register and File Browser OK" />
+    <option name="LAST_COMMIT_MESSAGE" value="Manager with filepath OK&#10;Get path of Registered cube in Main OK&#10;send to Register and File Browser OK" />
   </component>
 </project>
