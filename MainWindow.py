@@ -10,11 +10,10 @@ import os
 import traceback
 
 # widgets import
-from hypercubes.hypercube      import HDF5BrowserWidget
+from hypercubes.hypercube  import *
 from data_vizualisation.data_vizualisation_tool import Data_Viz_Window
 from registration.register_tool        import RegistrationApp
 from interface.HypercubeManager import HypercubeManager
-from hypercubes.hypercube import CubeInfoTemp
 
 # TODO : initier dans MainWindow les hypercubes et connecter les champs de chaque widget (yeah...big deal)
 
@@ -189,7 +188,6 @@ class MainApp(QtWidgets.QMainWindow):
         # 4) Affichage du dock
         self.file_browser_dock.show()
         widget.show()
-
 
     def _add_dock(self, title, WidgetClass, area):
         widget = WidgetClass(parent=self)
