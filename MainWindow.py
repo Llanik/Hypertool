@@ -16,6 +16,8 @@ from registration.register_tool        import RegistrationApp
 from interface.HypercubeManager import HypercubeManager
 
 # TODO : initier dans MainWindow les hypercubes et connecter les champs de chaque widget (yeah...big deal)
+# TODO : generate metadata position,height, width ,parentCube,name of registered cube or minicube
+# TODO : generate a list of basic Metadatas keys with types
 
 from PyQt5.QtWidgets import QToolBar, QDockWidget
 from PyQt5.QtCore    import QSize, Qt

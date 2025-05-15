@@ -25,7 +25,7 @@ class CubeInfoTemp:
     """
     Container for per-cube working data.
     """
-    filepath: str
+    filepath: str = None
     data_path: Optional[str] = None
     metadata_path: Optional[str] = None
     wl_path: Optional[str] = None

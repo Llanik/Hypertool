@@ -1,12 +1,18 @@
 from hypercubes.hypercube import*
 from data_vizualisation.metadata_dock import*
 
+# TODO : ici ou dans hypercube - generation automatique des metadata.
+# TODO : ajouter outils de generation de la valeur de la metadata (wl, bands,height,name,parent_cube,position,width)
+# TODO : propose edit all Metadata : type formulaire with add_meta possibility
+# TODO : save data
+
 class MetadataTool(QWidget, Ui_Metadata_tool):
 
-    def __init__(self,cube_info:CubeInfoTemp, parent=None):
+    def __init__(self,cube_info:CubeInfoTemp=CubeInfoTemp(), parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.cube_info=cube_info
+        self.meta_load=cube_info.metadata_temp # to keep in memory in order to reset
 
         # connect combobox
         self.comboBox_metadata.currentIndexChanged.connect(self.update_metadata_label)
@@ -19,6 +25,11 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         #connect to edit
         self.checkBox_edit.toggled.connect(self._toggle_edit_metadata)
 
+        # connect buttons
+        self.pushButton_save.pressed.connect(self.keep_metadata)
+        self.pushButton_cancel.pressed.connect(self.reset_metadata)
+        self.lineEdit_metadata.returnPressed.connect(self.keep_metadata)
+
     def update_combo_meta(self,init=False):
 
         last_key = self.comboBox_metadata.currentText()
@@ -27,7 +38,7 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         if init:
             self.comboBox_metadata.clear()
 
-        if self.cube_info.metadata_temp is not None:
+        if self.cube_info.metadata_temp :
             for key in self.cube_info.metadata_temp.keys():
                 if key not in ['wl','GT_cmap','spectra_mean','spectra_std']:
                     if key in ['GTLabels','pixels_averaged']:
@@ -44,7 +55,16 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
 
             self.update_metadata_label()
 
+    def set_cube_info(self,cube:CubeInfoTemp):
+        self.cube_info = cube
+        self.meta_load = cube.metadata_temp.copy()
+
+    def reset_metadata(self):
+        self.cube_info.metadata_temp=self.meta_load
+        self.update_metadata_label()
+
     def update_metadata_label(self):
+        self.lineEdit_metadata.setStyleSheet("QLineEdit { color: black; }")
         key = self.comboBox_metadata.currentText()
         if key=='':
             key='cubeinfo'
@@ -53,8 +73,10 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
             case 'GTLabels':
                 if len(raw.shape)==2:
                     st=f'GT indexes : <b>{(' , ').join(raw[0])}</b>  <br>  GT names : <b>{(' , ').join(raw[1])}</b>'
+                    disp = str(raw)
                 elif len(raw.shape)==1:
                     st=f'GT indexes : <b>{(raw[0])}</b>  <br>  GT names : <b>{raw[1]}</b>'
+                    disp = str(raw)
 
             case 'aged':
                 st=f'The sample has been aged ? <br> <b>{raw}</b>'
@@ -120,9 +142,63 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
                 st=f'<b>{self.cube_info.metadata_temp[key]}</b>'
 
         self.label_metadata.setText(st)
-        try : self.lineEdit_metadata.setText(raw)
-        except : self.lineEdit_metadata.setText(repr(type(raw)))
-        # TODO : affiche tous les metadata. faire des test comme pour affichage.
+
+        try:
+            disp=raw
+            self.lineEdit_metadata.setText(disp)
+        except :
+            disp = str(raw)
+            try:
+                self.lineEdit_metadata.setText(disp)
+
+            except:
+                self.lineEdit_metadata.setText(repr(type(raw)))
+
+
+        if isinstance(raw, np.ndarray):
+            # par exemple : forme et dtype
+            type_print = f"array shape={raw.shape}, dtype={raw.dtype}"
+
+        else:
+            type_print = repr(type(raw))
+
+        print(type_print)
+
+    def keep_metadata(self):
+        key = self.comboBox_metadata.currentText()
+        raw_in=self.lineEdit_metadata.text()
+        meta_init = self.cube_info.metadata_temp[key]
+        meta_valid=False
+
+        if isinstance(meta_init,str):
+            self.cube_info.metadata_temp[key]=raw_in
+            meta_valid=True
+
+        elif isinstance(meta_init,np.ndarray):
+            if len(meta_init.shape)==1:
+                raw_in=raw_in.replace('[','')
+                raw_in=raw_in.replace(']','')
+                list_temp=raw_in.split(' ')
+                print(list_temp)
+                try :
+                    self.cube_info.metadata_temp[key] = np.array(list_temp,dtype=meta_init.dtype)
+                    meta_valid = True
+                except :
+                    try:
+                        self.cube_info.metadata_temp[key] = np.array(list_temp, dtype=meta_init.dtype)
+                        meta_valid = True
+                    except:
+                        meta_valid = False
+
+        if not meta_valid:
+            QMessageBox.warning(self,
+                                "Warnings",  # titre de la fenêtre
+                                "Metadata has not been keeped. Check structure."  # texte du message
+                                )
+            self.lineEdit_metadata.setStyleSheet("QLineEdit { color: red; }")
+
+        else:
+            self.lineEdit_metadata.setStyleSheet("QLineEdit { color: green; }")
 
     def _toggle_edit_metadata(self, editable: bool):
         """
@@ -130,7 +206,9 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         """
         self.stacked_metadata.setCurrentIndex(1 if editable else 0)
         self.lineEdit_metadata.setReadOnly(not editable)
+        self.pushButton_save.setEnabled(editable)
         self.update_metadata_label()
+        self.lineEdit_metadata.setStyleSheet("QLineEdit { color: black; }")
 
 if __name__ == '__main__':
     sample   = '00001-VNIR-mock-up.h5'
@@ -146,7 +224,9 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    window = MetadataTool(cube.cube_info)
-    window.show()
+    meta_window = MetadataTool()
+    meta_window.set_cube_info(cube.cube_info)
+    meta_window.update_combo_meta(init=True)
+    meta_window.show()
 
     sys.exit(app.exec_())
