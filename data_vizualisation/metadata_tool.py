@@ -80,10 +80,8 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
             case 'GTLabels' | 'gtlabels':
                 if len(raw.shape)==2:
                     st=f'GT indexes : <b>{(' , ').join(raw[0])}</b>  <br>  GT names : <b>{(' , ').join(raw[1])}</b>'
-                    disp = str(raw)
                 elif len(raw.shape)==1:
                     st=f'GT indexes : <b>{(raw[0])}</b>  <br>  GT names : <b>{raw[1]}</b>'
-                    disp = str(raw)
 
             case 'aged':
                 st=f'The sample has been aged ? <br> <b>{raw}</b>'
@@ -149,6 +147,11 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
                 st=f'<b>{self.cube_info.metadata_temp[key]}</b>'
         self.label_metadata.setText(st)
 
+        # edit text
+        if key in ['GTLabels','gtlabels','bands','height','name','pixels_averaged','position','width']:
+            self.textEdit_metadata.setReadOnly(True)
+            self.textEdit_metadata.setStyleSheet("QTextEdit  { color: red; }")
+
         try:
             disp=raw
             self.textEdit_metadata.setText(disp)
@@ -160,10 +163,12 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
             except:
                 self.textEdit_metadata.setText(repr(type(raw)))
 
+
+
+        #print on console to debugg/analyse
         if isinstance(raw, np.ndarray):
             # par exemple : forme et dtype
             type_print = f"array shape={raw.shape}, dtype={raw.dtype}"
-
         else:
             type_print = repr(type(raw))
 
