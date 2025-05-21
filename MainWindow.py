@@ -14,6 +14,7 @@ from hypercubes.hypercube  import *
 from data_vizualisation.data_vizualisation_tool import Data_Viz_Window
 from registration.register_tool        import RegistrationApp
 from interface.HypercubeManager import HypercubeManager
+from data_vizualisation.metadata_tool import MetadataTool
 
 # TODO : initier dans MainWindow les hypercubes et connecter les champs de chaque widget (yeah...big deal)
 # TODO : generate metadata position,height, width ,parentCube,name of registered cube or minicube
@@ -88,6 +89,7 @@ class MainApp(QtWidgets.QMainWindow):
         self.file_browser_dock = self._add_file_browser_dock()
         self.data_viz_dock =self._add_dock("Data Visualization", Data_Viz_Window,  QtCore.Qt.RightDockWidgetArea)
         self.reg_dock=self._add_dock("Registration",   RegistrationApp,     QtCore.Qt.BottomDockWidgetArea)
+        self.meta_dock=self._add_dock("Metadata",   MetadataTool,     QtCore.Qt.BottomDockWidgetArea)
 
         # Tool menu
         view = self.menuBar().addMenu("Tools")
@@ -119,6 +121,13 @@ class MainApp(QtWidgets.QMainWindow):
         act_reg.setIcon(QIcon(os.path.join(ICONS_DIR, icon_registration)))
         act_reg.setToolTip("Registration")
         toolbar.addAction(act_reg)
+
+        # Action Metadata
+        act_met = self.meta_dock.toggleViewAction()
+        icon_met = "metadata_icon.png"
+        act_met.setIcon(QIcon(os.path.join(ICONS_DIR, icon_met)))
+        act_met.setToolTip("Metadata")
+        toolbar.addAction(act_met)
 
         toolbar.addSeparator()
 
@@ -223,7 +232,6 @@ class MainApp(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
         return dock
 
-
     def _on_add_cube(self,paths=None):
         if not isinstance(paths, (list, tuple)) or len(paths) == 0:
             paths, _ = QtWidgets.QFileDialog.getOpenFileNames(
@@ -240,17 +248,36 @@ class MainApp(QtWidgets.QMainWindow):
             ci=CubeInfoTemp(filepath=path)
             self.hypercube_manager.addCube(ci)
 
+    def _on_get_cube_info(self, insert_index):
+        # 1) Récupère le CubeInfoTemp déjà présent
+        ci = self.hypercube_manager._cubes[insert_index]
+        filepath = ci.filepath
+        if not filepath:
+            return
+
+        # 2) Recharge les infos via Hypercube en mode init
+        hc = Hypercube(filepath=filepath, cube_info=ci, load_init=True)
+        # Optionnel : mettre à jour la forme des données pour affichage
+        ci.data_shape = getattr(hc.data, 'shape', None)
+
+        # 3) Nettoie l’objet lourd pour ne pas garder de data en mémoire
+        hc.reinit_cube()
+        del hc
+
+        # 4) Notifie la mise à jour du manager/UI
+        self.hypercube_manager.cubesChanged.emit(self.hypercube_manager.paths)
+
     def _update_cube_menu(self, paths):
         """Met à jour le menu de cubes avec sous-menus et actions fonctionnelles."""
         self.cubeMenu.clear()
         for idx, path in enumerate(paths):
             # Sous-menu pour chaque cube
             sub = QtWidgets.QMenu(path, self)
-            # Envoyer au dock1
-            act1 = QtWidgets.QAction("Send to Vizualisation tool", self)
-            act1.triggered.connect(lambda checked, i=idx: self._send_to_dock(i, self.dock1))
-            sub.addAction(act1)
-            # Envoyer au dock2
+            # Envoyer au dock viz
+            act_viz = QtWidgets.QAction("Send to Vizualisation tool", self)
+            act_viz.triggered.connect(lambda checked, i=idx: self._send_to_dock(i, self.dock1))
+            sub.addAction(act_viz)
+            # Envoyer au dock reg
             menu_load_reg=QtWidgets.QMenu("Send to Register Tool", sub)
             act_fix = QtWidgets.QAction("Fixed Cube", self)
             act_fix.triggered.connect(
@@ -264,10 +291,25 @@ class MainApp(QtWidgets.QMainWindow):
             )
             menu_load_reg.addAction(act_mov)
             sub.addMenu(menu_load_reg)
-            # Envoyer au dock3
+            # Envoyer au dock file browser
             act_browser = QtWidgets.QAction("Send to File Browser", self)
             act_browser.triggered.connect(lambda checked, i=idx: self._open_file_browser_for_index(i))
             sub.addAction(act_browser)
+
+            # Envoyer au dock metadata
+            act_meta = QtWidgets.QAction("Send to Metadata", self)
+            act_meta.triggered.connect(lambda checked, i=idx: self.meta_dock.widget().set_cube_info(self.hypercube_manager.getCubeInfo(i)))
+            sub.addAction(act_meta)
+
+            # Séparateur
+            sub.addSeparator()
+
+            # ─── NOUVELLE ACTION “Get Cube Info from File” ─────────────────
+            act_get_info = QtWidgets.QAction("Get cube_info from file…", self)
+            act_get_info.triggered.connect(lambda _, i=idx: self._on_get_cube_info(i))
+            sub.addAction(act_get_info)
+            # ───────────────────────────────────────────────────────────────
+
             # Séparateur
             sub.addSeparator()
             # Supprimer de la liste

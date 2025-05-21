@@ -1,4 +1,5 @@
 import re
+import os
 
 from hypercubes.hypercube import*
 from data_vizualisation.metadata_dock import*
@@ -31,6 +32,15 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         self.pushButton_save.pressed.connect(self.keep_metadata)
         self.pushButton_cancel.pressed.connect(self.reset_metadata)
         self.pushButton_reset_one.pressed.connect(self.reset_metadatum)
+        self.toolButton_up.clicked.connect(lambda : self.step_combo(-1))
+        self.toolButton_down.clicked.connect(lambda : self.step_combo(+1))
+
+    def step_combo(self, delta: int):
+        combo = self.comboBox_metadata
+        i = combo.currentIndex() + delta
+        if 0 <= i < combo.count():
+            combo.setCurrentIndex(i)
+        # self.update_combo_meta()
 
     def update_combo_meta(self,init=False):
 
@@ -60,6 +70,8 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
     def set_cube_info(self,cube:CubeInfoTemp):
         self.cube_info = cube
         self.meta_load = cube.metadata_temp.copy()
+        self.label_file_name_meta.setText(os.path.basename(self.cube_info.filepath))
+        self.update_combo_meta(init=True)
 
     def reset_metadatum(self):
         key = self.comboBox_metadata.currentText()
@@ -162,8 +174,6 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
 
             except:
                 self.textEdit_metadata.setText(repr(type(raw)))
-
-
 
         #print on console to debugg/analyse
         if isinstance(raw, np.ndarray):

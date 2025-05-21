@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, List,Union
 import numpy as np
 
-from hypercubes.hypercube import CubeInfoTemp
+from hypercubes.hypercube import CubeInfoTemp,Hypercube
 
 class HypercubeManager(QtCore.QObject):
     """Manage a collection of CubeInfoTemp objects and emit updates."""
@@ -21,11 +21,16 @@ class HypercubeManager(QtCore.QObject):
         filepath=cube_info.filepath
         if not filepath:
             return
+
         # prevent duplicates
         if any(ci.filepath == filepath for ci in self._cubes):
             return
-        cube = cube_info # CubeInfoTemp(filepath=filepath)
-        self._cubes.append(cube)
+
+        if cube_info.metadata_temp is None:
+            hc = Hypercube(filepath=ci.filepath, cube_info=cube_info, load_init=True)
+
+
+        self._cubes.append(cube_info)
         self.cubesChanged.emit(self.paths)
 
     def removeCube(self, index: int):

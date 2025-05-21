@@ -25,13 +25,14 @@ class CubeInfoTemp:
     """
     Container for per-cube working data.
     """
-    filepath: str = None
-    data_path: Optional[str] = None
-    metadata_path: Optional[str] = None
-    wl_path: Optional[str] = None
-    metadata_temp: dict = field(default_factory=dict)
-    crop: Optional[Union[List[float], np.ndarray]] = None
-    wl_trans:Optional[str]= None #if need to transpose wl dim from dim 1 to dim 3
+    filepath: str = None    #filepath of cube
+    data_path: Optional[str] = None # data location in the file
+    metadata_path: Optional[str] = None # metadata location in the path
+    wl_path: Optional[str] = None #wl location in the path
+    metadata_temp: dict = field(default_factory=dict) # all metadatas modified in the app before saving
+    data_shape: Optional[Union[List[float], np.ndarray]] = None # cube shape [width, height, bands]
+    crop: Optional[Union[List[float], np.ndarray]] = None # [x,y,dx,dy]
+    wl_trans:Optional[str]= None # if need to transpose wl dim from dim 1 to dim 3
 
 class Hypercube:
 
@@ -55,6 +56,9 @@ class Hypercube:
                 self.open_hyp(default_path=self.filepath, open_dialog=False)
             else:
                 self.open_hyp(open_dialog=True)
+
+        if self.cube_info.filepath is None:
+            self.cube_info.filepath=self.filepath
 
     @staticmethod
     def _is_hdf5_file(path: str) -> bool:
@@ -139,6 +143,8 @@ class Hypercube:
                     self.cube_info.metadata_path = "Metadata"
                     self.cube_info.metadata_temp = self.metadata.copy()
                     self.cube_info.wl_dim = True
+                    if self.data is not None:
+                        self.cube_info.data_shape = self.data.shape
 
                     return  # success → no dialog
 
@@ -159,6 +165,8 @@ class Hypercube:
                     self.cube_info.metadata_path = "/"
                     self.cube_info.metadata_temp = self.metadata.copy()
                     self.cube_info.wl_trans = True
+                    if self.data is not None:
+                        self.cube_info.data_shape = self.data.shape
 
                     return  # success → no dialog
 
@@ -225,6 +233,9 @@ class Hypercube:
                             key = sel['meta_path'].split('/')[-1]
                             self.metadata[key] = meta_val
 
+                    if self.data is not None:
+                        self.cube_info.data_shape = self.data.shape
+
                 except:
                     #HDF5 or MAT v7.3
                     with h5py.File(filepath, 'r') as f:
@@ -264,6 +275,9 @@ class Hypercube:
                                 name = meta_sel.split('/')[-1]
                                 self.metadata[name] = obj[()]
 
+                        if self.data is not None:
+                            self.cube_info.data_shape = self.data.shape
+
                 return
 
             except Exception as e:
@@ -273,6 +287,7 @@ class Hypercube:
                 return
 
         # 3) ENVI (.hdr + raw)
+        # TODO : cube info fill with ENVI files
         elif ext == '.hdr':
             try:
                 img = envi.open(filepath)

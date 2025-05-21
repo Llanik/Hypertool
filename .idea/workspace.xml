@@ -4,9 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="le register_tool envoie un cube_info dans le signal">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="metadata not editable from metadata tool blocked">
+      <change afterPath="$PROJECT_DIR$/ground_truth/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ground_truth/ground_truth_tool_chatGPT.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_vizualisation/metadata_dock.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/metadata_dock.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_vizualisation/metadata_dock.ui" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/metadata_dock.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_vizualisation/metadata_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/metadata_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interface/HypercubeManager.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/HypercubeManager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/registration/register_images_with_chatGPT.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -339,7 +350,15 @@
       <option name="project" value="LOCAL" />
       <updated>1747664241381</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="metadata not editable from metadata tool blocked">
+      <option name="closed" value="true" />
+      <created>1747665666661</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1747665666661</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -391,7 +410,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Initial commit" />
     <MESSAGE value="Test updating GitHub from Pycharm" />
     <MESSAGE value="Reorganisation en dossier" />
     <MESSAGE value="Working on opening matlab files with hypercube objects." />
@@ -416,6 +434,7 @@
     <MESSAGE value="Outils Metadata OK en lecture." />
     <MESSAGE value="On avance sur le metada. OK pour alidation str et numpy 1D" />
     <MESSAGE value="le register_tool envoie un cube_info dans le signal" />
-    <option name="LAST_COMMIT_MESSAGE" value="le register_tool envoie un cube_info dans le signal" />
+    <MESSAGE value="metadata not editable from metadata tool blocked" />
+    <option name="LAST_COMMIT_MESSAGE" value="metadata not editable from metadata tool blocked" />
   </component>
 </project>
