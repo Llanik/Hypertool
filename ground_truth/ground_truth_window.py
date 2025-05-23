@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_GroundTruthWidget(object):
     def setupUi(self, GroundTruthWidget):
         GroundTruthWidget.setObjectName("GroundTruthWidget")
-        GroundTruthWidget.resize(916, 597)
+        GroundTruthWidget.resize(1005, 597)
         self.verticalLayout = QtWidgets.QVBoxLayout(GroundTruthWidget)
         self.verticalLayout.setObjectName("verticalLayout")
         self.frame = QtWidgets.QFrame(GroundTruthWidget)
@@ -117,6 +117,9 @@ class Ui_GroundTruthWidget(object):
         self.comboBox_ClassifMode.addItem("")
         self.comboBox_ClassifMode.addItem("")
         self.gridLayout.addWidget(self.comboBox_ClassifMode, 0, 3, 1, 1)
+        self.pushButton_class_selection = QtWidgets.QPushButton(self.frame)
+        self.pushButton_class_selection.setObjectName("pushButton_class_selection")
+        self.gridLayout.addWidget(self.pushButton_class_selection, 0, 4, 1, 1)
         self.horizontalLayout_2.addLayout(self.gridLayout)
         self.line_3 = QtWidgets.QFrame(self.frame)
         self.line_3.setFrameShape(QtWidgets.QFrame.VLine)
@@ -196,6 +199,7 @@ class Ui_GroundTruthWidget(object):
         self.run_btn.setText(_translate("GroundTruthWidget", "Segment"))
         self.comboBox_ClassifMode.setItemText(0, _translate("GroundTruthWidget", "Unsupervised"))
         self.comboBox_ClassifMode.setItemText(1, _translate("GroundTruthWidget", "Supervised"))
+        self.pushButton_class_selection.setText(_translate("GroundTruthWidget", "Classification class selection"))
         self.label_GT_3.setText(_translate("GroundTruthWidget", "GT transparency"))
         self.live_cb.setText(_translate("GroundTruthWidget", "Spectrum live visualization"))
         self.checkBox_seeGTspectra.setText(_translate("GroundTruthWidget", "See GT spectra"))

@@ -20,12 +20,20 @@ from ground_truth.ground_truth_window import Ui_GroundTruthWidget
 # todo : show average spectrum (and std) in graph zone
 # todo : add normalize possibility for
 
+def spectral_angle(p, m):
+    """
+    Compute the Spectral Angle Mapper (SAM) between two spectra p and m.
+    """
+    cos = np.dot(p, m) / (np.linalg.norm(p) * np.linalg.norm(m))
+    cos = np.clip(cos, -1.0, 1.0)
+    return np.arccos(cos)
+
 class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Set up UI from compiled .py
         self.setupUi(self)
-
+        self.selecting_pixels = False
 
         # Replace placeholders with custom widgets
         self._replace_placeholder('viewer_left', ZoomableGraphicsView)
@@ -59,6 +67,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.load_btn.clicked.connect(self.load_cube)
         self.run_btn.clicked.connect(self.run)
         self.comboBox_ClassifMode.currentIndexChanged.connect(self.set_mode)
+        self.pushButton_class_selection.clicked.connect(self.start_pixel_selection)
 
         # RGB sliders <-> spinboxes
         self.sliders_rgb = [self.horizontalSlider_red_channel, self.horizontalSlider_green_channel,
@@ -134,6 +143,12 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
             self.show_image()
 
+    def start_pixel_selection(self):
+        # on active le mode sélection ; le drag/zoom sera bloqué par eventFilter
+        self.selecting_pixels = True
+        QMessageBox.information(self, "Mode Sélection",
+                                "Cliquez sur les pixels pour les classer. Cliquez sur 'Non' dans la boîte de dialogue pour sortir.")
+
     def _init_spectrum_canvas(self):
         placeholder = getattr(self, 'spec_canvas')
         parent = placeholder.parent()
@@ -163,26 +178,46 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.spec_canvas.setVisible(False)
 
     def eventFilter(self, source, event):
-        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove:
-            if self.live_cb.isChecked() and self.data is not None:
-                pos = self.viewer_left.mapToScene(event.pos())
-                x, y = int(pos.x()), int(pos.y())
-                if 0 <= x < self.data.shape[1] and 0 <= y < self.data.shape[0]:
-                    spectrum = self.data[y, x, :]
-                    self.spec_ax.clear()
-                    # tracé du spectre live
-                    self.spec_ax.plot(spectrum, label='Pixel')
-                    if self.checkBox_seeGTspectra.isChecked() and hasattr(self, 'class_means'):
-                        for c, mu in self.class_means.items():
-                            # récupère un RGBA entre 0 et 1, puis passe en RGB matplotlib
-                            rgba = self._cmap(c)
-                            # trace en trait pointillé
-                            self.spec_ax.plot(mu, linestyle='--', color=rgba, label=f'Classe {c}')
-                        self.spec_ax.legend(loc='upper right', fontsize='small')
+        if source is self.viewer_left.viewport():
+            # 1) Clic pour sélection de pixel uniquement si on est en mode selecting_pixels
+            if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+                if self.selecting_pixels and self.data is not None:
+                    pos = self.viewer_left.mapToScene(event.pos())
+                    x, y = int(pos.x()), int(pos.y())
+                    H, W = self.data.shape[:2]
+                    if 0 <= x < W and 0 <= y < H:
+                        cls, ok = QInputDialog.getInt(
+                            self, "Classe", "Numéro de la classe :", 0, 0, self.nclass_box.value() - 1
+                        )
+                        if ok:
+                            self.samples.setdefault(cls, []).append(self.data[y, x, :])
+                            # demander si on continue
+                            reply = QMessageBox.question(
+                                self, "Continuer ?",
+                                "Continue selecting pixels ?",
+                                QMessageBox.Yes | QMessageBox.No
+                            )
+                            if reply == QMessageBox.No:
+                                # désactivation du mode sélection et retour au drag
+                                self.selecting_pixels = False
+                    # On consomme l’événement pour empêcher le drag
+                    return True
 
-                    self.spec_ax.set_title(f'Spectrum @ ({x},{y})')
-                    self.spec_canvas.setVisible(True)
-                    self.spec_canvas.draw()
+            # 2) Mouvement souris pour le live spectrum (déjà en place)
+            if event.type() == QEvent.MouseMove:
+                if self.live_cb.isChecked() and self.data is not None:
+                    pos = self.viewer_left.mapToScene(event.pos())
+                    x, y = int(pos.x()), int(pos.y())
+                    if 0 <= x < self.data.shape[1] and 0 <= y < self.data.shape[0]:
+                        spectrum = self.data[y, x, :]
+                        self.spec_ax.clear()
+                        self.spec_ax.plot(spectrum, label='Pixel')
+                        # éventuellement tracé des class_means et class_stds...
+                        self.spec_ax.set_title(f'Spectrum @ ({x},{y})')
+                        self.spec_canvas.setVisible(True)
+                        self.spec_canvas.draw()
+                return False
+
         return super().eventFilter(source, event)
 
     def on_alpha_change(self, val):
@@ -320,6 +355,13 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             labels = kmeans.labels_
             # ← NOUVEAU : on stocke les centres de clusters
             self.class_means = {i: kmeans.cluster_centers_[i] for i in range(n)}
+            self.class_stds = {}
+            for i in range(n):
+                spectra_i = flat[labels == i]
+                self.class_stds[i] = np.std(spectra_i, axis=0)
+
+            n = len(self.class_means)
+            self._cmap = cm.get_cmap('jet', n)
 
         else:
             if not self.samples:
@@ -327,17 +369,16 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 return
             # calcul des moyennes par classe
             means = {c: np.mean(np.vstack(sp), axis=0) for c, sp in self.samples.items()}
+            stds = {c: np.std(np.vstack(sp), axis=0) for c, sp in self.samples.items()}
             labels = np.zeros((flat.shape[0],), dtype=int)
             for i, pix in enumerate(flat):
                 angles = {c: spectral_angle(pix, mu) for c, mu in means.items()}
                 labels[i] = min(angles, key=angles.get)
             self.class_means = means
+            self.class_stds = stds
+            self._cmap = cm.get_cmap('jet', len(self.class_means))
 
-        self._cmap = cm.get_cmap('jet', len(self.class_means))
         self.cls_map = labels.reshape(self.data.shape[0], self.data.shape[1])
-        n = len(self.class_means)
-        self._cmap = cm.get_cmap('jet', n)
-
         self.show_image()
 
     def _np2pixmap(self, img):

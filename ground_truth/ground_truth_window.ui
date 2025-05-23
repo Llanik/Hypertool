@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>916</width>
+    <width>1005</width>
     <height>597</height>
    </rect>
   </property>
@@ -226,6 +226,13 @@
             <string>Supervised</string>
            </property>
           </item>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="pushButton_class_selection">
+          <property name="text">
+           <string>Classification class selection</string>
+          </property>
          </widget>
         </item>
        </layout>
