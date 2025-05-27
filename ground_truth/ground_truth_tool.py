@@ -1,11 +1,12 @@
 import os
 import numpy as np
 import cv2
-from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox,QInputDialog , QSplitter
+from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox,QInputDialog , QSplitter,QGraphicsView
 from PyQt5.QtCore import Qt, QEvent, QRect
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib import cm
+from matplotlib.path import Path
 
 from scipy.spatial import distance as spdist
 
@@ -19,40 +20,35 @@ from ground_truth.ground_truth_window import Ui_GroundTruthWidget
 # Todo : gestion de la selection semi-supervisée
 # todo : manual correction pixel by pixel (or pixel groups)
 # todo : show average spectrum (and std) in graph zone A DISPARU
-#todo : finish selection : multiple pixel and lasso
+# todo : finish selection : multiple pixel and lasso
 # todo : semi-supervised
-
-def spectral_angle(p, m):
-    """
-    Compute the Spectral Angle Mapper (SAM) between two spectra p and m.
-    """
-    cos = np.dot(p, m) / (np.linalg.norm(p) * np.linalg.norm(m))
-    cos = np.clip(cos, -1.0, 1.0)
-    return np.arccos(cos)
 
 class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Set up UI from compiled .py
         self.setupUi(self)
-        self.selecting_pixels = False
 
-        self.selecting_pixels = False
-        self.selection_mask = None
+        self.selecting_pixels = False # mode selection ref activated
+        self._pixel_selecting = False  # for manual pixel selection for dragging mode
+        self._pixel_coords = []  # collected  (x,y) during dragging
+        self._preview_mask = None # temp mask during dragging pixel selection
         self.class_colors = {}  # color of each class
         self._cmap = None
         n0 = self.nclass_box.value()
         self._cmap = cm.get_cmap('jet', n0)         # same jet as final segmentation
-
 
         # Replace placeholders with custom widgets
         self._replace_placeholder('viewer_left', ZoomableGraphicsView)
         self._replace_placeholder('viewer_right', ZoomableGraphicsView)
         self._promote_canvas('spec_canvas', FigureCanvas)
 
-        # Enable live spectrum tracking
-        self.viewer_left.viewport().setMouseTracking(True)
         self.viewer_left.viewport().installEventFilter(self)
+        self.viewer_right.viewport().installEventFilter(self)
+
+        # Enable live spectrum tracking
+        self.viewer_left.viewport().setCursor(Qt.CrossCursor) # curseur croix
+        self.viewer_left.viewport().setMouseTracking(True)
 
         # Promote spec_canvas placeholder to FigureCanvas
         self.spec_canvas_layout = self.spec_canvas.layout() if hasattr(self.spec_canvas, 'layout') else None
@@ -72,12 +68,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.hyps_rgb_chan=[0,0,0] #current rgb (in int nm)
         self.class_means = {} #for spectra of classe
 
-
         # Connect widget signals
         self.load_btn.clicked.connect(self.load_cube)
         self.run_btn.clicked.connect(self.run)
         self.comboBox_ClassifMode.currentIndexChanged.connect(self.set_mode)
-        self.pushButton_class_selection.clicked.connect(self.start_pixel_selection)
+        self.pushButton_class_selection.toggled.connect(self.on_toggle_selection)
 
         # RGB sliders <-> spinboxes
         self.sliders_rgb = [self.horizontalSlider_red_channel, self.horizontalSlider_green_channel,
@@ -104,10 +99,14 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             'cosine': spdist.cosine,
             'correlation': spdist.correlation,
             'canberra': spdist.canberra,
-            'spectral_angle': spectral_angle
         }
 
     def start_pixel_selection(self):
+
+        self.pushButton_class_selection.setText("Stop Selection")
+        self.pushButton_class_selection.setStyleSheet(
+            "background-color: green; color: black;"
+        )
 
         if len(self.samples)>0 :
             reply = QMessageBox.question(
@@ -122,7 +121,39 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 self.samples.clear()
 
         self.selecting_pixels = True
+        self.viewer_left.setDragMode(QGraphicsView.NoDrag)
+        self.viewer_left.setCursor(Qt.CrossCursor)
+        self.viewer_left.viewport().setCursor(Qt.CrossCursor)
         self.show_image()
+
+    def stop_pixel_selection(self):
+
+        self.selecting_pixels = False
+
+        # ready to select
+        self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.viewer_left.setCursor(Qt.ArrowCursor)
+        self.viewer_left.viewport().setCursor(Qt.ArrowCursor)
+
+        # remet le bouton à l'état initial
+        self.pushButton_class_selection.setText("Start Selection")
+        self.pushButton_class_selection.setStyleSheet("")
+        self.pushButton_class_selection.setChecked(False)
+
+        # efface tout preview en cours
+        self.selecting_pixels = False
+
+        # enfin, on affiche l'image normale (sans preview ni sélection en cours)
+        self.show_image()
+
+    def on_toggle_selection(self, checked: bool):
+
+        if checked:
+
+            self.start_pixel_selection()
+        else:
+            # fin du mode sélection
+            self.stop_pixel_selection()
 
     def modif_sliders(self):
         max_wl = int(self.wl[-1])
@@ -176,8 +207,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             else:
                 element.setEnabled(True)
 
-            self.show_image()
-
+        self.show_image()
 
     def _init_spectrum_canvas(self):
         placeholder = getattr(self, 'spec_canvas')
@@ -207,6 +237,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.spec_canvas.setVisible(False)
         self.comboBox_pixel_selection_mode
+
     def _handle_selection(self, coords):
         """Prompt for class and store spectra of the given coordinates."""
         cls, ok = QInputDialog.getInt(
@@ -232,23 +263,17 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.show_image()
 
-        # ask to continue
-        reply = QMessageBox.question(
-            self, "Continue ?", "Continue selecting pixels?",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if reply == QMessageBox.No:
-            self.selecting_pixels = False
-
     def eventFilter(self, source, event):
         mode = self.comboBox_pixel_selection_mode.currentText()
 
         # 1) Clic souris
-        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton and self.selecting_pixels:
             pos = self.viewer_left.mapToScene(event.pos())
             x0, y0 = int(pos.x()), int(pos.y())
             if mode == 'pixel':
-                self._handle_selection([(x0, y0)])
+                # on commence la collecte
+                self._pixel_selecting = True
+                self._pixel_coords = [(x0, y0)]
                 return True
             elif mode == 'rectangle':
                 # début du drag
@@ -262,6 +287,21 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 return True
 
         # 2) Mouvement souris → mise à jour du cadre
+        if event.type() == QEvent.MouseMove and self._pixel_selecting and mode == 'pixel':
+            pos = self.viewer_left.mapToScene(event.pos())
+            x, y = int(pos.x()), int(pos.y())
+
+            if (x, y) not in self._pixel_coords:
+                self._pixel_coords.append((x, y))
+            if self._preview_mask is None:
+                H, W = self.data.shape[:2]
+                self._preview_mask = np.zeros((H, W), dtype=bool)
+
+            self._preview_mask[y, x] = True
+            self.show_image(preview=True)
+
+            return True
+
         if event.type() == QEvent.MouseMove and hasattr(self, 'rubberBand'):
             self.rubberBand.setGeometry(
                 QRect(self.origin, event.pos()).normalized()
@@ -269,6 +309,46 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             return True
 
         # 3) Relâchement souris → calcul de la sélection
+
+        if event.type() == QEvent.MouseButtonRelease and event.button() == Qt.LeftButton and mode == 'pixel' and self._pixel_selecting :
+            # get pixels
+            coords = self._pixel_coords.copy()
+            #  Si au moins 3 points, propose de fermer le cheminif min 3 points, propose contour
+            if len(coords) >= 3:
+                reply = QMessageBox.question(
+                    self, "Close Path?",
+                    "You have selected multiple pixels.\n"
+                    "Do you want to close the path and include all pixels inside the contour?",
+                    QMessageBox.Yes | QMessageBox.No
+                )
+                if reply == QMessageBox.Yes:
+                    pts = np.array(coords)
+                    poly = Path(pts)
+                    x0, y0 = pts[:, 0].min().astype(int), pts[:, 1].min().astype(int)
+                    x1, y1 = pts[:, 0].max().astype(int), pts[:, 1].max().astype(int)
+                    filled = list(coords)
+                    for yy in range(y0, y1 + 1):
+                        for xx in range(x0, x1 + 1):
+                            if poly.contains_point((xx, yy)):
+                                filled.append((xx, yy))
+                    coords = filled
+
+                    # to avoid dobbles
+                    seen = set()
+                    coords = []
+                    for p in filled:
+                        if p not in seen:
+                            seen.add(p)
+                            coords.append(p)
+
+
+            self._handle_selection(coords) # close selection
+
+            # ready to new selection
+            self._pixel_selecting = False
+            self._preview_mask = None
+            return True
+
         if event.type() == QEvent.MouseButtonRelease and hasattr(self, 'rubberBand'):
             rect = self.rubberBand.geometry()
             self.rubberBand.hide()
@@ -285,24 +365,42 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             ]
             self._handle_selection(coords)
             del self.rubberBand
+            self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
+            self.viewer_left.setCursor(Qt.ArrowCursor)
+            self.viewer_left.viewport().setCursor(Qt.ArrowCursor)
             return True
 
         # 4) Mouvement souris pour le live spectrum
-        if event.type() == QEvent.MouseMove:
+        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove:
             if self.live_cb.isChecked() and self.data is not None:
+                x_graph = self.wl
                 pos = self.viewer_left.mapToScene(event.pos())
                 x, y = int(pos.x()), int(pos.y())
                 if 0 <= x < self.data.shape[1] and 0 <= y < self.data.shape[0]:
                     spectrum = self.data[y, x, :]
                     self.spec_ax.clear()
-                    self.spec_ax.plot(spectrum, label='Pixel')
-                    # éventuellement tracé des class_means et class_stds...
-                    self.spec_ax.set_title(f'Spectrum @ ({x},{y})')
+                    # Spectre du pixel
+                    self.spec_ax.plot(x_graph, spectrum, label='Pixel')
+
+                    # Spectres GT moyens ± std
+                    if self.checkBox_seeGTspectra.isChecked() and hasattr(self, 'class_means'):
+                        for c, mu in self.class_means.items():
+                            std = self.class_stds[c]
+                            color = self._cmap(c)
+                            self.spec_ax.fill_between(
+                                x_graph, mu - std, mu + std,
+                                color=color, alpha=0.3, linewidth=0
+                            )
+                            self.spec_ax.plot(
+                                x_graph, mu, '--',
+                                color=color, label=f'Classe {c}'
+                            )
+                        self.spec_ax.legend(loc='upper right', fontsize='small')
+
+                    self.spec_ax.set_title(f'Spectra @ ({x},{y})')
                     self.spec_canvas.setVisible(True)
                     self.spec_canvas.draw()
-            return False
-
-        return super().eventFilter(source, event)
+            return super().eventFilter(source, event)
 
     def on_alpha_change(self, val):
         self.alpha = val / 100.0
@@ -341,12 +439,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.mode = self.comboBox_ClassifMode.currentText()
 
         self.nclass_box.setEnabled(self.mode in ['Unsupervised', 'Semi-supervised'])
-        self.pushButton_class_selection.setEnabled(self.mode in ['Supervised', 'Semi-supervised'])
 
         self.spec_canvas.setVisible(False)
         self.show_image()
 
-    def show_image(self):
+    def show_image(self, preview=False):
         if self.data is None:
             return
         H, W, B = self.data.shape
@@ -377,6 +474,17 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             seg8 = (self.cls_map.astype(np.float32) / (self.nclass_box.value() - 1) * 255).astype(np.uint8)
             pix2 = self._np2pixmap(cv2.applyColorMap(seg8, cv2.COLORMAP_JET))
         self.viewer_right.setImage(pix2)
+
+        if preview and self._preview_mask is not None:
+            overlay_pv = overlay.copy()
+            # couleur de preview : jaune transparent
+            layer = np.zeros_like(overlay_pv)
+            layer[..., 1:] = 255, 255  # BGR = (0,255,255)
+            mixed = cv2.addWeighted(overlay_pv, 1 - 0.3, layer, 0.3, 0)
+            mask3 = self._preview_mask[:, :, None]
+            overlay_pv = np.where(mask3, mixed, overlay_pv)
+            self.viewer_left.setImage(self._np2pixmap(overlay_pv))
+            return
 
         if self.selection_mask_map is not None:
             mixed = overlay.copy()
@@ -450,9 +558,8 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
     def compute_distance(self, u, v):
         name = self.comboBox_distance.currentText()
-        fn   = self.distance_funcs.get(name, spectral_angle)
+        fn   = self.distance_funcs.get(name)
         return fn(u, v)
-
 
     def run(self):
         if self.data is None:
@@ -476,7 +583,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         elif self.mode == 'Supervised':
             classes = sorted(self.samples.keys())
             if not classes:
-                QMessageBox.warning(self, "Warning", "Sélect at least one pixel !")
+                QMessageBox.warning(self, "Warning", "Select at least one pixel !")
                 return
             # moyennes par classe labellisée
             means = {c: np.mean(np.vstack(self.samples[c]), axis=0) for c in classes}
@@ -501,8 +608,8 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             means = {c: np.mean(np.vstack(sp), axis=0) for c, sp in self.samples.items()}
             labels = np.zeros(flat.shape[0], dtype=int)
             for i, pix in enumerate(flat):
-                angles = {c: spectral_angle(pix, mu) for c, mu in means.items()}
-                labels[i] = min(angles, key=angles.get)
+                dists = {c: self.compute_distance(pix, mu) for c, mu in means.items()}
+                labels[i] = min(dists, key=dists.get)
             self.class_means = means
             self.class_stds = {c: np.std(np.vstack(sp), axis=0) for c, sp in self.samples.items()}
             self._cmap = cm.get_cmap('jet', len(self.class_means))
