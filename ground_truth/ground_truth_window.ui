@@ -34,6 +34,9 @@
            <property name="text">
             <string>RGB default</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
@@ -45,7 +48,7 @@
             <string>RGB user</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -221,8 +224,14 @@
         </item>
         <item row="0" column="5">
          <widget class="QPushButton" name="pushButton_class_selection">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="text">
-           <string>Select Ref</string>
+           <string>Start selection</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -261,17 +270,12 @@
          <widget class="QComboBox" name="comboBox_pixel_selection_mode">
           <item>
            <property name="text">
-            <string>rectangle</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
             <string>pixel</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>lasso</string>
+            <string>rectangle</string>
            </property>
           </item>
           <item>
@@ -351,7 +355,7 @@
            <string>See GT spectra</string>
           </property>
           <property name="checked">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
          </widget>
         </item>
