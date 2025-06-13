@@ -715,12 +715,15 @@ if __name__ == '__main__':
     # Example usage:
     # sample   = '00001-VNIR-mock-up.mat'
     # folder   = r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Samples\minicubes'
-    sample = 'jabon_guillermo_final.mat'
+    # sample = 'jabon_guillermo_final.mat'
     # sample = 'jabon_2-04-2025.mat'
-    folder = r'C:\Users\Usuario\Downloads'
+    # folder = r'C:\Users\Usuario\Downloads'
     # sample = 'MPD41a_SWIR.mat'
     # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria'
-    filepath = os.path.join(folder, sample)
+    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test/'
+    file_name = '00001-SWIR-mock-up.h5'
+    filepath = folder + file_name
+    # filepath = os.path.join(folder, sample)
     # filepath='C:/Users/Usuario/Documents/DOC_Yannick/Hyperdoc_Test/Samples/minicubes/00001-VNIR-mock-up.h5'
     # filepath = None  # force dialog
 
