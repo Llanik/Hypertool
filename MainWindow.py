@@ -268,6 +268,13 @@ class MainApp(QtWidgets.QMainWindow):
         # 4) Notifie la mise à jour du manager/UI
         self.hypercube_manager.cubesChanged.emit(self.hypercube_manager.paths)
 
+    def _send_to_metadata(self,index):
+        self.meta_dock.widget().set_cube_info(self.hypercube_manager.getCubeInfo(index))
+        self.meta_dock.widget().update_combo_meta(init=True)
+        print('send to meta')
+
+    # TODO : Fix meta_tool init
+
     def _update_cube_menu(self, paths):
         """Met à jour le menu de cubes avec sous-menus et actions fonctionnelles."""
         self.cubeMenu.clear()
@@ -299,7 +306,7 @@ class MainApp(QtWidgets.QMainWindow):
 
             # Envoyer au dock metadata
             act_meta = QtWidgets.QAction("Send to Metadata", self)
-            act_meta.triggered.connect(lambda checked, i=idx: self.meta_dock.widget().set_cube_info(self.hypercube_manager.getCubeInfo(i)))
+            act_meta.triggered.connect(lambda checked, i=idx: self._send_to_metadata(i))
             sub.addAction(act_meta)
 
             # Séparateur

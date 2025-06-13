@@ -58,7 +58,7 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
                             len(self.cube_info.metadata_temp[key])
                             self.comboBox_metadata.addItem(f"{key}")
                         except:
-                            a=0
+                            pass
 
                     else:
                         self.comboBox_metadata.addItem(f"{key}")

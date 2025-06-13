@@ -19,8 +19,6 @@ from ground_truth.GT_table_viz import LabelWidget
 from ground_truth.ground_truth_window import Ui_GroundTruthWidget
 
 # todo : give GT labels names and number for RGB code ? -> save GT in new dataset of file + png
-# todo : band selection on spectra graph
-# todo : show number of pixel selected and number of pixel of each class after segmentation
 # todo : link to cube_info (read and fill)
 
 class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
@@ -34,8 +32,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.erase_selection = False # erase mode on or off
         self._pixel_coords = []  # collected  (x,y) during dragging
         self._preview_mask = None # temp mask during dragging pixel selection
-        self.class_info = {}
-        #dictionnary of lists :  {key:[label GT, name GT,(R,G,B)]}
+        self.class_info = {}         #dictionnary of lists :  {key:[label GT, name GT,(R,G,B)]}
         self.class_colors ={}  # color of each class
         n0 = self.nclass_box.value()
 
@@ -71,6 +68,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.hyps_rgb_chan_DEFAULT=[0,0,0] #default rgb channels (in int nm)
         self.hyps_rgb_chan=[0,0,0] #current rgb (in int nm)
         self.class_means = {} #for spectra of classe
+        self.class_ncount={} #for npixels classified
         self.selected_bands=[]
         self.selected_span_patch=[]
 
@@ -84,6 +82,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.pushButton_merge.clicked.connect(self.merge_selec_GT)
         self.pushButton_class_name_assign.clicked.connect(self.open_label_table)
         self.pushButton_band_selection.toggled.connect(self.band_selection)
+        self.pushButton_keep_GT.clicked.connect(self.keep_GT)
 
         # RGB sliders <-> spinboxes
         self.sliders_rgb = [self.horizontalSlider_red_channel, self.horizontalSlider_green_channel,
@@ -128,6 +127,45 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.splitter_2.setStyleSheet("""QSplitter::handle {background-color: darkgray;}""")
 
         self.set_mode()
+
+    def keep_GT(self):
+        # On envoie dans metadata : map de GT, class_counts (pixels_averaged), 'GT_cmap','spectra_mean','spectra_std'
+
+        if self.cls_map is None:
+            QMessageBox.warning(self, "Warning", "Nothig to keep. Launch segmentation first")
+            return
+
+        self.cube.cube_info.metadata_temp['pixels_averaged']=list(self.class_ncount.values())
+        GT_name=[]
+        GT_num=[]
+        for key in self.class_info:
+            GT_num.append(self.class_info[key][0])
+            GT_name.append(self.class_info[key][1])
+
+        self.cube.cube_info.metadata_temp['GTLabels']=[GT_num,GT_name]
+
+        self.cube.cube_info.metadata_temp['GT_mask']=self.cls_map
+
+        print(self.cube.cube_info.metadata_temp['pixels_averaged'])
+        print(self.cube.cube_info.metadata_temp['GTLabels'])
+
+        if  hasattr(self, 'GT_image'):
+            path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save segmentation image",
+                "",
+                "PNG (*.png)"
+            )
+            if not path:
+                return
+
+            cv2.imwrite(path, self.GT_image)
+            QMessageBox.information(self, "Saved", f"Ground truth image saved in :\n{path}")
+
+        else :
+            print('No Overlay')
+
+        # On demande si on veut AUSSI sauvegarder le cube (.h5) en l'etat et/ou juste le GT (format)
 
     def open_label_table(self):
 
@@ -274,6 +312,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.prune_unused_classes()
         self.show_image()
+        self.update_counts()
         self.update_legend()
 
     def modif_sliders(self):
@@ -756,7 +795,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         if not path :
             print('Ask path for cube')
             path, _ = QFileDialog.getOpenFileName(
-            self, "Ouvrir Hypercube", "", "Hypercube files (*.mat *.h5 *.hdr)"
+            self, "Open Hypercube", "", "Hypercube files (*.mat *.h5 *.hdr)"
             )
             if not path:
                 return
@@ -901,6 +940,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 seg_color2[mask] = [gray, gray, gray]
 
             pix2 = self._np2pixmap(seg_color2)
+            self.GT_image = seg_color2
 
         self.viewer_right.setImage(pix2)
 
@@ -946,8 +986,12 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         for c in sorted(self.class_colors):
             b, g, r = self.class_colors[c]
-            lbl = QLabel(str(c))
-            lbl.setFixedSize(30, 20)
+            txt=str(c)
+            if self.class_ncount is not None :
+                txt+='-'+str(self.class_ncount[c])+'px'
+
+            lbl = QLabel(txt)
+            # lbl.setFixedSize(30, 20)
             lbl.setAlignment(Qt.AlignCenter)
             lbl.setStyleSheet(
                 f"background-color: rgb({r},{g},{b});"
@@ -1125,7 +1169,14 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.prune_unused_classes()
         self._assign_initial_colors()
         self.show_image()
+        self.update_counts()
         self.update_legend()
+
+    def update_counts(self):
+        labels, counts = np.unique(self.cls_map, return_counts=True)
+        for cls, cnt in zip(labels, counts):
+            self.class_ncount[cls]=cnt
+            print(f"Classe {cls} → {cnt} pixels")
 
     def _np2pixmap(self, img):
         from PyQt5.QtGui import QImage, QPixmap
