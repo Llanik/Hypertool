@@ -390,7 +390,6 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 suffixe_label = [" (fixed)", " (moving)"][i_mov]
                 self.viewer_label[i_mov].setText(self.cube[i_mov].filepath.split('/')[-1] + suffixe_label)
 
-
         self.pushButton_register.setEnabled(False)
 
     def load_fixed_btn(self,fname=None):
@@ -854,10 +853,10 @@ if __name__ == '__main__':
     window.clean_cache()
     app.setStyle('Fusion')
 
-    # folder_cube=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria/'
-    # path_fixed_cube=folder_cube+'MPD41a_SWIR.mat'
-    # path_moving_cube=folder_cube+'MPD41a_VNIR.mat'
-    # window.load_cube(0,path_fixed_cube)
-    # window.load_cube(1,path_moving_cube)
+    folder_cube=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria/'
+    path_fixed_cube=folder_cube+'MPD41a_SWIR.mat'
+    path_moving_cube=folder_cube+'MPD41a_VNIR.mat'
+    window.load_cube(0,path_fixed_cube)
+    window.load_cube(1,path_moving_cube)
 
     sys.exit(app.exec_())

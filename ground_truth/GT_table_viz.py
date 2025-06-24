@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QFileDialog, QMessageBox, QGridLayout, QLabel, QFrame, QSplitter,
     QInputDialog,QColorDialog
 )
+
 from PyQt5.QtCore import QAbstractTableModel, Qt, pyqtSlot
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtCore import pyqtSignal,QPoint

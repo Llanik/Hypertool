@@ -82,10 +82,10 @@ class MainApp(QtWidgets.QMainWindow):
         self.resize(1200, 800)
         self.setCentralWidget(QtWidgets.QWidget())
 
-        BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-        ICONS_DIR = os.path.join(BASE_DIR, "Hypertool/interface/icons")
+        self.BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+        self.ICONS_DIR = os.path.join(self.BASE_DIR, "Hypertool/interface/icons")
         icon_main= "Hyperdoc_logo_transparente_CIMLab.png"
-        self.setWindowIcon(QIcon(os.path.join(ICONS_DIR,icon_main)))
+        self.setWindowIcon(QIcon(os.path.join(self.ICONS_DIR,icon_main)))
 
         # make left docks with meta and file browser
         self.file_browser_dock = self._add_file_browser_dock() # left dock with file browser
@@ -107,55 +107,25 @@ class MainApp(QtWidgets.QMainWindow):
             view.addAction(dock.toggleViewAction())
 
         # ─── Toolbar “Quick Tools” ───────────────────────────────────────────
-        toolbar = self.addToolBar("Quick Tools")
-        toolbar.setIconSize(QSize(48, 48))  # Taille des icônes
-        toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)  #ToolButtonIconOnly ou TextUnderIcon)
+        self.toolbar = self.addToolBar("Quick Tools")
+        self.toolbar.setIconSize(QSize(48, 48))  # Taille des icônes
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)  #ToolButtonIconOnly ou TextUnderIcon)
 
-        # Action File Browser
-        act_file = self.file_browser_dock.toggleViewAction()
-        icon_file_browser = "file_browser_icon.png"
-        act_file.setIcon(QIcon(os.path.join(ICONS_DIR, icon_file_browser)))  # charge ton icône
-        act_file.setToolTip("File Browser")
-        toolbar.addAction(act_file)
+        act_file = self.onToolButtonPress(self.file_browser_dock,icon_name="file_browser_icon.png",tooltip="File Browser")
+        act_met = self.onToolButtonPress(self.meta_dock, "metadata_icon.png", "Metadata")
+        self.toolbar.addSeparator()
+        act_data = self.onToolButtonPress(self.data_viz_dock, "icon_data_viz.svg", "Metadata")
+        act_reg = self.onToolButtonPress(self.reg_dock, "registration_icon.png", "Registration")
+        act_gt =self.onToolButtonPress(self.gt_dock, "GT_icon_1.png", "Ground Truth")
 
-        # Action Metadata
-        act_met = self.meta_dock.toggleViewAction()
-        icon_met = "metadata_icon.png"
-        act_met.setIcon(QIcon(os.path.join(ICONS_DIR, icon_met)))
-        act_met.setToolTip("Metadata")
-        toolbar.addAction(act_met)
-
-        toolbar.addSeparator()
-
-        # Action Data Viz
-        act_data = self.data_viz_dock.toggleViewAction()
-        icon_data_viz = "icon_data_viz.svg"
-        act_data.setIcon(QIcon(os.path.join(ICONS_DIR, icon_data_viz)))
-        act_data.setToolTip("Data Visualization")
-        toolbar.addAction(act_data)
-
-        # Action Registration
-        act_reg = self.reg_dock.toggleViewAction()
-        icon_registration = "registration_icon.png"
-        act_reg.setIcon(QIcon(os.path.join(ICONS_DIR, icon_registration)))
-        act_reg.setToolTip("Registration")
-        toolbar.addAction(act_reg)
-
-        # Action GT
-        act_gt = self.gt_dock.toggleViewAction()
-        icon_gt = "GT_icon_1.png"
-        act_gt.setIcon(QIcon(os.path.join(ICONS_DIR, icon_gt)))
-        act_gt.setToolTip("Ground Truth")
-        toolbar.addAction(act_gt)
-
-        toolbar.addSeparator()
+        self.toolbar.addSeparator()
 
         # Cubes "list"
         self.cubeBtn = QtWidgets.QToolButton(self)
         self.cubeBtn.setText("Cubes list   ")
         self.cubeBtn.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         # self.cubeBtn.setStyleSheet("QToolButton::menu-indicator { image: none; }")
-        toolbar.addWidget(self.cubeBtn)
+        self.toolbar.addWidget(self.cubeBtn)
 
         # Création du menu hiérarchique
         self.cubeMenu = QtWidgets.QMenu(self)
@@ -169,7 +139,7 @@ class MainApp(QtWidgets.QMainWindow):
         # Action Add File in list of cubes
         act_add = QAction("Add Cubes", self)
         act_add.triggered.connect(self._on_add_cube)
-        toolbar.addAction(act_add)
+        self.toolbar.addAction(act_add)
 
         # Mise à jour du menu à chaque modification
         self.hypercube_manager.cubesChanged.connect(self._update_cube_menu)
@@ -177,15 +147,29 @@ class MainApp(QtWidgets.QMainWindow):
 
         act_open_previous = QAction("<", self)
         act_open_previous.setToolTip("Open previous cube in current folder")
-        toolbar.addAction(act_open_previous)
+        self.toolbar.addAction(act_open_previous)
 
         act_open_next = QAction(">", self)
         act_open_next.setToolTip("Open next cube in current folder")
-        toolbar.addAction(act_open_next)
+        self.toolbar.addAction(act_open_next)
 
         # tools to hide at opening
         self.file_browser_dock.hide()
         self.reg_dock.hide()
+
+    def onToolButtonPress(self, dock, icon_name, tooltip):
+        # act = dock.toggleViewAction()
+        # act.setIcon(QIcon(os.path.join(self.ICONS_DIR, icon_name)))
+
+        act = QAction(QIcon(os.path.join(self.ICONS_DIR, icon_name)), tooltip, self)
+        act.setToolTip(tooltip)
+        act.setCheckable(False)
+        act.triggered.connect(lambda checked, d=dock: (d.show(), d.raise_()))
+        # act.toggled.connect(
+        #     lambda visible, d=dock: QTimer.singleShot(0, d.raise_) if visible else None
+        # )
+        self.toolbar.addAction(act)
+        return act
 
     def _on_file_browser_accepted(self, updated_ci: CubeInfoTemp):
         '''
