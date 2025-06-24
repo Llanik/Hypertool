@@ -405,49 +405,56 @@ class Hypercube:
                     # seulement si c’est bien le header trop gros
                     if "object header message is too large" not in str(e):
                         raise  # autre erreur → on remonte
-                    # prompt interactif
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Question)
-                    msg.setWindowTitle("Metadata too large")
-                    msg.setText(f"The metadata '{key}' is too large to save in HDF5.")
-                    msg.setInformativeText("Do you want to save without this metadata?")
-                    yes_btn = msg.addButton("Yes", QMessageBox.AcceptRole)
-                    no_btn = msg.addButton("No", QMessageBox.RejectRole)
-                    dataset_btn = msg.addButton("Save as dataset", QMessageBox.ActionRole)
-                    cancel_btn = msg.addButton("Cancel", QMessageBox.DestructiveRole)
-                    cb = QCheckBox("Do this for all")
-                    msg.setCheckBox(cb)
-                    msg.exec_()
 
-                    # gestion de la réponse
-                    if msg.clickedButton() is cancel_btn:
-                        # on annule tout le save
-                        f.close()
-                        os.remove(filepath)  # ou on laisse le fichier incomplet
-                        return
+                    try:
+                        f.create_dataset(f"Meta_{key}", data=val)
+                    except Exception:
+                        pass
 
-                    if msg.clickedButton() is dataset_btn:
-                        try:
-                            f.create_dataset(f"Meta_{key}", data=val)
-                        except Exception:
-                            pass
-                        filtered_meta[key] = val
-                        if cb.isChecked():
-                            ask_all = True
-                            default_drop = False
-                        continue
+                    # prompt interactif if we want to choose if new dataset
 
-                    drop = (msg.clickedButton() is yes_btn)
-                    if cb.isChecked():
-                        ask_all = True
-                        default_drop = drop
-                    if not drop:
-                        # user chose "Keep as attribute"
-                        try:
-                            f.attrs[key] = val
-                            filtered_meta[key] = val
-                        except:
-                            pass
+                    # msg = QMessageBox()
+                    # msg.setIcon(QMessageBox.Question)
+                    # msg.setWindowTitle("Metadata too large")
+                    # msg.setText(f"The metadata '{key}' is too large to save in HDF5.")
+                    # msg.setInformativeText("Do you want to save without this metadata?")
+                    # yes_btn = msg.addButton("Yes", QMessageBox.AcceptRole)
+                    # no_btn = msg.addButton("No", QMessageBox.RejectRole)
+                    # dataset_btn = msg.addButton("Save as dataset", QMessageBox.ActionRole)
+                    # cancel_btn = msg.addButton("Cancel", QMessageBox.DestructiveRole)
+                    # cb = QCheckBox("Do this for all")
+                    # msg.setCheckBox(cb)
+                    # msg.exec_()
+
+                    # # gestion de la réponse
+                    # if msg.clickedButton() is cancel_btn:
+                    #     # on annule tout le save
+                    #     f.close()
+                    #     os.remove(filepath)  # ou on laisse le fichier incomplet
+                    #     return
+                    #
+                    # if msg.clickedButton() is dataset_btn:
+                    #     try:
+                    #         f.create_dataset(f"Meta_{key}", data=val)
+                    #     except Exception:
+                    #         pass
+                    #     filtered_meta[key] = val
+                    #     if cb.isChecked():
+                    #         ask_all = True
+                    #         default_drop = False
+                    #     continue
+                    #
+                    # drop = (msg.clickedButton() is yes_btn)
+                    # if cb.isChecked():
+                    #     ask_all = True
+                    #     default_drop = drop
+                    # if not drop:
+                    #     # user chose "Keep as attribute"
+                    #     try:
+                    #         f.attrs[key] = val
+                    #         filtered_meta[key] = val
+                    #     except:
+                    #         pass
 
             # Optionnel : mettre à jour self.metadata pour refléter ce qui a été écrit
             self.metadata = filtered_meta
