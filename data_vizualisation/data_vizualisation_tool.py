@@ -5,8 +5,6 @@
 # G:\Mi unidad\CIMLab\Proyectos y OTRI\Hyperdoc\Datos\Database_samples\HYPERDOC Database\Samples
 # --exclude-module tensorflow --exclude-module torch
 
-## import
-# os and interp
 import sys
 import traceback
 import os
@@ -18,7 +16,7 @@ import pandas as pd
 
 # GUI
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget,
+    QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QScrollArea,QDialog,QFormLayout,
     QSlider, QFileDialog, QHBoxLayout,QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,QMessageBox
 )
 from PyQt5.QtCore import Qt,QTimer,QEvent
@@ -43,6 +41,7 @@ from hypercubes.hypercube import*
 # todo : let open file if name do not fit the nomenclature
 
 class Data_Viz_Window(QWidget,Ui_DataVizualisation):
+
     #TODO : make a widget window to edit metadata and add a button on all windows of the app
     def __init__(self,parent=None):
         super().__init__(parent)
@@ -61,7 +60,7 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         self.GT=GroundTruth() # create GT object
         self.image_loaded=[False,False,False]
 
-        self.canvas_image = Canvas_Image() # Canvas pour les images
+        self.canvas_image = Canvas_Image(self) # Canvas pour les images
         self.verticalLayout_image.addWidget(self.canvas_image)
 
         self.canvas_spectra = Canvas_Spectra() # Canvas pour les spectres
@@ -70,6 +69,9 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         # Connect pushButtons du canvas load image
         self.pushButton_open_hypercube.clicked.connect(self.open_hypercubes_and_GT)
         self.pushButton_save_image.clicked.connect(self.save_image)
+
+        # Connect to window Metadata
+        self.pushButton_see_all_metadata.clicked.connect(self.show_all_metadata)
 
         # Connect elements du canvas GT image
         self.sliders_rgb=[self.horizontalSlider_red_channel,self.horizontalSlider_green_channel,self.horizontalSlider_blue_channel]
@@ -107,13 +109,7 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         for elem in [self.pushButton_next_cube,self.pushButton_prev_cube,self.pushButton_save_image,self.horizontalSlider_red_channel,self.horizontalSlider_green_channel,self.horizontalSlider_blue_channel,self.spinBox_red_channel,self.spinBox_green_channel,self.spinBox_blue_channel,self.checkBox_std,self.pushButton_save_spectra,self.horizontalSlider_transparency_GT,self.radioButton_VNIR,self.radioButton_rgb_user,self.radioButton_rgb_default,self.radioButton_SWIR,self.radioButton_grayscale]:
             elem.setEnabled(False)
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-        path_icon = os.path.join(BASE_DIR, "interface/icons", "Hyperdoc_logo_transparente_CIMLab.png")
-        self.pixmap = QPixmap(path_icon)
-        self.setWindowIcon(QIcon(path_icon))
 
-        size = min(self.label_icon_CIL.width(), self.label_icon_CIL.height())
-        self.label_icon_CIL.resize(size, size)
-        self.resize_icon()
 
         # load lookup table for VNIR - SWIR correspodance
         if getattr(sys, 'frozen', False):  # pynstaller case
@@ -125,19 +121,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
                                          "data_vizualisation/Spatially registered minicubes equivalence.csv")
 
         self.minicube_association_table = pd.read_csv(table_path)
-
-    def resizeEvent(self, event):
-        # Redéfinir la méthode resizeEvent pour redimensionner l'image lorsque la fenêtre est redimensionnée
-        super().resizeEvent(event)
-        size = min(self.label_icon_CIL.width(), self.label_icon_CIL.height())
-        self.label_icon_CIL.resize(size, size)
-        self.resize_icon()
-
-    def resize_icon(self):
-        if hasattr(self, 'pixmap'):
-            size = min(self.label_icon_CIL.width(), self.label_icon_CIL.height())
-            scaled_pixmap = self.pixmap.scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            self.label_icon_CIL.setPixmap(scaled_pixmap)
 
     def start_debounce_timer(self):
         """Déclenche le timer pour mettre à jour l'image après un délai."""
@@ -178,7 +161,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
             file_new = files[(index_init + i) % len(files)]
 
         file_hyp = init_dir_hyp + '/' + file_new
-        print(f'file_hyp quick : {file_hyp} ')
 
         try:
             self.open_hypercubes_and_GT(filepath=file_hyp)
@@ -207,7 +189,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         self.cubes_path=filepath # update default folder
 
         cube=Hypercube(filepath,load_init=True) # load hypercube
-        print(f'cube loaded from : {filepath}')
 
         # TODO : continue working on nicely open associated cubes
 
@@ -219,14 +200,12 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
                 if not os.path.exists(path_SWIR):
                     # use table
                     base_name=os.path.basename(filepath).split('.')[0]
-                    print(base_name)
                     matching_rows = self.minicube_association_table[self.minicube_association_table['VNIR'] == base_name]
 
                 if not matching_rows.empty:
                     cube_asoc = matching_rows['SWIR'].iloc[0]
                     path_SWIR = filepath.replace(base_name, cube_asoc)
                 else:
-                    print(f"NO SWIR found for : {base_name}")
                     path_SWIR = None  # ou lève une exception ou gère autrement
                     cube_asoc = self.minicube_association_table.loc[self.minicube_association_table['VNIR'] == base_name]['SWIR'][0]
                     path_SWIR=filepath.replace(base_name,cube_asoc)
@@ -238,7 +217,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
                 if not os.path.exists(path_VNIR):
                     # use table
                     base_name=os.path.basename(filepath).split('.')[0]
-                    print(base_name)
 
                     matching_rows = self.minicube_association_table[self.minicube_association_table['SWIR'] == base_name]
 
@@ -246,7 +224,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
                         cube_asoc = matching_rows['VNIR'].iloc[0]
                         path_VNIR = filepath.replace(base_name, cube_asoc)
                     else:
-                        print(f"NO VNIR found for : {base_name}")
                         path_VNIR = None  # ou lève une exception ou gère autrement
                         cube_asoc = \
                         self.minicube_association_table.loc[self.minicube_association_table['SWIR'] == base_name]['VNIR'][0]
@@ -306,7 +283,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         # load GT using previous folder_name saved with file_GT
         if self.folder_GT is not None :
             path_GT = self.folder_GT + '/' + file_GT
-            print(f'path_GT1 : {path_GT}')
             try:
                 self.GT.load_image(path_GT)
                 self.image_loaded[2] = True
@@ -318,7 +294,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         if not self.image_loaded[2]:
             self.folder_GT = os.path.dirname(filepath)
             path_GT =  os.path.join(self.folder_GT,file_GT)
-            print(f'path_GT2 : {path_GT}')
             try :
                 self.GT.load_image(path_GT)
                 self.image_loaded[2] = True
@@ -329,7 +304,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         if not self.image_loaded[2]:
             self.folder_GT = os.path.join(os.path.dirname(os.path.dirname(filepath)),'GT')
             path_GT = os.path.join(self.folder_GT, file_GT)
-            print(f'path_GT3 : {path_GT}')
             try:
                 self.GT.load_image(path_GT)
                 self.image_loaded[2] = True
@@ -340,7 +314,6 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
         if not self.image_loaded[2]:
             self.folder_GT = os.path.dirname(os.path.dirname(filepath))
             path_GT =  os.path.join(self.folder_GT,file_GT)
-            print(f'path_GT4 : {path_GT}')
             try:
                 self.GT.load_image(path_GT)
                 self.image_loaded[2] = True
@@ -555,6 +528,56 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
 
         self.label_metadata.setText(st)
 
+    def show_all_metadata(self):
+
+        hyp = self.hyps[self.radioButton_SWIR.isChecked()]
+
+        if hyp.metadata is None:
+            QMessageBox.information(self, "No Metadata", "No metadata available.")
+            return
+
+            # Window of dialog kind
+        dialog = QDialog(self)
+        dialog.setWindowTitle("All Metadata")
+        dialog.setModal(False)
+        layout = QVBoxLayout(dialog)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        inner = QWidget()
+        form_layout = QFormLayout(inner)
+
+        # add rows to the form_layout
+        for key, val in hyp.metadata.items():
+            # Ignore entries too long
+            if key in ['spectra_mean', 'spectra_std', 'GT_cmap', 'wl']:
+                continue
+
+            try:
+                if isinstance(val, list) or isinstance(val, np.ndarray):
+                    val_str = ', '.join(str(v) for v in val)
+                elif isinstance(val, dict):
+                    val_str = str(val)
+                else:
+                    val_str = str(val)
+            except Exception as e:
+                val_str = f"<unable to display: {e}>"
+
+            form_layout.addRow(f"{key}:", QLabel(val_str))
+
+        #add scroll widget in dialog eindow layout
+        scroll.setWidget(inner)
+        layout.addWidget(scroll)
+
+        # Close push button
+        btn_close = QPushButton("Close")
+        btn_close.clicked.connect(dialog.accept)
+        layout.addWidget(btn_close)
+
+        dialog.setLayout(layout)
+        dialog.resize(500, 600)
+        dialog.exec()
+
     def modif_channels(self):
 
         hyp_active=self.radioButton_SWIR.isChecked()    # 0 (VNIR) ou 1 (SWIR)
@@ -754,8 +777,10 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
             self.label_general_message.setText('Saving spectra FAILED')
 
 class Canvas_Image(FigureCanvas):
-    def __init__(self):
+    def __init__(self,parent_logic):
         self.fig=Figure(facecolor=(1, 1, 1, 0.1))
+        super().__init__(self.fig)
+        self.logic = parent_logic # to make a reference to Data_Viz class
         self.gs = GridSpec(2, 2, figure=self.fig)
         self.ax0 = self.fig.add_subplot(self.gs[0, 0])  # VNIR
         self.ax1 = self.fig.add_subplot(self.gs[1, 0])  # SWIR
@@ -767,6 +792,41 @@ class Canvas_Image(FigureCanvas):
 
         super().__init__(self.fig)
         self.fig.subplots_adjust(left=0.01, bottom=0.05, right=0.99, top=0.85)
+
+        #add interaction
+        self.fig.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+
+    def on_mouse_move(self,event):
+        # check if on VNIR or SWIR, if not, erase
+        if event.inaxes not in self.axs[:2] :
+            self.logic.canvas_spectra.update_live_spectra()
+            return
+
+        index = self.axs.index(event.inaxes)
+
+        if self.images[index] is None:
+            return
+
+        try:
+            x, y = int(event.xdata), int(event.ydata)
+
+            if x < 0 or y < 0:
+                return
+            hyp = self.logic.hyps[index]
+            if hyp.data is None:
+                return
+
+            if y >= hyp.data.shape[0] or x >= hyp.data.shape[1]:
+                return
+
+            spectrum = hyp.data[y, x, :]
+            wavelength = hyp.wl
+
+            self.logic.canvas_spectra.update_live_spectra(spectrum, wavelength)
+
+        except Exception as e:
+            print(f"[on_mouse_move] error: {e}")
+            return
 
     def create_axis(self,images=[False,False,False]):
         self.fig.clear()
@@ -815,8 +875,11 @@ class Canvas_Image(FigureCanvas):
         for i,rgb_image in enumerate(rgb_images):
             self.axs[i].clear()
             self.axs[i].set_axis_off()
+
             if rgb_image is not None:
+
                 im=self.axs[i].imshow(rgb_image)
+
                 self.images.append(im)
 
                 if not UV :
@@ -833,6 +896,20 @@ class Canvas_Image(FigureCanvas):
                 self.images.append(None)
 
         self.fig.suptitle(title)
+        self.fig.tight_layout()
+
+        ## same size and centered for GT if two hypercubes images
+        bbox0 = self.axs[0].get_position()
+        bbox1 = self.axs[1].get_position()
+        height = (bbox0.height + bbox1.height) / 2
+        width = min(bbox0.width, bbox1.width)
+        new_bbox2 = [bbox1.x1 + 0.02, bbox0.y0, width, height]  # [x0, y0, width, height]
+        y_center = (bbox0.y0 + bbox1.y1) / 2  # centre vertical entre les deux
+        y0 = y_center - height / 2
+        x0 = bbox1.x1 + 0.02  # marge à droite
+        new_bbox2 = [x0, y0, width, height]
+        self.axs[2].set_position(new_bbox2)
+
         self.draw()
 
     def set_gt_transparency(self, transparency):
@@ -960,6 +1037,7 @@ class Canvas_Spectra(FigureCanvas):
 
         self.fig.canvas.mpl_connect('pick_event', self.on_pick)
 
+        self.fig.tight_layout()
         self.draw()
 
     def on_pick(self, event):
@@ -996,8 +1074,24 @@ class Canvas_Spectra(FigureCanvas):
 
         self.draw()
 
-    def update_live_spectra(self, rgb_image, index):
+    def update_live_spectra(self, spectrum=None, wavelength=None):
 
+        if spectrum is None or wavelength is None:
+            if hasattr(self, "live_line"):
+                if self.live_line is not None:
+                    self.live_line.remove()
+                    self.live_line = None
+                    self.draw()
+            return
+
+        if not hasattr(self, "live_line") or self.live_line is None :
+            self.live_line, = self.ax.plot(wavelength, spectrum, color='blue', linestyle='-', label='_nolegend_')
+
+        else:
+            self.live_line.set_data(wavelength, spectrum)
+
+        self.ax.relim()
+        self.ax.autoscale_view()
         self.draw()
 
     def cut_long_string(self,text=None,len_max=20):
@@ -1109,3 +1203,4 @@ if __name__ == "__main__":
     window.open_hypercubes_and_GT(filepath=filepath)
 
     sys.exit(app.exec_())
+
