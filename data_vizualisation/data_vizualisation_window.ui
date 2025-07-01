@@ -36,7 +36,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="2,1">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="3,1">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -69,7 +69,7 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,3">
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,2">
          <item>
           <widget class="QFrame" name="frame_image">
            <property name="styleSheet">
@@ -157,7 +157,7 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,1,3">
+        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,1,2">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -184,7 +184,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_6" stretch="3,3,2">
+           <layout class="QVBoxLayout" name="verticalLayout_6" stretch="3,3">
             <property name="sizeConstraint">
              <enum>QLayout::SetDefaultConstraint</enum>
             </property>
@@ -456,25 +456,6 @@
               </item>
              </layout>
             </item>
-            <item>
-             <widget class="QLabel" name="label_general_message">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
            </layout>
           </widget>
          </item>
@@ -490,6 +471,46 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout">
+            <item row="2" column="1" colspan="2">
+             <widget class="QPushButton" name="pushButton_open_hypercube">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Open Cubes</string>
+              </property>
+              <property name="autoExclusive">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QPushButton" name="pushButton_next_cube">
+              <property name="text">
+               <string>&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QPushButton" name="pushButton_prev_cube">
+              <property name="text">
+               <string>&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1" colspan="2">
+             <widget class="QPushButton" name="pushButton_save_image">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Save Image</string>
+              </property>
+              <property name="autoExclusive">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="0" rowspan="3">
              <widget class="QGroupBox" name="groupBox_ActiceHyp">
               <property name="title">
@@ -526,78 +547,22 @@
               </layout>
              </widget>
             </item>
-            <item row="3" column="1">
-             <widget class="QPushButton" name="pushButton_prev_cube">
-              <property name="text">
-               <string>&lt;</string>
-              </property>
-             </widget>
-            </item>
             <item row="5" column="0" colspan="3">
-             <widget class="QLabel" name="label_icon_CIL">
-              <property name="minimumSize">
-               <size>
-                <width>10</width>
-                <height>10</height>
-               </size>
-              </property>
-              <property name="mouseTracking">
-               <bool>false</bool>
-              </property>
+             <widget class="QLabel" name="label_general_message">
               <property name="styleSheet">
-               <string notr="true">color: rgb(255, 0, 0);</string>
+               <string notr="true"/>
               </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
               </property>
               <property name="text">
-               <string>Logo 
- Hyperdoc</string>
-              </property>
-              <property name="textFormat">
-               <enum>Qt::PlainText</enum>
-              </property>
-              <property name="scaledContents">
-               <bool>false</bool>
+               <string/>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
               </property>
               <property name="wordWrap">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QPushButton" name="pushButton_next_cube">
-              <property name="text">
-               <string>&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1" colspan="2">
-             <widget class="QPushButton" name="pushButton_open_hypercube">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>Open Cubes</string>
-              </property>
-              <property name="autoExclusive">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1" colspan="2">
-             <widget class="QPushButton" name="pushButton_save_image">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>Save Image</string>
-              </property>
-              <property name="autoExclusive">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -630,6 +595,26 @@
                 </widget>
                </item>
                <item>
+                <widget class="QCheckBox" name="checkBox_live_spectrum">
+                 <property name="text">
+                  <string>Live</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_4">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QPushButton" name="pushButton_save_spectra">
                  <property name="text">
                   <string>Save Spectra</string>
@@ -646,7 +631,18 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
-                <widget class="QComboBox" name="comboBox_metadata"/>
+                <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="3,1">
+                 <item>
+                  <widget class="QComboBox" name="comboBox_metadata"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton_see_all_metadata">
+                   <property name="text">
+                    <string>See All</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
                <item>
                 <widget class="QLabel" name="label_metadata">
