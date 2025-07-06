@@ -161,3 +161,16 @@ Traceback (most recent call last):
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TypeError: HypercubeManager.compare_metadata_dicts() takes 2 positional arguments but 3 were given
 
+2025-07-06 22:32:00,339 - INFO - [Metadata] 
+Re-format all metadatas from initial format
+2025-07-06 22:32:53,096 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube_manager.py", line 104, in updateMetadata
+    test = not self.compare_metadata_dicts(self._cubes[index].metadata_temp, updated_ci.metadata_temp)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube_manager.py", line 92, in compare_metadata_dicts
+    if v1 != v2:
+       ^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+
+2025-07-06 22:33:40,953 - ERROR - User comment: after send metadata to tools from copy
