@@ -1,12 +1,14 @@
 import re
 import copy
+import os
 
 from hypercubes.hypercube import*
 from metadata.metadata_dock import*
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QApplication,  QPushButton, QLabel, QVBoxLayout, QWidget, QScrollArea,QDialog,QFormLayout,
-     QMessageBox,QFileDialog,QDialogButtonBox,QHBoxLayout,QCheckBox,QLineEdit
+     QMessageBox,QFileDialog,QDialogButtonBox,QHBoxLayout,QCheckBox,QLineEdit,QComboBox
 )
 
 
@@ -14,6 +16,7 @@ from PyQt5.QtWidgets import (
 # TODO : ajouter outils de generation de la valeur de la metadata (wl, bands,height,name,parent_cube,position,width)
 # TODO : propose edit all Metadata : type formulaire with add_meta possibility
 # TODO : save data
+# TODO : check type when creating/copy from another cube -> protect from editing when added to the form at first ?
 
 class MetadataTool(QWidget, Ui_Metadata_tool):
 
@@ -151,6 +154,7 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         """to propose to copy or create metadata"""
         # todo : add dialog to propose copy from other cube
 
+        # check if already have metadata
         if len(self.cube_info.metadata_temp)!=0:
             ans = QMessageBox.question(
                 self,
@@ -162,7 +166,21 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
             if ans != QMessageBox.Yes:
                 return
 
-        self.create_metadata_set()
+        #ask if create from nothig or copy from other cube
+
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Generate or copy ?")
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setText(
+            "How do you want to generate your metadata set : \n -> from scratch ? \n -> from another cube ? ")
+        scratch_button = msg_box.addButton("From scratch ", QMessageBox.ActionRole)
+        copy_button = msg_box.addButton("From another cube", QMessageBox.ActionRole)
+        msg_box.exec()
+
+        if msg_box.clickedButton() == scratch_button:
+            self.create_metadata_set()
+        elif msg_box.clickedButton() == copy_button:
+            self.copy_from_other_cube()
 
     def create_metadata_set(self):
         """ to propose to create metada """
@@ -226,7 +244,6 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         layout.addWidget(buttons)
 
         def on_accept():
-            print('Accepted')
             for key, (chk, inp) in widgets.items():
                 if chk.isChecked():
                     text = inp.text().strip()
@@ -254,10 +271,196 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         self.update_combo_meta(init=True)
 
     def copy_from_other_cube(self):
-        """ to copy keys and values from other cube with checklist """
+        """Open a form to copy metadata from another cube with checkbox selection."""
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Copy Metadata from Another Cube")
+        dialog.setModal(True)
+        main_layout = QVBoxLayout(dialog)
+
+        # Button to load another cube
+        load_button = QPushButton("Load cube to copy metadata")
+        main_layout.addWidget(load_button)
+
+        # Scrollable area for metadata fields
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QFormLayout(scroll_content)
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area)
+
+        widgets = {}  # Dictionary: key -> (checkbox, lineedit)
+
+        def load_cube():
+            """Open file dialog and load metadata from another cube."""
+            path, _ = QFileDialog.getOpenFileName(
+                self, "Load Cube", "", "Cube files (*.h5 *.hdr *.mat);;All Files (*)"
+            )
+            if not path:
+                return
+            try:
+                new_cube = Hypercube(filepath=path, load_init=True)
+                metadata = new_cube.cube_info.metadata_temp.copy()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Could not load cube:\n{e}")
+                return
+
+            # Clear previous form fields
+            for i in reversed(range(scroll_layout.count())):
+                item = scroll_layout.itemAt(i)
+                if item.widget():
+                    item.widget().deleteLater()
+            widgets.clear()
+
+            # Re-add the global checkbox row
+
+            # Add each metadata field
+            for key, val in metadata.items():
+                hbox = QHBoxLayout()
+                lineedit = QLineEdit()
+                if isinstance(val, (list, np.ndarray)):
+                    lineedit.setText(" ".join(str(x) for x in np.array(val).flatten()))
+                else:
+                    lineedit.setText(str(val))
+                hbox.addWidget(lineedit)
+
+                checkbox = QCheckBox()
+                checkbox.setChecked(True)
+                hbox.addWidget(checkbox)
+
+                widgets[key] = (checkbox, lineedit)
+                scroll_layout.addRow(QLabel(key), hbox)
+
+        load_button.clicked.connect(load_cube)
+
+        # Dialog validation buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        main_layout.addWidget(buttons)
+
+        def accept_copy():
+            """Apply selected metadata to current cube."""
+            for key, (chk, line) in widgets.items():
+                if chk.isChecked():
+                    text = line.text().strip()
+                    if text == "":
+                        continue
+                    try:
+                        values = [float(x) if '.' in x else int(x) for x in text.split()]
+                        self.cube_info.metadata_temp[key] = np.array(values) if len(values) > 1 else values[0]
+                    except:
+                        self.cube_info.metadata_temp[key] = text
+            dialog.accept()
+
+        buttons.accepted.connect(accept_copy)
+        buttons.rejected.connect(dialog.reject)
+
+        dialog.resize(700, 600)
+
+        if dialog.exec_() == QDialog.Accepted:
+            self.update_combo_meta(init=True)
 
     def add_remove_metadatum(self):
-        """add key from metadata_temp and item"""
+        """Open a dialog to add or remove a metadatum from metadata_temp"""
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add or Remove Metadata")
+        layout = QVBoxLayout(dialog)
+
+        # --- ADD PART ---
+        add_group = QVBoxLayout()
+        add_label = QLabel("<b>Add a metadatum</b>")
+        form_add = QFormLayout()
+
+        key_input = QLineEdit()
+        value_input = QLineEdit()
+
+        type_combo = QComboBox()
+        type_combo.addItems(["str", "int", "float", "list", "ndarray"])
+
+        add_button = QPushButton("Add")
+
+        form_add.addRow("Name:", key_input)
+        form_add.addRow("Value:", value_input)
+        form_add.addRow("Type:", type_combo)
+        form_add.addRow("", add_button)
+
+        add_group.addWidget(add_label)
+        add_group.addLayout(form_add)
+        layout.addLayout(add_group)
+
+        # --- REMOVE PART ---
+        remove_group = QVBoxLayout()
+        remove_label = QLabel("<b>Remove a metadatum</b>")
+        form_remove = QFormLayout()
+
+        remove_combo = QComboBox()
+        remove_combo.addItems(list(self.cube_info.metadata_temp.keys()))
+        remove_button = QPushButton("Remove")
+
+        form_remove.addRow("Select key:", remove_combo)
+        form_remove.addRow("", remove_button)
+
+        remove_group.addWidget(remove_label)
+        remove_group.addLayout(form_remove)
+        layout.addLayout(remove_group)
+
+        # --- CALLBACKS ---
+
+        def add_metadata():
+            key = key_input.text().strip()
+            raw_val = value_input.text().strip()
+            dtype = type_combo.currentText()
+
+            if not key:
+                QMessageBox.warning(dialog, "Error", "Key cannot be empty.")
+                return
+
+            try:
+                if dtype == "str":
+                    val = raw_val
+                elif dtype == "int":
+                    val = int(raw_val)
+                elif dtype == "float":
+                    val = float(raw_val)
+                elif dtype == "list":
+                    val = eval(raw_val)  # ex: "[1, 2, 3]"
+                    if not isinstance(val, list):
+                        raise ValueError
+                elif dtype == "ndarray":
+                    val = np.array(eval(raw_val))
+                else:
+                    raise ValueError("Unknown type")
+            except Exception:
+                QMessageBox.critical(dialog, "Error", f"Invalid value for type {dtype}.")
+                return
+
+            self.cube_info.metadata_temp[key] = val
+            QMessageBox.information(dialog, "Success", f"Metadatum '{key}' added.")
+            self.update_combo_meta(init=True)
+            dialog.accept()
+
+        def remove_metadata():
+            key = remove_combo.currentText()
+            if not key:
+                return
+            reply = QMessageBox.question(
+                dialog,
+                "Confirm",
+                f"Do you really want to remove '{key}'?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if reply == QMessageBox.Yes:
+                self.cube_info.metadata_temp.pop(key, None)
+                QMessageBox.information(dialog, "Removed", f"Metadatum '{key}' removed.")
+                self.update_combo_meta(init=True)
+                dialog.accept()
+
+        add_button.clicked.connect(add_metadata)
+        remove_button.clicked.connect(remove_metadata)
+
+        dialog.setLayout(layout)
+        dialog.exec()
 
     def reset_metadata(self):
         """ all values back to initial copy named meta_load """

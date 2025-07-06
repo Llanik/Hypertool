@@ -4,15 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Main added all tools and open cube with dialog">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Metadata tool with generate meta first step.&#10;Much robust for lokking at changes keep save etc...">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/hypercube_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata/metadata_dock.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_dock.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata/metadata_dock.ui" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_dock.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/suggestions.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/suggestions.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/metadata/metadata_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_tool.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -140,14 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00008" summary="registration_images OK for grey image&#10;to do : &#10;- load hypercubes&#10;- save transformed hypercube">
-      <option name="closed" value="true" />
-      <created>1745598050547</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1745598050547</updated>
     </task>
     <task id="LOCAL-00009" summary="scrolable images OK">
       <option name="closed" value="true" />
@@ -533,7 +521,15 @@
       <option name="project" value="LOCAL" />
       <updated>1751621833902</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="Metadata tool with generate meta first step.&#10;Much robust for lokking at changes keep save etc...">
+      <option name="closed" value="true" />
+      <created>1751732511279</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1751732511281</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -585,7 +581,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="OK for selection rectangle and pixel of different color, multiple distance." />
     <MESSAGE value="selection with pixel drag OK (with inside path in option)" />
     <MESSAGE value="Erase Mode OK .. .BUT .. no se vee la selction anterior en pixel mode when drag" />
     <MESSAGE value="Erase all right&#10;correction of overlays supperposition in drag mode" />
@@ -610,6 +605,7 @@
     <MESSAGE value="ouverture des cubes dans data_viz elargie en format, ajout de la hash_up table pour association de cube, depandance UV differentes" />
     <MESSAGE value="syncronize Drag and scroll for images and GT&#10;Open non h5&#10;live spectrum initiate if no GT" />
     <MESSAGE value="Main added all tools and open cube with dialog" />
-    <option name="LAST_COMMIT_MESSAGE" value="Main added all tools and open cube with dialog" />
+    <MESSAGE value="Metadata tool with generate meta first step.&#10;Much robust for lokking at changes keep save etc..." />
+    <option name="LAST_COMMIT_MESSAGE" value="Metadata tool with generate meta first step.&#10;Much robust for lokking at changes keep save etc..." />
   </component>
 </project>

@@ -77,20 +77,22 @@ class HypercubeManager(QtCore.QObject):
         for key in d1:
             v1 = d1[key]
             v2 = d2[key]
-            print(v1,v2)
 
-            if isinstance(v1, np.ndarray) and isinstance(v2, np.ndarray):
-                if not np.array_equal(v1, v2):
-                    return False
-            elif isinstance(v1, list) and isinstance(v2, list):
-                if v1 != v2:
-                    return False
-            elif isinstance(v1, dict) and isinstance(v2, dict):
-                if v1 != v2:
-                    return False
-            else:
-                if v1 != v2:
-                    return False
+            try:
+                if isinstance(v1, np.ndarray) and isinstance(v2, np.ndarray):
+                    if not np.array_equal(v1, v2):
+                        return False
+                elif isinstance(v1, list) and isinstance(v2, list):
+                    if v1 != v2:
+                        return False
+                elif isinstance(v1, dict) and isinstance(v2, dict):
+                    if v1 != v2:
+                        return False
+                else:
+                    if v1 != v2:
+                        return False
+            except :
+                return False
 
         return True
 
