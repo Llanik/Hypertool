@@ -6,6 +6,7 @@ from hypercubes.hypercube import*
 from metadata.metadata_dock import*
 
 from PyQt5.QtCore import Qt
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
     QApplication,  QPushButton, QLabel, QVBoxLayout, QWidget, QScrollArea,QDialog,QFormLayout,
      QMessageBox,QFileDialog,QDialogButtonBox,QHBoxLayout,QCheckBox,QLineEdit,QComboBox
@@ -21,6 +22,7 @@ from PyQt5.QtWidgets import (
 class MetadataTool(QWidget, Ui_Metadata_tool):
 
     metadataChanged = pyqtSignal(object)
+    cubeLoaded = QtCore.pyqtSignal(str)
 
     def __init__(self,cube_info:CubeInfoTemp=CubeInfoTemp(), parent=None):
         super().__init__(parent)
@@ -482,7 +484,12 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         self.textEdit_metadata.setStyleSheet("QTextEdit  { color: black; }")
         key = self.comboBox_metadata.currentText()
         if key=='':
-            key='cubeinfo'
+            try:
+                key='cubeinfo'
+                raw = self.cube_info.metadata_temp[key]
+            except:
+                pass
+
         raw = self.cube_info.metadata_temp[key]
 
         try :
@@ -754,6 +761,11 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         cube = Hypercube(filepath=path, load_init=True)
         self.set_cube_info(cube.cube_info)
         self.update_combo_meta(init=True)
+        self.cubeLoaded.emit(path)  # Notify the manager
+
+    def load_cube_info(self, ci: CubeInfoTemp):
+        # Called by the manager to inject the latest version of the cube info
+        self.set_cube_info(ci)
 
 if __name__ == '__main__':
     filepath = None

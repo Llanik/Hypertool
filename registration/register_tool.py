@@ -10,12 +10,13 @@ import numpy as np
 import cv2
 from IPython.core.display_functions import update_display
 from PyQt5.QtWidgets import (
-    QApplication, QWidget,QMainWindow, QVBoxLayout, QPushButton,
+    QApplication, QWidget,QMainWindow, QVBoxLayout, QPushButton,QSpinBox,
     QLabel, QFileDialog, QHBoxLayout, QMessageBox, QComboBox, QDialog,QLineEdit,
     QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,QRubberBand,QFormLayout,QDialogButtonBox
 )
 from PyQt5.QtGui import QPixmap, QImage, QTransform,  QPen, QColor
 from PyQt5.QtCore import Qt, QPointF, QRectF, QRect, QPoint,QSize,pyqtSignal,QStandardPaths
+from PyQt5 import QtCore
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 import os, uuid, tempfile
@@ -62,6 +63,7 @@ def overlay_checkerboard(fixed, aligned, tile_size=20):
     return result
 
 class ZoomableGraphicsView(QGraphicsView):
+    middleClicked = pyqtSignal(QPointF)
     def __init__(self):
         super().__init__()
         self.setScene(QGraphicsScene())
@@ -97,6 +99,10 @@ class ZoomableGraphicsView(QGraphicsView):
             self.rubber_band.setGeometry(QRect(self.origin, QSize()))
             self.rubber_band.show()
             self._selecting = True
+        if event.button() == Qt.MiddleButton and self.pixmap_item:
+            scene_pos = self.mapToScene(event.pos())
+            self.middleClicked.emit(scene_pos)
+
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -165,9 +171,10 @@ class ZoomableGraphicsView(QGraphicsView):
         self.rect_coords=None
 
 class RegistrationApp(QMainWindow, Ui_MainWindow):
-    # TODO: show number of features found
 
     alignedCubeReady = pyqtSignal(CubeInfoTemp) # send signal to main
+    cubeLoaded = QtCore.pyqtSignal(str)
+    cube_saved = pyqtSignal(CubeInfoTemp)
 
     def __init__(self,parent=None):
         super().__init__(parent)
@@ -223,6 +230,8 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.left_layout.addWidget(self.viewer_moving, stretch=1)
         self.viewer_img=[self.viewer_fixed,self.viewer_moving,self.viewer_aligned]
         self.viewer_label=[self.label_fixed,self.label_moving]
+
+        self.viewer_aligned.middleClicked.connect(self.middle_click_on_match) #interaction for features supress
 
         self.setLayout(self.main_layout)
 
@@ -308,6 +317,20 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 # self.label_img[i_mov].setPixmap(np_to_qpixmap(img).scaled(300, 300, Qt.KeepAspectRatio))
                 self.viewer_img[i_mov].setImage(np_to_qpixmap(img))
 
+    def load_cube_info(self, ci: CubeInfoTemp):
+        """
+        Used by the manager to inject updated CubeInfoTemp.
+        Detects whether the filepath matches the fixed or moving cube.
+        """
+        if self.fixed_cube and self.fixed_cube.cube_info.filepath == ci.filepath:
+            self.fixed_cube.cube_info=ci
+
+        elif self.moving_cube and self.moving_cube.cube_info.filepath == ci.filepath:
+            self.moving_cube.cube_info=ci
+
+        else:
+            print(f"[Warning] CubeInfo path does not match fixed or moving cube: {ci.filepath}")
+
     def load_cube(self,i_mov=None,fname=None,switch=False):
 
         if switch:
@@ -372,10 +395,12 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                         self.moving_cube.open_hyp(fname, open_dialog=False)
                         cube=self.moving_cube.data
                         wl=self.moving_cube.wl
+                        self.cubeLoaded.emit(fname)  # Notify the manager
                     else:
                         self.fixed_cube.open_hyp(fname, open_dialog=False)
                         cube=self.fixed_cube.data
                         wl = self.fixed_cube.wl
+                        self.cubeLoaded.emit(fname)  # Notify the manager
 
                     self.cube = [self.fixed_cube, self.moving_cube]
 
@@ -673,6 +698,9 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         start_idx = packet_idx * keypoints_per_packet
         end_idx = start_idx + keypoints_per_packet
         selected_matches = self.matches_all[start_idx:end_idx]
+        self.match_display_to_global_index = {
+            i: start_idx + i for i in range(len(selected_matches))
+        } #to keep corespondace between displayed number and number in the feature list
 
         # Créer une image combinée côte à côte
         fixed_img_vis = cv2.cvtColor(self.fixed_img, cv2.COLOR_GRAY2BGR) if len(
@@ -704,6 +732,11 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
             cv2.putText(combined, str(i), (pt1[0] + 6, pt1[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
             cv2.putText(combined, str(i), (pt2_shifted[0] + 6, pt2_shifted[1] - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                         color, 1)
+
+        self.currently_displayed_matches = selected_matches
+        self.match_display_to_global_index = {
+            i: start_idx + i for i in range(len(selected_matches))
+        }
 
         self.viewer_aligned.setImage(np_to_qpixmap(combined))
 
@@ -781,20 +814,24 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                                             'NO selected zone in the aligned cube.\nSelect first a rectangle with the right click or do not check "Croped cubes" on saving')
                         return
 
-                    if not save_both:
+            if not save_both and not flag_save_aligned:
 
-                        # if croped selected but not save both -> ask if sure
-                        msg_box = QMessageBox(self)
-                        msg_box.setWindowTitle("Only one cube ?")
-                        msg_box.setIcon(QMessageBox.Question)
-                        msg_box.setText(
-                            "You choosed to keep only the selected part of the whole cube.\nAre you sure you do not want to save both croped cubes ?")
-                        only_aligned = msg_box.addButton("Yes, just keep croped aligned cube", QMessageBox.ActionRole)
-                        save_both = msg_box.addButton("No, save both", QMessageBox.ActionRole)
-                        msg_box.exec()
+                # if croped selected but not save both -> ask if sure
+                msg_box = QMessageBox(self)
+                msg_box.setWindowTitle("Only one cube ?")
+                msg_box.setIcon(QMessageBox.Question)
+                msg_box.setText(
+                    "You choosed to keep only the selected part of the whole cube.\nAre you sure you do not want to save both croped cubes ?")
+                only_aligned = msg_box.addButton("Yes, just keep croped aligned cube", QMessageBox.ActionRole)
+                save_both = msg_box.addButton("No, save both", QMessageBox.ActionRole)
+                msg_box.exec()
 
-                        if msg_box.clickedButton() == save_both:
-                            save_both=True
+                if msg_box.clickedButton() == save_both:
+                    save_both=True
+                elif msg_box.clickedButton() == only_aligned:
+                    save_both=False
+
+        print(f'save both : {save_both}')
 
         mini_fixed_cube = Hypercube(data=self.fixed_cube.data,metadata=self.fixed_cube.cube_info.metadata_temp, wl=self.fixed_cube.wl, cube_info=self.fixed_cube.cube_info)
         mini_align_cube = Hypercube(data=self.moving_cube.data, wl=self.moving_cube.wl,metadata=self.moving_cube.cube_info.metadata_temp,
@@ -919,11 +956,12 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 def on_accept():
 
                     mini_align_cube.cube_info.metadata_temp['name'] = lineedit_reg_name.text().strip()
-                    mini_fixed_cube.cube_info.metadata_temp['name'] = lineedit_fix_name.text().strip()
                     mini_align_cube.cube_info.metadata_temp['cubeinfo'] = lineedit_reg_cubeinfo.text().strip()
-                    mini_fixed_cube.cube_info.metadata_temp['cubeinfo'] = lineedit_fix_cubeinfo.text().strip()
                     mini_align_cube.cube_info.metadata_temp['number'] = lineedit_number.text().strip()
-                    mini_fixed_cube.cube_info.metadata_temp['number'] = lineedit_number.text().strip()
+                    if save_both:
+                        mini_fixed_cube.cube_info.metadata_temp['name'] = lineedit_fix_name.text().strip()
+                        mini_fixed_cube.cube_info.metadata_temp['cubeinfo'] = lineedit_fix_cubeinfo.text().strip()
+                        mini_fixed_cube.cube_info.metadata_temp['number'] = lineedit_number.text().strip()
 
                     dialog.accept()
 
@@ -996,6 +1034,21 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         fmt = opts['cube_format']
         try :
             mini_align_cube.save(save_path_align,fmt=fmt,meta_from_cube_info=True)
+            if len(save_path_align.split('.'))==1:
+                match fmt:
+                    case "MATLAB":
+                        ext = '.mat'
+                    case "HDF5":
+                        ext = '.h5'
+                    case "ENVI":
+                        ext = '.hdr'
+                    case _:
+                        ext = '.h5'
+                save_path_align+=ext
+
+            mini_align_cube.cube_info.filepath=save_path_align
+            self.cube_saved.emit(mini_align_cube.cube_info)
+            print(f'mini_align_cube save {mini_align_cube.cube_info.filepath}')
             if flag_save_aligned or not opts['crop_cube']:
                 self.parent_aligned_for_minicubes=mini_align_cube
                 self.checkBox_autorize_modify.setChecked(False)
@@ -1007,10 +1060,74 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
 
         if save_both:
             mini_fixed_cube.save(save_path_fixed,fmt=fmt,meta_from_cube_info=True)
+            if len(save_path_fixed.split('.'))==1:
+                match fmt:
+                    case "MATLAB":
+                        ext = '.mat'
+                    case "HDF5":
+                        ext = '.h5'
+                    case "ENVI":
+                        ext = '.hdr'
+                    case _:
+                        ext = '.h5'
+                save_path_fixed+=ext
+            mini_fixed_cube.cube_info.filepath=save_path_fixed
+            self.cube_saved.emit(mini_fixed_cube.cube_info)
             QMessageBox.information(self, "Succès", f"Cubes saved as {fmt} in :\n{save_path_align} \n{save_path_fixed} ")
 
     def switch_fixe_mov(self):
         self.load_cube(switch=True)
+
+    def middle_click_on_match(self, scene_pos):
+        if self.overlay_selector.currentText() != "View Matches":
+            return
+
+        clicked_x, clicked_y = scene_pos.x(), scene_pos.y()
+        img_width = self.fixed_img.shape[1]
+        min_dist = 15
+        closest_display_idx = None
+
+        for i, match in enumerate(self.currently_displayed_matches):
+            pt1 = np.array(self.kp1[match.queryIdx].pt)
+            pt2 = np.array(self.kp2[match.trainIdx].pt) + np.array([img_width, 0])
+            dist1 = np.linalg.norm(pt1 - np.array([clicked_x, clicked_y]))
+            dist2 = np.linalg.norm(pt2 - np.array([clicked_x, clicked_y]))
+
+            if dist1 < min_dist or dist2 < min_dist:
+                closest_display_idx = i
+                break
+
+        if closest_display_idx is not None:
+            self.dialog_remove_match(closest_display_idx)
+
+    def dialog_remove_match(self, match_idx):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Remove Match")
+        layout = QVBoxLayout(dialog)
+
+        label = QLabel("Supress feature #")
+        spinbox = QSpinBox()
+        spinbox.setRange(0, len(self.matches_all) - 1)
+        spinbox.setValue(match_idx)
+
+        layout.addWidget(label)
+        layout.addWidget(spinbox)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addWidget(buttons)
+
+        def on_accept():
+            display_idx = spinbox.value()
+            real_idx = self.match_display_to_global_index.get(display_idx, None)
+            if real_idx is not None:
+                del self.matches_all[real_idx]
+                self.update_keypoints_display()
+            dialog.accept()
+
+        buttons.accepted.connect(on_accept)
+        buttons.rejected.connect(dialog.reject)
+
+        dialog.exec_()
 
     def clean_cache(self):
         import glob
@@ -1020,6 +1137,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
                 os.remove(f)
             except:
                 pass
+
 
 # TODO : clean different load and save function in data_viz and register and openSave
 

@@ -20,7 +20,7 @@ import copy
 # TODO : sortir HDF5BrowserWidget du fichier de la classe hypercube ?
 # TODO : si metadata à la racine, alors on garde toute la racine sauf le cube (ou une selection ?)
 # todo : before closing or removing cubes, check if modif have been made by comparing cube.cubeInfo.metadataTemp and cube.metadata
-
+from pathlib import Path
 @dataclass
 class CubeInfoTemp:
     """
@@ -37,8 +37,12 @@ class CubeInfoTemp:
     # because only one filepath for one cube...and one cube for one filepath, let's define the cubeInfo equality
     def __eq__(self, other):
         if not isinstance(other, CubeInfoTemp):
-            return False
-        return self.filepath == other.filepath
+            return NotImplemented
+        return Path(self.filepath).resolve() == Path(other.filepath).resolve()
+
+    def __hash__(self):
+        # if in dic or set
+        return hash(Path(self.filepath).resolve())
 
 class Hypercube:
 

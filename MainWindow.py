@@ -1,12 +1,12 @@
 # cd C:\Users\Usuario\Documents\GitHub\Hypertool
-# pyinstaller --noconsole --noconfirm --exclude-module tensorflow --exclude-module torch --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth" MainWindow.py
+# pyinstaller --noconsole --noconfirm --exclude-module tensorflow --exclude-module torch --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation"  MainWindow.py
 
 # GUI Qt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer,QSize, Qt
 from PyQt5.QtGui import QFont,QIcon, QPalette, QColor
 from PyQt5.QtWidgets import (QStyleFactory, QAction, QPushButton, QSizePolicy,
-                             QLabel, QVBoxLayout, QTextEdit)
+                             QLabel, QVBoxLayout, QTextEdit,QMessageBox)
 
 ## System
 
@@ -153,31 +153,66 @@ class MainApp(QtWidgets.QMainWindow):
         self.hypercube_manager.cubesChanged.connect(self._update_cube_menu)
         self._update_cube_menu(self.hypercube_manager.paths)
 
-        act_open_previous = QAction("<", self)
-        act_open_previous.setToolTip("Open previous cube in current folder")
-        self.toolbar.addAction(act_open_previous)
+        # act_save = QAction("Save Cube to Disc", self)
+        # act_save.setToolTip("Save cube from loaded cubes")
+        # act_save.triggered.connect(self.save_cube)
+        # self.toolbar.addAction(act_save)
 
-        act_open_next = QAction(">", self)
-        act_open_next.setToolTip("Open next cube in current folder")
-        self.toolbar.addAction(act_open_next)
+        # Save with menu
+        self.saveBtn = QtWidgets.QToolButton(self)
+        self.saveBtn.setText("Save Cube")
+        # self.saveBtn.setIcon(QIcon(os.path.join(self.ICONS_DIR, "save_icon.png")))
+        # todo : add icon for save cube
+        self.saveBtn.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.saveMenu = QtWidgets.QMenu(self)
+        self.saveBtn.setMenu(self.saveMenu)
+        self.toolbar.addWidget(self.saveBtn)
+
+        # update if list modified
+        self.hypercube_manager.cubesChanged.connect(self._update_save_menu)
+        self._update_save_menu(self.hypercube_manager.paths)
 
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.toolbar.addWidget(spacer)
 
-        act_suggestion= QAction("SUGGESTIONS",self)
-        act_suggestion.setToolTip("Add a suggestion for the developper")
-        act_suggestion.triggered.connect(self.open_suggestion_box)
-        self.toolbar.addAction(act_suggestion)
-
-        #### connect tools with hypercube manager for managinf changes in cubeInfoTemp
+        #### connect tools with hypercube manager for managing changes in cubeInfoTemp
         self.meta_dock.widget().metadataChanged.connect(self.hypercube_manager.updateMetadata)
-        self.hypercube_manager.metadataUpdated.connect(self.meta_dock.widget().on_metadata_updated)
 
+        self.reg_dock.widget().cube_saved.connect(self.hypercube_manager.add_or_update_cube)
+        self.gt_dock.widget().cube_saved.connect(self.hypercube_manager.add_or_update_cube)
+
+        self.hypercube_manager.metadataUpdated.connect(self.meta_dock.widget().on_metadata_updated)
+        self.hypercube_manager.metadataUpdated.connect(self.reg_dock.widget().load_cube_info)
+        self.hypercube_manager.metadataUpdated.connect(self.gt_dock.widget().load_cube_info)
+        # self.hypercube_manager.metadataUpdated.connect(self.data_viz_dock.widget().load_cube_info)
+
+        self.reg_dock.widget().cubeLoaded.connect(lambda fp: self._on_tool_loaded_cube(fp, self.reg_dock.widget()))
+        self.meta_dock.widget().cubeLoaded.connect(lambda fp: self._on_tool_loaded_cube(fp, self.meta_dock.widget()))
+        # self.data_viz_dock.widget().cubeLoaded.connect(lambda fp: self._on_tool_loaded_cube(fp, self.data_viz_dock.widget()))
+        self.gt_dock.widget().cubeLoaded.connect(lambda fp: self._on_tool_loaded_cube(fp, self.gt_dock.widget()))
 
     def open_suggestion_box(self):
         self.suggestion_window = SuggestionWidget()
         self.suggestion_window.show()
+
+    def addOrSyncCube(self, filepath: str) -> CubeInfoTemp:
+        """
+        Check if the cube is already in the manager.
+        If so, return the existing CubeInfoTemp.
+        Otherwise, load it from disk, add it to the list, and return it.
+        """
+        index = self.getIndexFromPath(filepath)
+        if index != -1:
+            return self._cubes[index]
+
+        # Cube is not in the list → load and add it
+        ci = CubeInfoTemp(filepath=filepath)
+        hc = Hypercube(filepath=filepath, cube_info=ci, load_init=True)
+        ci = hc.cube_info
+        self._cubes.append(ci)
+        self.cubesChanged.emit(self.paths)
+        return ci
 
     def onToolButtonPress(self, dock, icon_name, tooltip):
         # act = dock.toggleViewAction()
@@ -257,6 +292,25 @@ class MainApp(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
         return dock
 
+    def _update_save_menu(self, paths):
+        """Met à jour le menu déroulant du bouton Save Cube avec tous les cubes chargés."""
+        self.saveMenu.clear()
+        for idx, path in enumerate(paths):
+            action = QtWidgets.QAction(os.path.basename(path), self)
+            action.triggered.connect(lambda checked, i=idx: self.save_cube(i))
+            self.saveMenu.addAction(action)
+
+    def save_cube(self,index=None):
+        ci     = self.hypercube_manager.getCubeInfo(index)
+
+        ans=QMessageBox.question(self,'Save modification',f'Sure to save modification on disc for the cube :\n{ci.filepath}', QMessageBox.Yes | QMessageBox.Cancel)
+        if ans==QMessageBox.Cancel:
+            return
+
+        cube=Hypercube(filepath=ci.filepath,metadata=ci.metadata_temp)
+        cube.save(filepath=ci.filepath)
+        print(f'cube saves as {ci.filepath}')
+
     def _on_add_cube(self,paths=None):
         if not isinstance(paths, (list, tuple)) or len(paths) == 0:
             paths, _ = QtWidgets.QFileDialog.getOpenFileNames(
@@ -329,7 +383,14 @@ class MainApp(QtWidgets.QMainWindow):
         self._send_to_metadata(index)
         self.reg_dock.widget().load_cube(1, self.hypercube_manager.paths[index])
 
-    # todo : send to all
+    def _on_tool_loaded_cube(self, filepath, widget):
+        index = self.hypercube_manager.getIndexFromPath(filepath)
+        if index != -1:
+            ci = self.hypercube_manager.getCubeInfo(index)
+            widget.load_cube_info(ci)
+        else:
+            ci=Hypercube(filepath,load_init=True).cube_info
+            self.hypercube_manager.addCube(ci)
 
     def _update_cube_menu(self, paths):
         """Met à jour le menu de cubes avec sous-menus et actions fonctionnelles."""
@@ -381,11 +442,15 @@ class MainApp(QtWidgets.QMainWindow):
             # Séparateur
             sub.addSeparator()
 
-            # ─── NOUVELLE ACTION “Get Cube Info from File” ─────────────────
-            act_get_info = QtWidgets.QAction("Get cube_info from file…", self)
-            act_get_info.triggered.connect(lambda _, i=idx: self._on_get_cube_info(i))
-            sub.addAction(act_get_info)
-            # ───────────────────────────────────────────────────────────────
+            # Get Cube Info from File”
+            # act_get_info = QtWidgets.QAction("Get cube_info from file…", self)
+            # act_get_info.triggered.connect(lambda _, i=idx: self._on_get_cube_info(i))
+            # sub.addAction(act_get_info)
+
+            # Save Cube
+            act_save = QtWidgets.QAction("Save modification to disc", self)
+            act_save.triggered.connect(lambda checked, i=idx: self.save_cube(i))
+            sub.addAction(act_save)
 
             # Séparateur
             sub.addSeparator()
@@ -526,7 +591,7 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    folder=r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database\Samples\minicubes/'
+    folder='C:/Users/Usuario/Documents/DOC_Yannick/HYPERDOC Database/Samples/minicubes/'
     cube_1='00189-VNIR-mock-up.h5'
     cube_2='00191-VNIR-mock-up.h5'
     paths=[folder+cube_1,folder+cube_2]
