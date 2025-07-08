@@ -8,6 +8,7 @@ import os
 import sys
 
 ## GUI
+from PyQt5 import QtCore
 from PyQt5.QtGui    import QPixmap, QPainter, QColor, QPen
 from PyQt5.QtWidgets import (
     QApplication,QSizePolicy, QGraphicsScene, QGraphicsPixmapItem,QRubberBand,QWidget, QFileDialog, QMessageBox,QInputDialog , QSplitter,QGraphicsView,QLabel,
@@ -36,6 +37,8 @@ from ground_truth.ground_truth_window import Ui_GroundTruthWidget
 # todo : actualize GT_cmp if label added OR load from default GT_table
 # todo : check if cube already hace a GT map done (looking at GT labels for example)
 # todo : upload GT_cmap from csv ?
+
+
 
 ## GT colors
 GT_cmap=np.array([[0.        , 1.        , 0.24313725, 0.22745098, 0.37254902,
@@ -222,8 +225,10 @@ class ZoomableGraphicsView(QGraphicsView):
     #         self._selecting = True
     #     super().mousePressEvent(event)
 
-
 class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
+    cubeLoaded = QtCore.pyqtSignal(str)
+    cube_saved = QtCore.pyqtSignal(CubeInfoTemp)
+
     def __init__(self, parent=None,cubeInfo=None):
         super().__init__(parent)
         # Set up UI from compiled .py
@@ -574,8 +579,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                         fmt = 'HDF5'
                     case '.hdr':
                         fmt='ENVI'
+                    case _:
+                        fmt = 'HDF5'
 
                 self.cube.save(filepath,fmt=fmt)
+                self.cube_saved.emit(self.cube.cube_info)
 
         else :
             print('No Overlay')
@@ -956,7 +964,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.show_image()
         self.update_legend()
 
-
     def _handle_erasure(self, coords):
 
         for x, y in coords:
@@ -1125,7 +1132,10 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.reset_state()
         self.modif_sliders()
-        self.show_image()
+        self.show_image(path) # Notify the manager
+
+    def load_cube_info(self, ci: CubeInfoTemp):
+        self.cube.cube_info = ci
 
     def reset_state(self):
         """

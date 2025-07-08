@@ -109,6 +109,39 @@ class HypercubeManager(QtCore.QObject):
             updated_ci.modif = True
             self.metadataUpdated.emit(updated_ci)
 
+    def add_or_update_cube(self, ci: CubeInfoTemp):
+        """
+        Add cube if new, or update metadata if it already exists.
+        Emits cubesChanged or metadataUpdated accordingly.
+        """
+        index = self.getIndexFromPath(ci.filepath)
+
+        if index == -1:
+            # New cube
+            self._cubes.append(ci)
+            self.cubesChanged.emit(self.paths)
+        else:
+            # Existing cube → update metadata
+            self.updateMetadata(ci)
+
+    def addOrSyncCube(self, filepath: str) -> CubeInfoTemp:
+        """
+        Check if the cube is already in the manager.
+        If so, return the existing CubeInfoTemp.
+        Otherwise, load it from disk, add it to the list, and return it.
+        """
+        index = self.getIndexFromPath(filepath)
+        if index != -1:
+            return self._cubes[index]
+
+        # Cube is not in the list → load and add it
+        ci = CubeInfoTemp(filepath=filepath)
+        hc = Hypercube(filepath=filepath, cube_info=ci, load_init=True)
+        ci = hc.cube_info
+        self._cubes.append(ci)
+        self.cubesChanged.emit(self.paths)
+        return ci
+
     @property
     def paths(self) -> List[str]:
         """List of cube filepaths."""

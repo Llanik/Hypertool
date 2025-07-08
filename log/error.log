@@ -1,176 +1,46 @@
 
-2025-07-03 22:14:14,261 - ERROR - Uncaught exception:
+
+2025-07-08 01:16:30,065 - ERROR - Uncaught exception:
 Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 315, in <lambda>
-    act_viz.triggered.connect(lambda checked, i=idx: self._send_to_dock(i, self.dock1))
-                                                     ^^^^^^^^^^^^^^^^^^
-AttributeError: 'MainApp' object has no attribute '_send_to_dock'. Did you mean: '_send_to_gt'?
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 583, in keep_GT
+    self.cube.save(filepath,fmt=fmt)
+                                ^^^
+UnboundLocalError: cannot access local variable 'fmt' where it is not associated with a value
 
-2025-07-03 22:14:46,404 - ERROR - User comment: j'ai voulu envoyer a l'outils visualisation et ho...bugg
-
-2025-07-03 22:15:06,063 - INFO - faire proprement l'envoi a data viz
-2025-07-04 09:30:29,317 - ERROR - Uncaught exception:
+2025-07-08 01:20:39,612 - ERROR - Uncaught exception:
 Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 131, in update_metadata_label
-    st = f'The sample has been restored ?  <br> <b> {['NO','YES'][raw[0]]}</b>'
-                                                     ~~~~~~~~~~~~^^^^^^^^
-TypeError: only integer scalar arrays can be converted to a scalar index
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 586, in keep_GT
+    self.cube_saved.emit(self.cube.ci)
+                         ^^^^^^^^^^^^
+AttributeError: 'Hypercube' object has no attribute 'ci'
 
-2025-07-04 09:30:39,068 - ERROR - Uncaught exception:
+2025-07-08 01:44:51,625 - ERROR - Uncaught exception:
 Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 143, in update_metadata_label
-    st = f'The exposure time set for the capture was <b>{raw[0]:.2f}</b> ms.'
-                                                        ^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 959, in on_accept
+    mini_fixed_cube.cube_info.metadata_temp['name'] = lineedit_fix_name.text().strip()
+                                                      ^^^^^^^^^^^^^^^^^
+NameError: cannot access free variable 'lineedit_fix_name' where it is not associated with a value in enclosing scope. Did you mean: 'lineedit_reg_name'?
 
-
-2025-07-04 11:01:17,951 - ERROR - Uncaught exception:
+2025-07-08 01:45:03,050 - ERROR - Uncaught exception:
 Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 820, in switch_fixe_mov
-    self.load_cube(switch=True)
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 325, in load_cube
-    self.slider_channel[idx].setMaximum(cube_data.shape[2] - 1)
-                                        ^^^^^^^^^^^^^^^
-AttributeError: 'NoneType' object has no attribute 'shape'
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 959, in on_accept
+    mini_fixed_cube.cube_info.metadata_temp['name'] = lineedit_fix_name.text().strip()
+                                                      ^^^^^^^^^^^^^^^^^
+NameError: cannot access free variable 'lineedit_fix_name' where it is not associated with a value in enclosing scope. Did you mean: 'lineedit_reg_name'?
 
-2025-07-04 20:59:57,873 - ERROR - Uncaught exception:
+2025-07-08 01:45:16,488 - ERROR - Uncaught exception:
 Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 136, in update_metadata_label
-    st = f'The sample has been restored ?  <br> <b> {['NO','YES'][raw[0]]}</b>'
-                                                     ~~~~~~~~~~~~^^^^^^^^
-TypeError: only integer scalar arrays can be converted to a scalar index
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 959, in on_accept
+    mini_fixed_cube.cube_info.metadata_temp['name'] = lineedit_fix_name.text().strip()
+                                                      ^^^^^^^^^^^^^^^^^
+NameError: cannot access free variable 'lineedit_fix_name' where it is not associated with a value in enclosing scope. Did you mean: 'lineedit_reg_name'?
 
-2025-07-04 21:00:04,082 - ERROR - Uncaught exception:
+2025-07-08 01:45:50,391 - ERROR - Uncaught exception:
 Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 148, in update_metadata_label
-    st = f'The exposure time set for the capture was <b>{raw[0]:.2f}</b> ms.'
-                                                        ^^^^^^^^^^^^
-TypeError: unsupported format string passed to numpy.ndarray.__format__
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 780, in open_save_dialog
+    self.save_cube_with_options(opts)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\registration\register_tool.py", line 1072, in save_cube_with_options
+    save_path_fixed+=ext
+                     ^^^
+UnboundLocalError: cannot access local variable 'ext' where it is not associated with a value
 
-2025-07-04 21:00:12,434 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 148, in update_metadata_label
-    st = f'The exposure time set for the capture was <b>{raw[0]:.2f}</b> ms.'
-                                                        ^^^^^^^^^^^^
-TypeError: unsupported format string passed to numpy.ndarray.__format__
-
-2025-07-04 21:00:17,778 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 136, in update_metadata_label
-    st = f'The sample has been restored ?  <br> <b> {['NO','YES'][raw[0]]}</b>'
-                                                     ~~~~~~~~~~~~^^^^^^^^
-TypeError: only integer scalar arrays can be converted to a scalar index
-
-2025-07-04 21:01:01,282 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 136, in update_metadata_label
-    st = f'The sample has been restored ?  <br> <b> {['NO','YES'][raw[0]]}</b>'
-                                                     ~~~~~~~~~~~~^^^^^^^^
-TypeError: only integer scalar arrays can be converted to a scalar index
-
-2025-07-04 21:01:06,834 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 148, in update_metadata_label
-    st = f'The exposure time set for the capture was <b>{raw[0]:.2f}</b> ms.'
-                                                        ^^^^^^^^^^^^
-TypeError: unsupported format string passed to numpy.ndarray.__format__
-
-2025-07-04 21:01:48,834 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 245, in _toggle_edit_metadata
-    self.update_metadata_label()
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 95, in update_metadata_label
-    raw = self.cube_info.metadata_temp[key]
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-KeyError: 'cubeinfo'
-
-2025-07-04 21:01:52,242 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 245, in _toggle_edit_metadata
-    self.update_metadata_label()
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 95, in update_metadata_label
-    raw = self.cube_info.metadata_temp[key]
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-KeyError: 'cubeinfo'
-
-2025-07-04 21:01:56,834 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 245, in _toggle_edit_metadata
-    self.update_metadata_label()
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 95, in update_metadata_label
-    raw = self.cube_info.metadata_temp[key]
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-KeyError: 'cubeinfo'
-
-2025-07-04 21:05:43,057 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 245, in _toggle_edit_metadata
-    return
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 95, in update_metadata_label
-    raw = self.cube_info.metadata_temp[key]
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-KeyError: 'cubeinfo'
-
-2025-07-04 21:06:12,021 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 245, in _toggle_edit_metadata
-    return
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 95, in update_metadata_label
-    raw = self.cube_info.metadata_temp[key]
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-KeyError: 'cubeinfo'
-
-2025-07-04 21:08:34,792 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 235, in _toggle_edit_metadata
-    self.cube_info.metadata_temp[0]
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
-KeyError: 0
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 237, in _toggle_edit_metadata
-    QMessageBox.warning(self,title='Problem',text='No metadata to edit')
-TypeError: warning(parent: Optional[QWidget], title: Optional[str], text: Optional[str], buttons: Union[QMessageBox.StandardButtons, QMessageBox.StandardButton] = QMessageBox.Ok, defaultButton: QMessageBox.StandardButton = QMessageBox.NoButton): 'title' is not a valid keyword argument
-
-2025-07-04 21:13:50,656 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 236, in _toggle_edit_metadata
-    self.cube_info.metadata_temp[key]
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
-KeyError: ''
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 238, in _toggle_edit_metadata
-    QMessageBox.warning(self,text='No metadata to edit')
-TypeError: warning(parent: Optional[QWidget], title: Optional[str], text: Optional[str], buttons: Union[QMessageBox.StandardButtons, QMessageBox.StandardButton] = QMessageBox.Ok, defaultButton: QMessageBox.StandardButton = QMessageBox.NoButton): 'text' is not a valid keyword argument
-
-2025-07-04 21:19:56,879 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 505, in check_resolution_change
-    current_width = screen.size().width()
-                    ^^^^^^^^^^^
-AttributeError: 'NoneType' object has no attribute 'size'
-
-2025-07-05 16:17:52,206 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube_manager.py", line 105, in updateMetadata
-    test = not self.compare_metadata_dicts(self._cubes[index].metadata_temp, updated_ci.metadata_temp)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: HypercubeManager.compare_metadata_dicts() takes 2 positional arguments but 3 were given
-
-2025-07-06 22:32:00,339 - INFO - [Metadata] 
-Re-format all metadatas from initial format
-2025-07-06 22:32:53,096 - ERROR - Uncaught exception:
-Traceback (most recent call last):
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube_manager.py", line 104, in updateMetadata
-    test = not self.compare_metadata_dicts(self._cubes[index].metadata_temp, updated_ci.metadata_temp)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube_manager.py", line 92, in compare_metadata_dicts
-    if v1 != v2:
-       ^^^^^^^^
-ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
-
-2025-07-06 22:33:40,953 - ERROR - User comment: after send metadata to tools from copy

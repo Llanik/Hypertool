@@ -5,7 +5,7 @@ a = Analysis(
     ['MainWindow.py'],
     pathex=[],
     binaries=[],
-    datas=[('interface/icons', 'Hypertool/interface/icons'), ('ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv', 'ground_truth')],
+    datas=[('interface/icons', 'Hypertool/interface/icons'), ('ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv', 'ground_truth'), ('data_vizualisation/Spatially registered minicubes equivalence.csv', 'data_vizualisation')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
