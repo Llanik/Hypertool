@@ -1,7 +1,7 @@
 # cd C:\Users\Usuario\Documents\GitHub\Hypertool
 # sys.excepthook = excepthook #set the exception handler
-# pyinstaller --noconsole --noconfirm --exclude-module tensorflow --exclude-module torch --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation"  MainWindow.py
-
+# pyinstaller  --noconfirm --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation"  MainWindow.py
+# --noconsole
 # GUI Qt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer,QSize, Qt
@@ -9,14 +9,13 @@ from PyQt5.QtGui import QFont,QIcon, QPalette, QColor
 from PyQt5.QtWidgets import (QStyleFactory, QAction, QPushButton, QSizePolicy,
                              QLabel, QVBoxLayout, QTextEdit,QMessageBox)
 
-## System
 
 ## exception gestion
 import traceback
 import logging
 
 # projects import
-from hypercubes.hypercube  import *
+from hypercubes.hypercube import *
 from data_vizualisation.data_vizualisation_tool import Data_Viz_Window
 from registration.register_tool        import RegistrationApp
 from hypercubes.hypercube_manager import HypercubeManager
@@ -80,6 +79,116 @@ def apply_fusion_border_highlight(app,
     }}
     """)
 
+class CustomDockTitleBar(QtWidgets.QWidget):
+    def __init__(self, dock_widget, style=None):
+        super().__init__()
+        self.dock = dock_widget
+        self.style = style or {}
+        self.setObjectName("CustomDockTitleBar")
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(5, 0, 5, 0)
+
+        # Title label
+        self.title_label = QtWidgets.QLabel()
+        self.title_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        layout.addWidget(self.title_label)
+
+        # Fullscreen button
+        self.fullscreen_button = QtWidgets.QPushButton("⛶")
+        self.fullscreen_button.setFixedSize(20, 20)
+        self.fullscreen_button.setToolTip("Toggle fullscreen")
+        self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
+        layout.addWidget(self.fullscreen_button)
+
+        # Dock/undock button
+        self.dock_button = QtWidgets.QPushButton("🗗")
+        self.dock_button.setFixedSize(20, 20)
+        self.dock_button.setToolTip("Dock / Undock")
+        self.dock_button.clicked.connect(self.toggle_dock)
+        layout.addWidget(self.dock_button)
+
+        # Close button
+        self.close_button = QtWidgets.QPushButton("✕")
+        self.close_button.setFixedSize(20, 20)
+        self.close_button.setToolTip("Close")
+        self.close_button.clicked.connect(self.dock.close)
+        layout.addWidget(self.close_button)
+
+        self.setLayout(layout)
+        self.setAutoFillBackground(True)
+
+        # Disable double-click behavior
+        self.installEventFilter(self)
+        self.dock.topLevelChanged.connect(self.update_title)
+        self.dock.windowTitleChanged.connect(self.update_title)
+
+        self.update_title()
+        self.apply_style()
+
+    def toggle_fullscreen(self):
+        if not self.dock.isFloating():
+            return
+        window = self.dock.window()
+        if window.isMaximized():
+            window.showNormal()
+        else:
+            window.showMaximized()
+
+    def toggle_dock(self):
+        if self.dock.isFloating():
+            self.dock.setFloating(False)
+            self.dock.raise_()
+        else:
+            self.dock.setFloating(True)
+            screen = QtWidgets.QApplication.primaryScreen().availableGeometry()
+            center_x = screen.center().x() - self.dock.width() // 2
+            center_y = screen.center().y() - self.dock.height() // 2
+            self.dock.move(center_x, center_y)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QtCore.QEvent.MouseButtonDblClick:
+            return True
+        return super().eventFilter(obj, event)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_title()
+
+    def update_title(self):
+        fm = self.fontMetrics()
+        available_width = max(40, self.width() - 90)
+        elided = fm.elidedText(self.dock.windowTitle(), Qt.ElideRight, available_width)
+        self.title_label.setText(elided)
+        self.title_label.setToolTip(self.dock.windowTitle())
+
+    def apply_style(self):
+        bg     = self.style.get("background", "#E0E0E0")
+        border = self.style.get("border", "#888888")
+        text   = self.style.get("text", "black")
+        pad_top = self.style.get("padding_top", 2)
+        pad_left = self.style.get("padding_left", 4)
+
+        self.setStyleSheet(f"""
+            CustomDockTitleBar {{
+                background-color: {bg};
+                border-bottom: 1px solid {border};
+            }}
+            QLabel {{
+                color: {text};
+                padding-top: {pad_top}px;
+                padding-left: {pad_left}px;
+                background-color: transparent;
+            }}
+            QPushButton {{
+                background-color: transparent;
+                border: none;
+            }}
+            QPushButton:hover {{
+                background-color: {border};
+            }}
+        """)
+
 class MainApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -92,15 +201,28 @@ class MainApp(QtWidgets.QMainWindow):
         else :
             self.BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+
         self.ICONS_DIR = os.path.join(self.BASE_DIR, "Hypertool/interface/icons")
         icon_main= "Hyperdoc_logo_transparente_CIMLab.png"
         self.setWindowIcon(QIcon(os.path.join(self.ICONS_DIR,icon_main)))
 
+        # perso style title bar
+        self.title_bar_style = {
+            "background": "#E0E0E0",  # slightly darker than window background
+            "border": "#888888",  # border color
+            "text": "black",  # text color
+            "padding_top": 2,
+            "padding_left": 4
+        }
+
+
         # make left docks with meta and file browser
-        self.file_browser_dock = self._add_file_browser_dock() # left dock with file browser
+        # self.file_browser_dock = self._add_file_browser_dock() # left dock with file browser
         self.meta_dock=self._add_dock("Metadata",   MetadataTool,     QtCore.Qt.LeftDockWidgetArea) # add meta to left dock
-        self.tabifyDockWidget(self.file_browser_dock, self.meta_dock)
-        self.meta_dock.raise_() # raise meta and "hide in tab" file browser
+        # self.tabifyDockWidget(self.file_browser_dock, self.meta_dock)
+        # self.meta_dock.raise_() # raise meta and "hide in tab" file browser
+        self.meta_dock.setVisible(False) # raise meta and "hide in tab" file browser
+
 
         # make "central" dock with visuals tools
         self.data_viz_dock =self._add_dock("Data Visualization", Data_Viz_Window,  QtCore.Qt.RightDockWidgetArea)
@@ -120,7 +242,7 @@ class MainApp(QtWidgets.QMainWindow):
         self.toolbar.setIconSize(QSize(48, 48))  # Taille des icônes
         self.toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)  #ToolButtonIconOnly ou TextUnderIcon)
 
-        act_file = self.onToolButtonPress(self.file_browser_dock,icon_name="file_browser_icon.png",tooltip="File Browser")
+        # act_file = self.onToolButtonPress(self.file_browser_dock,icon_name="file_browser_icon.png",tooltip="File Browser")
         act_met = self.onToolButtonPress(self.meta_dock, "metadata_icon.png", "Metadata")
         self.toolbar.addSeparator()
         act_data = self.onToolButtonPress(self.data_viz_dock, "icon_data_viz.svg", "Data Vizualisation")
@@ -198,6 +320,12 @@ class MainApp(QtWidgets.QMainWindow):
         # self.data_viz_dock.widget().cubeLoaded.connect(lambda fp: self._on_tool_loaded_cube(fp, self.data_viz_dock.widget()))
         self.gt_dock.widget().cubeLoaded.connect(lambda fp: self._on_tool_loaded_cube(fp, self.gt_dock.widget()))
 
+        # visible docks of rightDock take all space possible
+
+        self.centralWidget().hide()
+        # self.showMaximized()
+
+
     def open_suggestion_box(self):
         self.suggestion_window = SuggestionWidget()
         self.suggestion_window.show()
@@ -269,6 +397,8 @@ class MainApp(QtWidgets.QMainWindow):
     def _add_dock(self, title, WidgetClass, area):
         widget = WidgetClass(parent=self)
         dock   =  QtWidgets.QDockWidget(title, self)
+        # dock.setTitleBarWidget(CustomDockTitleBar(dock))
+        dock.setTitleBarWidget(CustomDockTitleBar(dock, style=self.title_bar_style))
         dock.setWidget(widget)
         self.addDockWidget(area, dock)
         return dock
@@ -295,6 +425,7 @@ class MainApp(QtWidgets.QMainWindow):
         # 4) création du dock
         dock = QtWidgets.QDockWidget("File Browser", self)
         dock.setWidget(widget)
+        dock.setTitleBarWidget(CustomDockTitleBar(dock, style=self.title_bar_style))
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock)
         return dock
 
@@ -431,9 +562,9 @@ class MainApp(QtWidgets.QMainWindow):
             menu_load_reg.addAction(act_mov)
             sub.addMenu(menu_load_reg)
             # Envoyer au dock file browser
-            act_browser = QtWidgets.QAction("Send to File Browser", self)
-            act_browser.triggered.connect(lambda checked, i=idx: self._open_file_browser_for_index(i))
-            sub.addAction(act_browser)
+            # act_browser = QtWidgets.QAction("Send to File Browser", self)
+            # act_browser.triggered.connect(lambda checked, i=idx: self._open_file_browser_for_index(i))
+            # sub.addAction(act_browser)
 
             # Envoyer au dock metadata
             act_meta = QtWidgets.QAction("Send to Metadata", self)
@@ -600,19 +731,17 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     update_font(app)
-    # apply_fusion_dark_theme(app)
     apply_fusion_border_highlight(app)
-    # app.setStyle('Fusion')
 
     main = MainApp()
     main.show()
 
-    # folder='C:/Users/Usuario/Documents/DOC_Yannick/HYPERDOC Database/Samples/minicubes/'
-    # cube_1='00189-VNIR-mock-up.h5'
-    # cube_2='00191-VNIR-mock-up.h5'
-    # paths=[folder+cube_1,folder+cube_2]
-    #
-    # main._on_add_cube(paths)
+    try:
+        import matlab.engine
+
+        print("✅ matlab.engine loaded with success")
+    except Exception as e:
+        print(f"❌ Failed to load matlab.engine: {e}")
 
     # Timer for screen resolution check
     last_width = app.primaryScreen().size().width()
