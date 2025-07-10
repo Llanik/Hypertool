@@ -8,7 +8,6 @@ from importlib.metadata import metadata
 
 import numpy as np
 import cv2
-from IPython.core.display_functions import update_display
 from PyQt5.QtWidgets import (
     QApplication, QWidget,QMainWindow, QVBoxLayout, QPushButton,QSpinBox,QProgressBar,
     QLabel, QFileDialog, QHBoxLayout, QMessageBox, QComboBox, QDialog,QLineEdit,
@@ -32,6 +31,7 @@ import random
 
 from registration.registration_window import*
 from hypercubes.hypercube import*
+from interface.some_widget_for_interface import LoadingDialog
 
 def np_to_qpixmap(img):
     if len(img.shape) == 2:
@@ -85,29 +85,6 @@ def find_paired_cube_path(current_path):
     alt_path = os.path.join(dirname, alt_name)
     return alt_path if os.path.exists(alt_path) else None
 
-class LoadingDialog(QDialog):
-    def __init__(self, message="Loading...", filename=None, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Please wait")
-        self.setModal(True)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
-
-        layout = QVBoxLayout(self)
-
-        label = QLabel(message)
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
-
-        if filename:
-            label_file = QLabel(f"<i>{os.path.basename(filename)}</i>")
-            label_file.setAlignment(Qt.AlignCenter)
-            layout.addWidget(label_file)
-
-        self.progress = QProgressBar()
-        self.progress.setRange(0, 0)  # mode indéterminé
-        layout.addWidget(self.progress)
-
-        self.setFixedWidth(350)
 
 class ZoomableGraphicsView(QGraphicsView):
     middleClicked = pyqtSignal(QPointF) # suppres features
@@ -442,15 +419,12 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
             return  # important : on sort de la méthode après le switch
 
         else :
-
-            load_fixe_auto = False
-
             if fname is None:
                 fname, _ = QFileDialog.getOpenFileName(self, ['Load Fixed Cube','Load Moving Cube'][i_mov])
 
             if fname:
                 which_cube=['FIXED','MOVING'][i_mov]
-                message_progress=  "Loading "+which_cube+" cube..."
+                message_progress=  "[Register Tool] Loading "+which_cube+" cube..."
                 loading = LoadingDialog(message_progress, filename=fname, parent=self)
                 loading.show()
                 QApplication.processEvents()
@@ -849,7 +823,7 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         feat_start=packet_show*n_features_per_packet
         feat_stop=(packet_show+1)*n_features_per_packet-1
         if feat_stop>=n_features:feat_stop=n_features
-        self.label_packetToShow.setText(f'features {feat_start} to {feat_stop} /{n_features}')
+        self.label_packetToShow.setText(f'features {feat_start} to {feat_stop} / {n_features}')
         if packet_show>n_packet*self.features_slider.value()/ 100:
             self.label_packetToShow.setStyleSheet(u"color: rgb(255, 0, 0);")
         else:
@@ -1281,6 +1255,11 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.checkBox_autorize_modify.setChecked(False)
 
     def reset_all(self):
+        
+        ans=QMessageBox.warning(self,'Reset All','If you reset you will loose all the work you have done here.\n \nAre you sure you want to reset this tool ? ', QMessageBox.Yes|QMessageBox.Cancel)
+        if ans==QMessageBox.Cancel:
+            return
+        
         # reinit cube and images
         self.fixed_cube = Hypercube()
         self.moving_cube = Hypercube()

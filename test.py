@@ -1,22 +1,39 @@
-import pandas as pd
+
+import matlab.engine
+import numpy as np
+
+def load_cube_with_matlab(filepath):
+    eng = matlab.engine.start_matlab()
+    eng.eval(f"load('{filepath}')", nargout=0)
+
+    data_cube = eng.eval("cube.DataCube", nargout=1)
+    wavelengths = eng.eval("cube.Wavelength", nargout=1)
+
+    try:
+        metadata = eng.eval("Metadata", nargout=1)
+    except:
+        metadata = None
+
+    eng.quit()
+
+    data_np = np.array(data_cube)
+    wl_np = np.array(wavelengths).squeeze()
+
+    return data_np, wl_np, metadata
+
+
+folder=r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database'
+fname='cube_arabe.mat'
 import os
-import sys
+path=os.path.join(folder,fname)
 
-folder = r'C:\Users\Usuario\Documents\DOC_Yannick\App_present_24_06\datas\Archivo chancilleria_for_Registering/'
-file_name = 'reg_test.h5'
-filepath = folder + file_name
-os.path.exists(filepath)
+data, wl, meta = load_cube_with_matlab(path)
 
-if getattr(sys, 'frozen', False):  # pynstaller case
-    BASE_DIR = sys._MEIPASS
-else:
-    BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+print(data.shape)         # (H, W, bands)
+print(wl.shape)           # (bands,)
+print(meta.keys())        # dict avec les infos utiles
 
-lookup_table_path = os.path.join(BASE_DIR,
-                                      "Hypertool/data_vizualisation/Spatially registered minicubes equivalence.csv")
-
-df = pd.read_csv(lookup_table_path)
-
-curent='00189-VNIR-mock-up'
-otro=df.loc[df['VNIR']==curent]['SWIR'][0]
-
+from cv2 import imshow,waitKey
+img=data[:,:,0]
+imshow('image',img)
+waitKey(0)

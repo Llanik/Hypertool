@@ -4,17 +4,23 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[main] correction of suggestions suprresion">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save.">
+      <change afterPath="$PROJECT_DIR$/get_requirement.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hypercubes/matlab_engine_search.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hypercubes/matlab_env_path.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hypercubes/matlab_loader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_requirements.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.spec" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.spec" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata/metadata_dock.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_dock.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata/metadata_dock.ui" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_dock.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata/metadata_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_tool.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/registration/register_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -141,14 +147,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Load .mat7.3 (with hypercube module), envie and h5p OK.">
-      <option name="closed" value="true" />
-      <created>1746457691298</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1746457691298</updated>
     </task>
     <task id="LOCAL-00014" summary="Load personal OK&#10;check if transpose needed">
       <option name="closed" value="true" />
@@ -534,7 +532,15 @@
       <option name="project" value="LOCAL" />
       <updated>1751935369122</updated>
     </task>
-    <option name="localTasksCounter" value="62" />
+    <task id="LOCAL-00062" summary="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save.">
+      <option name="closed" value="true" />
+      <created>1752005647626</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1752005647626</updated>
+    </task>
+    <option name="localTasksCounter" value="63" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -586,7 +592,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Merging GT and manual added&#10;add legend of color class when selecting" />
     <MESSAGE value="QSplitter OK&#10;Loading cube with reste state OK" />
     <MESSAGE value="GT_table_viz works now very nice. To be inserted in GT tool." />
     <MESSAGE value="Supression of .ui previous try of class assignment" />
@@ -611,6 +616,7 @@
     <MESSAGE value="[Metadata] copy from other cube -&gt; type keep for non editable like numpy&#10;open cube possibility&#10;[Registration] all metadata seems OK. Gestion des croped parent etc...." />
     <MESSAGE value="Cube info loading and saving are syncronized with all tools (except visualize)&#10;[registration] manual features supression" />
     <MESSAGE value="[main] correction of suggestions suprresion" />
-    <option name="LAST_COMMIT_MESSAGE" value="[main] correction of suggestions suprresion" />
+    <MESSAGE value="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save." />
+    <option name="LAST_COMMIT_MESSAGE" value="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save." />
   </component>
 </project>

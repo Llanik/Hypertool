@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1318</width>
+    <width>1327</width>
     <height>609</height>
    </rect>
   </property>
@@ -16,7 +16,10 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,6">
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(181, 181, 181);</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,6">
    <item>
     <widget class="QFrame" name="frame">
      <property name="autoFillBackground">
@@ -28,13 +31,27 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,1,2,1,0,1,1,4,1,2">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,1,2,1,0,1,1,4,1,2">
       <item>
-       <widget class="QPushButton" name="load_btn">
-        <property name="text">
-         <string>Load Cube</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <item>
+         <widget class="QPushButton" name="load_btn">
+          <property name="text">
+           <string>Load Cube</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_reset">
+          <property name="styleSheet">
+           <string notr="true">color: rgba(255, 0, 0, 125);</string>
+          </property>
+          <property name="text">
+           <string>Reset all</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="Line" name="line_4">
@@ -337,68 +354,60 @@
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="page_distance">
-             <widget class="QComboBox" name="comboBox_distance">
-              <property name="geometry">
-               <rect>
-                <x>9</x>
-                <y>9</y>
-                <width>80</width>
-                <height>22</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
+             <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
-               <property name="text">
-                <string>cosine</string>
-               </property>
+               <widget class="QComboBox" name="comboBox_distance">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>cosine</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>sqeuclidean</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>correlation</string>
+                 </property>
+                </item>
+               </widget>
               </item>
-              <item>
-               <property name="text">
-                <string>sqeuclidean</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>correlation</string>
-               </property>
-              </item>
-             </widget>
+             </layout>
             </widget>
             <widget class="QWidget" name="page_normalized">
-             <widget class="QComboBox" name="comboBox_normalized">
-              <property name="geometry">
-               <rect>
-                <x>9</x>
-                <y>9</y>
-                <width>80</width>
-                <height>22</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
-               <property name="text">
-                <string>Raw</string>
-               </property>
+               <widget class="QComboBox" name="comboBox_normalized">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Raw</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Normalize</string>
+                 </property>
+                </item>
+               </widget>
               </item>
-              <item>
-               <property name="text">
-                <string>Normalize</string>
-               </property>
-              </item>
-             </widget>
+             </layout>
             </widget>
            </widget>
           </item>

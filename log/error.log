@@ -105,3 +105,28 @@ Traceback (most recent call last):
     raise KeyError(key) from err
 KeyError: 0
 
+2025-07-09 14:12:27,033 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 137, in toggle_dock
+    self.dock.move(screen_center - dock_size / 2)
+                   ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for -: 'QPoint' and 'QSize'
+
+2025-07-09 14:18:08,318 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 137, in toggle_dock
+    self.dock.move(screen_center - dock_size / 2)
+                   ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for -: 'QPoint' and 'QSize'
+
+2025-07-10 03:02:23,762 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1072, in load_cube
+    cube = Hypercube(filepath=path, load_init=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube.py", line 69, in __init__
+    self.open_hyp(default_path=filepath, open_dialog=False)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\hypercube.py", line 194, in open_hyp
+    from hypercubes.matlab_engine_search import setup_matlab_engine, load_mat_file_with_engine
+ImportError: cannot import name 'load_mat_file_with_engine' from 'hypercubes.matlab_engine_search' (C:\Users\Usuario\Documents\GitHub\Hypertool\hypercubes\matlab_engine_search.py)
+

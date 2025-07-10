@@ -10,16 +10,16 @@ import sys
 ## GUI
 from PyQt5 import QtCore
 from PyQt5.QtGui    import QPixmap, QPainter, QColor, QPen
-from PyQt5.QtWidgets import (
+from PyQt5.QtWidgets import ( QSplitter,
     QApplication,QSizePolicy, QGraphicsScene, QGraphicsPixmapItem,QRubberBand,QWidget, QFileDialog, QMessageBox,QInputDialog , QSplitter,QGraphicsView,QLabel,
 )
 from PyQt5.QtCore import Qt, QEvent, QRect, QRectF, QPoint, QSize
 
-#Graphs
+# Graphs
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.widgets import SpanSelector
-from matplotlib import cm
+from matplotlib import colormaps
 from matplotlib.path import Path
 
 # Maths
@@ -31,14 +31,14 @@ from scipy.spatial import distance as spdist
 from hypercubes.hypercube import Hypercube,CubeInfoTemp
 from ground_truth.GT_table_viz import LabelWidget
 from ground_truth.ground_truth_window import Ui_GroundTruthWidget
+from interface.some_widget_for_interface import LoadingDialog
+
 
 # todo : give GT labels names and number for RGB code ? -> save GT in new dataset of file + png
 # todo : link to cube_info (read and fill)
 # todo : actualize GT_cmp if label added OR load from default GT_table
 # todo : check if cube already hace a GT map done (looking at GT labels for example)
 # todo : upload GT_cmap from csv ?
-
-
 
 ## GT colors
 GT_cmap=np.array([[0.        , 1.        , 0.24313725, 0.22745098, 0.37254902,
@@ -216,15 +216,6 @@ class ZoomableGraphicsView(QGraphicsView):
         zoom = zoom_in_factor if event.angleDelta().y() > 0 else zoom_out_factor
         self.scale(zoom, zoom)
 
-    # def mousePressEvent(self, event):
-    #     if event.button() == Qt.RightButton and self.pixmap_item:
-    #         self.viewport().setCursor(Qt.CrossCursor)
-    #         self.origin = event.pos()
-    #         self.rubber_band.setGeometry(QRect(self.origin, QSize()))
-    #         self.rubber_band.show()
-    #         self._selecting = True
-    #     super().mousePressEvent(event)
-
 class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     cubeLoaded = QtCore.pyqtSignal(str)
     cube_saved = QtCore.pyqtSignal(CubeInfoTemp)
@@ -247,7 +238,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         # Replace placeholders with custom widgets
         self._replace_placeholder('viewer_left', ZoomableGraphicsView)
         self._replace_placeholder('viewer_right', ZoomableGraphicsView)
-
         self._promote_canvas('spec_canvas', FigureCanvas)
 
         self.viewer_left.viewport().installEventFilter(self)
@@ -260,8 +250,8 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         # Promote spec_canvas placeholder to FigureCanvas
         self.spec_canvas_layout = self.spec_canvas.layout() if hasattr(self.spec_canvas, 'layout') else None
-        self._init_spectrum_canvas()
-        self.spec_canvas.setVisible(False)
+        self.init_spectrum_canvas()
+        self.spec_canvas.setVisible(True)
         self.show_selection=True
         self.live_spectra_update=True
 
@@ -293,6 +283,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.pushButton_class_name_assign.clicked.connect(self.open_label_table)
         self.pushButton_band_selection.toggled.connect(self.band_selection)
         self.pushButton_keep_GT.clicked.connect(self.keep_GT)
+        self.pushButton_reset.clicked.connect(self.reset_all)
 
         # RGB sliders <-> spinboxes
         self.sliders_rgb = [self.horizontalSlider_red_channel, self.horizontalSlider_green_channel,
@@ -797,16 +788,18 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.show_image()
 
-    def _init_spectrum_canvas(self):
+    def init_spectrum_canvas(self):
         placeholder = getattr(self, 'spec_canvas')
         parent = placeholder.parent()
-        from PyQt5.QtWidgets import QSplitter
 
         # Crée le canvas
-        self.spec_fig = Figure()
+        self.spec_fig = Figure(facecolor=(1, 1, 1, 0.1))
         self.spec_canvas = FigureCanvas(self.spec_fig)
         self.spec_ax = self.spec_fig.add_subplot(111)
+        self.spec_ax.set_facecolor((0.7,0.7,0.7,1))
         self.spec_ax.set_title('Spectra')
+        self.spec_ax.grid()
+
 
         self.span_selector = SpanSelector(
             ax=self.spec_ax,  # votre axe “Spectrum”
@@ -1000,6 +993,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 spectrum = self.data[y, x, :]
                 # Spectre du pixel
                 self.spec_ax.plot(x_graph, spectrum, label='Pixel')
+                self.spec_ax.grid(color='black')
 
         # Spectres GT moyens ± std
         if self.checkBox_seeGTspectra.isChecked() and hasattr(self, 'class_means'):
@@ -1069,41 +1063,15 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             )
             if not path:
                 return
-        # try:
-        #     cube = Hypercube(filepath=path, load_init=True)
-        #
-        #     # todo : check if GT already done in the file
-        #
-        #     if cube_info is None:
-        #         if "GTLabels" in cube.metadata.keys():
-        #             if len(cube.metadata["GTLabels"][0])!=0:
-        #                 reply = QMessageBox.question(
-        #                     self, "Erase previous Ground Truth ?",
-        #                     "Ground truth labels has been found in the file. \n Are you sure that you want to make a new Ground Truth for this cube ?",
-        #                 QMessageBox.Yes | QMessageBox.No
-        #                 )
-        #                 if reply == QMessageBox.No:
-        #                     return
-        #
-        #     self.cube=cube
-        #     self.data = self.cube.data
-        #     self.wl = self.cube.wl
-        #
-        #     if self.wl[-1]<1100 and self.wl[0]>350:
-        #         self.hyps_rgb_chan_DEFAULT = [610, 540, 435]
-        #     elif self.wl[-1]>=1100:
-        #         self.hyps_rgb_chan_DEFAULT = [1605, 1205, 1005]
-        #     else:
-        #         mid=int(len(self.wl)/2)
-        #         self.hyps_rgb_chan_DEFAULT = [self.wl[0], self.wl[mid], self.wl[-1]]
-        #
-        #     self.reset_state()
-        #     self.modif_sliders()
-        #     self.show_image()
-        #
-        # except Exception as e:
-        #     QMessageBox.critical(self, "Erreur", f"Impossible de charger le cube: {e}")
+
+        message_progress = "[Ground Truth Tool] Loading cube..."
+        loading = LoadingDialog(message_progress, filename=path, parent=self)
+        loading.show()
+        QApplication.processEvents()
+
         cube = Hypercube(filepath=path, load_init=True)
+
+        loading.close()
 
         # todo : check if GT already done in the file
 
@@ -1172,13 +1140,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
     def set_mode(self):
         self.mode = self.comboBox_ClassifMode.currentText()
-        if self.mode=='Supervised':
-            self.page_distance.setVisible(True)
-            self.page_normalized.setVisible(False)
+        if self.mode == 'Supervised':
+            self.stackedWidget.setCurrentWidget(self.page_distance)
             self.label_metric.setText('Spectral distance')
-        elif self.mode=='Unsupervised':
-            self.page_distance.setVisible(False)
-            self.page_normalized.setVisible(True)
+        elif self.mode == 'Unsupervised':
+            self.stackedWidget.setCurrentWidget(self.page_normalized)
             self.label_metric.setText('Spectral Normalization')
 
 
@@ -1497,7 +1463,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         labels, counts = np.unique(self.cls_map, return_counts=True)
         for cls, cnt in zip(labels, counts):
             self.class_ncount[cls]=cnt
-            print(f"Class {cls} → {cnt} pixels")
 
     def _np2pixmap(self, img):
         from PyQt5.QtGui import QImage, QPixmap
@@ -1519,7 +1484,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         else:
             return
 
-        cmap = cm.get_cmap('tab10')
+        cmap = colormaps.get_cmap('tab10')
 
         for cls in unique_labels:
             if cls not in self.class_colors:
@@ -1598,12 +1563,86 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             self.span_selector.set_active(False)
             self.pushButton_band_selection.setText('Band selection')
 
+    def reset_all(self):
+        # Check if sure ?
+        ans = QMessageBox.warning(self, 'Reset All',
+                                  'If you reset you will loose all the work you have done here.\n \nAre you sure you want to reset this tool ? ',
+                                  QMessageBox.Yes | QMessageBox.Cancel)
+        if ans == QMessageBox.Cancel:
+            return
+
+        # Core data
+        self.cube = None
+        self.data = None
+        self.wl = None
+        self.current_cube_info = None
+        self.cls_map = None
+        self.GT_image = None
+
+        # Selection and class data
+        self.selection_mask_map = None
+        self.samples.clear()
+        self.sample_coords.clear()
+        self.class_means.clear()
+        self.class_stds.clear()
+        self.class_colors.clear()
+        self.class_info.clear()
+        self.class_ncount.clear()
+
+        # Band selections and spectrum patches
+        for patch in self.selected_span_patch:
+            try:
+                patch.remove()
+            except:
+                pass
+        self.selected_span_patch.clear()
+        self.selected_bands.clear()
+        self._band_action = None
+
+        # Temporary masks
+        self._preview_mask = None
+        if hasattr(self, '_erase_mask'):
+            self._erase_mask = None
+
+        # Selection state
+        self.selecting_pixels = False
+        self.erase_selection = False
+        self._pixel_selecting = False
+        self._pixel_coords = []
+        self.alpha = self.horizontalSlider_transparency_GT.value() / 100.0
+        self.live_spectra_update = True
+
+        # Spectrum plot UI
+        self.spec_ax.clear()
+        self.spec_canvas.draw_idle()
+        self.spec_canvas.setVisible(False)
+        self.pushButton_class_selection.setChecked(False)
+        self.pushButton_erase_selected_pix.setChecked(False)
+        self.checkBox_see_selection_overlay.setChecked(True)
+        self.checkBox_seeGTspectra.setChecked(True)
+        self.live_cb.setChecked(True)
+
+        # Clear legend layout
+        while self.frame_legend.layout().count():
+            item = self.frame_legend.layout().takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        # Reset RGB sliders
+        self.radioButton_rgb_default.setChecked(True)
+
+        # Clear images
+        blank = np.zeros((100, 100, 3), dtype=np.uint8)
+        self.viewer_left.setImage(self._np2pixmap(blank))
+        self.viewer_right.setImage(self._np2pixmap(blank))
+
+
 if __name__=='__main__':
 
     app = QApplication(sys.argv)
     w = GroundTruthWidget()
-    # folder=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test/'
-    # file_name='00001-SWIR-mock-up.h5'
+    # folder=r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database\Samples\minicubes/'
+    # file_name='00278-SWIR-mock-up.h5'
     # filepath=folder+file_name
     # w.load_cube(path=filepath)
     w.show()

@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (QWidget,
 from PyQt5.QtCore    import pyqtSignal, QEventLoop
 from registration.save_window_register_tool import Ui_Save_Window
 from hypercubes.hdf5_browser_tool import Ui_HDF5BrowserWidget
+
 import sys
 
 from dataclasses import dataclass, field
@@ -17,10 +18,8 @@ from typing import Optional, List, Union
 import numpy as np
 import copy
 
-# TODO : sortir HDF5BrowserWidget du fichier de la classe hypercube ?
-# TODO : si metadata à la racine, alors on garde toute la racine sauf le cube (ou une selection ?)
-# todo : before closing or removing cubes, check if modif have been made by comparing cube.cubeInfo.metadataTemp and cube.metadata
 from pathlib import Path
+
 @dataclass
 class CubeInfoTemp:
     """
@@ -190,9 +189,27 @@ class Hypercube:
             except Exception:
                 pass
 
+        # try with matlab engine
+        if ext ==".mat" and not flag_loaded:
+            from hypercubes.matlab_engine_search import setup_matlab_engine, load_mat_file_with_engine
 
-        # 2) If we get here, automatic failed → show browser dialog
-        # TODO : remember choice made by user for future loading ?
+            if setup_matlab_engine():
+                try:
+                    data, wl, meta = load_mat_file_with_engine(filepath)
+                    self.data = data
+                    self.wl = wl
+                    self.metadata = meta
+                    self.cube_info.data_shape = self.data.shape
+                    self.cube_info.filepath = filepath
+                    self.cube_info.metadata_temp = copy.deepcopy(self.metadata)
+                    flag_loaded = True
+
+                except Exception as e:
+                    if show_exception:
+                        QMessageBox.critical(None, "MATLAB Engine Error",
+                                             f"MATLAB Engine loading cube failed :\n{e}")
+                    self.reinit_cube()
+                    return
 
         if ext in (".mat", ".h5", ".hdf5") and not flag_loaded:
 
@@ -731,9 +748,11 @@ if __name__ == '__main__':
 
     # Example usage:
 
-    folder=r'C:\Users\Usuario\Documents\GitHub\Hypertool\metadata/'
-    file_name='model.h5'
-    filepath = folder + file_name
+    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database'
+    fname = 'cube_arabe.mat'
+    import os
+
+    filepath = os.path.join(folder, fname)
 
     try:
         cube = Hypercube(filepath=filepath, load_init=True)
