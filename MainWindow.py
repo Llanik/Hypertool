@@ -4,14 +4,12 @@
 # pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation"  MainWindow.py
 # C:\Envs\py37test\Scripts\activate
 
-
 # GUI Qt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer,QSize, Qt
 from PyQt5.QtGui import QFont,QIcon, QPalette, QColor
 from PyQt5.QtWidgets import (QStyleFactory, QAction, QPushButton, QSizePolicy,
                              QLabel, QVBoxLayout, QTextEdit,QMessageBox)
-
 
 ## exception gestion
 import traceback
@@ -221,14 +219,12 @@ class MainApp(QtWidgets.QMainWindow):
             "padding_left": 4
         }
 
-
         # make left docks with meta and file browser
         # self.file_browser_dock = self._add_file_browser_dock() # left dock with file browser
         self.meta_dock=self._add_dock("Metadata",   MetadataTool,     QtCore.Qt.LeftDockWidgetArea) # add meta to left dock
         # self.tabifyDockWidget(self.file_browser_dock, self.meta_dock)
         # self.meta_dock.raise_() # raise meta and "hide in tab" file browser
         self.meta_dock.setVisible(False) # raise meta and "hide in tab" file browser
-
 
         # make "central" dock with visuals tools
         self.data_viz_dock =self._add_dock("Data Visualization", Data_Viz_Window,  QtCore.Qt.RightDockWidgetArea)
