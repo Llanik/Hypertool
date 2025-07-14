@@ -1307,34 +1307,6 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.checkBox_crop.setChecked(False)
         self.checkBox_autorize_modify.setChecked(True)
 
-def save_cropped_registered_images(self):
-    if self.fixed_img is None or self.aligned_img is None:
-        QMessageBox.warning(self, "Erreur", "Les images ne sont pas prêtes.")
-        return
-
-    if not hasattr(self.viewer_aligned, 'get_rect_coords'):
-        QMessageBox.warning(self, "Erreur", "Aucune sélection trouvée dans viewer_aligned.")
-        return
-
-    # Ouvre un QFileDialog pour sélectionner un dossier
-    save_dir = QFileDialog.getExistingDirectory(self, "Choisir un dossier de sauvegarde")
-    if not save_dir:
-        return  # L'utilisateur a annulé
-
-    y, x, dy, dx = self.viewer_aligned.get_rect_coords()
-    x, y, dx, dy = int(x), int(y), int(dx), int(dy)
-
-    # Rogner et sauvegarder les cubes
-    if hasattr(self, "aligned_cube"):
-        aligned_cube_crop = self.aligned_cube[y:y+dy, x:x+dx, :]
-        np.save(os.path.join(save_dir, "aligned_cube_crop.npy"), aligned_cube_crop)
-
-    if hasattr(self, "fixed_cube"):
-        fixed_cube_crop = self.fixed_cube[y:y+dy, x:x+dx, :]
-        np.save(os.path.join(save_dir, "fixed_cube_crop.npy"), fixed_cube_crop)
-
-    QMessageBox.information(self, "Succès", f"Images et cubes rognés sauvegardés dans:\n{save_dir}")
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 

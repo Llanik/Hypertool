@@ -33,7 +33,6 @@ from ground_truth.GT_table_viz import LabelWidget
 from ground_truth.ground_truth_window import Ui_GroundTruthWidget
 from interface.some_widget_for_interface import LoadingDialog
 
-
 # todo : give GT labels names and number for RGB code ? -> save GT in new dataset of file + png
 # todo : link to cube_info (read and fill)
 # todo : actualize GT_cmp if label added OR load from default GT_table
@@ -196,13 +195,16 @@ GT_cmap=np.array([[0.        , 1.        , 0.24313725, 0.22745098, 0.37254902,
         0.8627451 , 0.74509804, 0.58823529, 0.39215686, 0.19607843]])
 
 class ZoomableGraphicsView(QGraphicsView):
-    def __init__(self):
+    def __init__(self,cursor_style='default'):
         super().__init__()
         self.setScene(QGraphicsScene())
         self.setDragMode(QGraphicsView.ScrollHandDrag)
-        self.setCursor(Qt.OpenHandCursor)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.pixmap_item = None  # check if image loaded
+        self.cursor_style=cursor_style
+        if self.cursor_style=='cross':
+            self.setCursor(Qt.CrossCursor)
+            self.viewport().setCursor(Qt.CrossCursor)
 
     def setImage(self, pixmap):
         self.scene().clear()
@@ -215,6 +217,21 @@ class ZoomableGraphicsView(QGraphicsView):
         zoom_out_factor = 1 / zoom_in_factor
         zoom = zoom_in_factor if event.angleDelta().y() > 0 else zoom_out_factor
         self.scale(zoom, zoom)
+
+    def enterEvent(self, event):
+        super().enterEvent(event)
+        if self.cursor_style == 'cross':
+            self.viewport().setCursor(Qt.CrossCursor)
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if self.cursor_style == 'cross':
+            self.viewport().setCursor(Qt.CrossCursor)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        if self.cursor_style == 'cross':
+            self.viewport().setCursor(Qt.CrossCursor)
 
 class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     cubeLoaded = QtCore.pyqtSignal(str)
@@ -236,24 +253,22 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         n0 = self.nclass_box.value()
 
         # Replace placeholders with custom widgets
-        self._replace_placeholder('viewer_left', ZoomableGraphicsView)
-        self._replace_placeholder('viewer_right', ZoomableGraphicsView)
+        self._replace_placeholder('viewer_left', ZoomableGraphicsView,cursor_style='cross')
+        self._replace_placeholder('viewer_right', ZoomableGraphicsView,cursor_style='defaut')
         self._promote_canvas('spec_canvas', FigureCanvas)
 
         self.viewer_left.viewport().installEventFilter(self)
         self.viewer_right.viewport().installEventFilter(self)
 
         # Enable live spectrum tracking
-        self.viewer_left.viewport().setCursor(Qt.CrossCursor) # curseur croix
         self.viewer_left.viewport().setMouseTracking(True)
         self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
 
         # Promote spec_canvas placeholder to FigureCanvas
         self.spec_canvas_layout = self.spec_canvas.layout() if hasattr(self.spec_canvas, 'layout') else None
         self.init_spectrum_canvas()
-        self.spec_canvas.setVisible(True)
         self.show_selection=True
-        self.live_spectra_update=True
+        self.checkBox_live_spectra.setChecked(True)
 
         # State variables
         self.cube = None
@@ -282,7 +297,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.pushButton_merge.clicked.connect(self.merge_selec_GT)
         self.pushButton_class_name_assign.clicked.connect(self.open_label_table)
         self.pushButton_band_selection.toggled.connect(self.band_selection)
-        self.pushButton_keep_GT.clicked.connect(self.keep_GT)
+        self.pushButton_save_GT.clicked.connect(self.save_GT)
         self.pushButton_reset.clicked.connect(self.reset_all)
 
         # RGB sliders <-> spinboxes
@@ -303,7 +318,8 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.horizontalSlider_transparency_GT.valueChanged.connect(self.on_alpha_change)
 
         # Live spectrum checkbox
-        self.live_cb.stateChanged.connect(self.toggle_live)
+        self.checkBox_live_spectra.stateChanged.connect(self.update_spectra)
+        self.checkBox_seeGTspectra.stateChanged.connect(self.update_spectra)
 
         self.distance_funcs = {
             'sqeuclidean': spdist.sqeuclidean,
@@ -371,8 +387,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.MiddleButton:
             if not self.selecting_pixels:
-                self.live_spectra_update=not self.live_spectra_update
-
+                self.checkBox_live_spectra.toggle()
         # 2) Mouvement souris → mise à jour de la selection en cours
         if event.type() == QEvent.MouseMove and self._pixel_selecting and mode == 'pixel':
             if not (self.selecting_pixels or self.erase_selection):
@@ -506,8 +521,8 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             return True
 
         # 4) Mouvement souris pour le live spectrum
-        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and self.live_spectra_update:
-            if self.live_cb.isChecked() and self.data is not None:
+        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and         self.checkBox_live_spectra.isChecked():
+            if self.checkBox_live_spectra.isChecked() and self.data is not None:
                 pos = self.viewer_left.mapToScene(event.pos())
                 x,y=int(pos.x()),int(pos.y())
                 H, W = self.data.shape[0], self.data.shape[1]
@@ -519,7 +534,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         # return super().eventFilter(source, event)
         return False
 
-    def keep_GT(self):
+    def save_GT(self):
         # On envoie dans metadata : map de GT, class_counts (pixels_averaged), 'GT_cmap','spectra_mean','spectra_std'
 
         if self.cls_map is None:
@@ -540,12 +555,15 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.cube.cube_info.metadata_temp['spectra_std']=list(self.class_stds.values())
 
         if  hasattr(self, 'GT_image'):
+            file_name_default = self.cube.cube_info.filepath.split('.')[0]+"_GT"
+
             path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save segmentation image",
-                "",
+                file_name_default,
                 "PNG (*.png)"
             )
+
             if not path:
                 return
 
@@ -609,7 +627,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.show_selection=True
         self.pushButton_class_selection.setText("Stop Selection")
         self.pushButton_erase_selected_pix.setChecked(False)
-        self.live_spectra_update=False # to bloc tracking
+        self.checkBox_live_spectra.setChecked(False) # bloc tracking to drag
 
         if len(self.samples)>0 :
             reply = QMessageBox.question(
@@ -625,8 +643,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.selecting_pixels = True
         # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
-        self.viewer_left.setCursor(Qt.CrossCursor)
-        self.viewer_left.viewport().setCursor(Qt.CrossCursor)
         self.show_image()
 
     def toggle_show_selection(self):
@@ -640,8 +656,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         # ready to select
         self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
-        self.viewer_left.setCursor(Qt.ArrowCursor)
-        self.viewer_left.viewport().setCursor(Qt.ArrowCursor)
 
         # remet le bouton à l'état initial
         self.pushButton_class_selection.setText("Start Selection")
@@ -665,12 +679,10 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             self.pushButton_erase_selected_pix.setText("Stop Erasing")
             self.pushButton_class_selection.setChecked(False)
             # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
-            self.viewer_left.setCursor(Qt.CrossCursor)
 
         else:
             self.pushButton_erase_selected_pix.setText("Erase Pixels")
             self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
-            self.viewer_left.unsetCursor()
 
     def on_toggle_selection(self, checked: bool):
 
@@ -826,8 +838,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         else:
             placeholder.deleteLater()
             self.verticalLayout.addWidget(self.spec_canvas)
-
-        self.spec_canvas.setVisible(True)
 
     def _on_bandselect(self, lambda_min, lambda_max):
         """
@@ -987,13 +997,14 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     def update_spectra(self,x=None,y=None):
         self.spec_ax.clear()
         x_graph = self.wl
+        maxR=1
 
         if x is not None and y is not None:
             if 0 <= x < self.data.shape[1] and 0 <= y < self.data.shape[0]:
                 spectrum = self.data[y, x, :]
                 # Spectre du pixel
                 self.spec_ax.plot(x_graph, spectrum, label='Pixel')
-                self.spec_ax.grid(color='black')
+                if np.max(spectrum) > maxR: maxR= np.max(spectrum)
 
         # Spectres GT moyens ± std
         if self.checkBox_seeGTspectra.isChecked() and hasattr(self, 'class_means'):
@@ -1009,10 +1020,14 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                     x_graph, mu, '--',
                     color=col, label=f"Class {c}"
                 )
+                if np.max(mu + std) > maxR: maxR = np.max(mu + std)
+
             if self.spec_ax.get_legend_handles_labels()[1]:
                 self.spec_ax.legend(loc='upper right', fontsize='small')
             self.spec_ax.set_title(f"Spectra")
-            self.spec_canvas.setVisible(True)
+            self.spec_ax.grid(color='black')
+            self.spec_ax.set_ylim(0,maxR+0.05)
+            self.spec_ax.set_xlim(x_graph[0],x_graph[-1])
 
         for patch in self.selected_span_patch:
             # patch est un PolyCollection produit par axvspan()
@@ -1025,13 +1040,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     def on_alpha_change(self, val):
         self.alpha = val / 100.0
         self.show_image()
-
-    def toggle_live(self, state):
-        if not state:
-            self.spec_canvas.setVisible(False)
-        else:
-            self.update_spectra()
-            self.live_spectra_update=True
 
     def load_cube(self,cube_info=None,path=None):
 
@@ -1132,7 +1140,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             self._erase_mask = None
         # 5. UI
         # Masquer le canvas de spectres
-        self.spec_canvas.setVisible(False)
         self.selecting_pixels = False
         self.erase_selection = False
         self.pushButton_class_selection.setChecked(False)
@@ -1615,12 +1622,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self._pixel_selecting = False
         self._pixel_coords = []
         self.alpha = self.horizontalSlider_transparency_GT.value() / 100.0
-        self.live_spectra_update = True
+        self.checkBox_live_spectra.setChecked(True)
 
         # Spectrum plot UI
         self.spec_ax.clear()
         self.spec_canvas.draw_idle()
-        self.spec_canvas.setVisible(False)
         self.pushButton_class_selection.setChecked(False)
         self.pushButton_erase_selected_pix.setChecked(False)
         self.checkBox_see_selection_overlay.setChecked(True)
@@ -1641,15 +1647,14 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.viewer_left.setImage(self._np2pixmap(blank))
         self.viewer_right.setImage(self._np2pixmap(blank))
 
-
 if __name__=='__main__':
 
     app = QApplication(sys.argv)
     w = GroundTruthWidget()
-    # folder=r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database\Samples\minicubes/'
-    # file_name='00278-SWIR-mock-up.h5'
-    # filepath=folder+file_name
-    # w.load_cube(path=filepath)
+    folder=r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database\Samples\minicubes/'
+    file_name='00278-SWIR-mock-up.h5'
+    filepath=folder+file_name
+    w.load_cube(path=filepath)
     w.show()
     sys.exit(app.exec_())
 
