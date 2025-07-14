@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Lot of things but most of all matlab.engine">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="ground truth : &#10;- cursor cross interference fixed,&#10;- updating spectra fixed&#10;- max R fixed &#10;- groups of widgets in tabs to have more space&#10;- add check box for live toggle">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,14 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Load in VizTool OK">
-      <option name="closed" value="true" />
-      <created>1746610626729</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1746610626729</updated>
     </task>
     <task id="LOCAL-00016" summary="Dockable window started.&#10;First test OK but widget not connected">
       <option name="closed" value="true" />
@@ -528,7 +521,15 @@
       <option name="project" value="LOCAL" />
       <updated>1752109688330</updated>
     </task>
-    <option name="localTasksCounter" value="64" />
+    <task id="LOCAL-00064" summary="ground truth : &#10;- cursor cross interference fixed,&#10;- updating spectra fixed&#10;- max R fixed &#10;- groups of widgets in tabs to have more space&#10;- add check box for live toggle">
+      <option name="closed" value="true" />
+      <created>1752500476863</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1752500476864</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -580,7 +581,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="GT_table_viz works now very nice. To be inserted in GT tool." />
     <MESSAGE value="Supression of .ui previous try of class assignment" />
     <MESSAGE value="Connection table and GT tools. &#10;right click interaction added on table." />
     <MESSAGE value="handle of classe suppresion ok" />
@@ -605,17 +605,7 @@
     <MESSAGE value="[main] correction of suggestions suprresion" />
     <MESSAGE value="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save." />
     <MESSAGE value="Lot of things but most of all matlab.engine" />
-    <option name="LAST_COMMIT_MESSAGE" value="Lot of things but most of all matlab.engine" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/MainWindow.py</url>
-          <line>7</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="ground truth : &#10;- cursor cross interference fixed,&#10;- updating spectra fixed&#10;- max R fixed &#10;- groups of widgets in tabs to have more space&#10;- add check box for live toggle" />
+    <option name="LAST_COMMIT_MESSAGE" value="ground truth : &#10;- cursor cross interference fixed,&#10;- updating spectra fixed&#10;- max R fixed &#10;- groups of widgets in tabs to have more space&#10;- add check box for live toggle" />
   </component>
 </project>
