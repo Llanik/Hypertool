@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1327</width>
-    <height>609</height>
+    <width>1340</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,7 +31,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,1,2,1,0,1,1,4,1,2">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,4,1,2,1,2,2,1,2">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
@@ -61,155 +61,415 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_image_type">
-        <property name="title">
-         <string>Image Choice</string>
+       <widget class="QTabWidget" name="tabWidget">
+        <property name="tabPosition">
+         <enum>QTabWidget::West</enum>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_5">
-         <item>
-          <widget class="QRadioButton" name="radioButton_rgb_default">
-           <property name="text">
-            <string>RGB default</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_rgb_user">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>RGB user</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_grayscale">
-           <property name="text">
-            <string>Grayscale</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Segment</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="3" column="7" colspan="2">
+             <widget class="QCheckBox" name="checkBox_enable_segment">
+              <property name="text">
+               <string>Enable auto segmentation</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="6" rowspan="4">
+             <widget class="Line" name="line_2">
+              <property name="lineWidth">
+               <number>1</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label_metric">
+              <property name="text">
+               <string>Spectral distance</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="7">
+             <widget class="QPushButton" name="pushButton_class_selection">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
+              </property>
+              <property name="text">
+               <string>Start selection</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="4">
+             <widget class="QPushButton" name="run_btn">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(173, 173, 173);</string>
+              </property>
+              <property name="text">
+               <string>Segmentation</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="7">
+             <widget class="QPushButton" name="pushButton_erase_selected_pix">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 206, 206);</string>
+              </property>
+              <property name="text">
+               <string>Erase Selected</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2" colspan="2">
+             <widget class="QComboBox" name="comboBox_ClassifMode">
+              <item>
+               <property name="text">
+                <string>Supervised</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Unsupervised</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="2" colspan="2">
+             <widget class="QLabel" name="label_class_type">
+              <property name="text">
+               <string>Classification type</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="8">
+             <widget class="QLabel" name="label_selec_mode">
+              <property name="text">
+               <string>Select mode</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLabel" name="nclass_label">
+              <property name="text">
+               <string># Classes:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5" rowspan="2">
+             <widget class="QSlider" name="slider_class_thr">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::NoTicks</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4">
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QStackedWidget" name="stackedWidget">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="page_distance">
+                 <layout class="QHBoxLayout" name="horizontalLayout">
+                  <item>
+                   <widget class="QComboBox" name="comboBox_distance">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>cosine</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>sqeuclidean</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>correlation</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="page_normalized">
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <item>
+                   <widget class="QComboBox" name="comboBox_normalized">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Raw</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Normalize</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="8">
+             <widget class="QComboBox" name="comboBox_pixel_selection_mode">
+              <item>
+               <property name="text">
+                <string>rectangle</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>ellipse</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>pixel</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QSpinBox" name="nclass_box">
+              <property name="minimum">
+               <number>2</number>
+              </property>
+              <property name="maximum">
+               <number>20</number>
+              </property>
+              <property name="value">
+               <number>3</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="QLabel" name="label_thr">
+              <property name="text">
+               <string>thr</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>Cube Viz</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QGroupBox" name="groupBox_image_type">
+            <property name="title">
+             <string>Image Choice</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <widget class="QRadioButton" name="radioButton_rgb_default">
+               <property name="text">
+                <string>RGB default</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="radioButton_rgb_user">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="text">
+                <string>RGB user</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="radioButton_grayscale">
+               <property name="text">
+                <string>Grayscale</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_RGBchannels_3">
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="spinBox_green_channel">
+              <property name="maximum">
+               <number>149</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="spinBox_blue_channel">
+              <property name="maximum">
+               <number>149</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="spinBox_red_channel">
+              <property name="maximum">
+               <number>149</number>
+              </property>
+              <property name="singleStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QSlider" name="horizontalSlider_blue_channel">
+              <property name="maximum">
+               <number>149</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_green_channel">
+              <property name="text">
+               <string>Green</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_blue_channel">
+              <property name="text">
+               <string>Blue</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_red_channel">
+              <property name="text">
+               <string>Red</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QSlider" name="horizontalSlider_green_channel">
+              <property name="maximum">
+               <number>149</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QSlider" name="horizontalSlider_red_channel">
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximum">
+               <number>149</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </widget>
-      </item>
-      <item>
-       <layout class="QGridLayout" name="gridLayout_RGBchannels_3">
-        <item row="1" column="1">
-         <widget class="QSpinBox" name="spinBox_green_channel">
-          <property name="maximum">
-           <number>149</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="spinBox_blue_channel">
-          <property name="maximum">
-           <number>149</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QSpinBox" name="spinBox_red_channel">
-          <property name="maximum">
-           <number>149</number>
-          </property>
-          <property name="singleStep">
-           <number>1</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QSlider" name="horizontalSlider_blue_channel">
-          <property name="maximum">
-           <number>149</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_green_channel">
-          <property name="text">
-           <string>Green</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_blue_channel">
-          <property name="text">
-           <string>Blue</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_red_channel">
-          <property name="text">
-           <string>Red</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QSlider" name="horizontalSlider_green_channel">
-          <property name="maximum">
-           <number>149</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QSlider" name="horizontalSlider_red_channel">
-          <property name="minimumSize">
-           <size>
-            <width>60</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximum">
-           <number>149</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
       <item>
        <widget class="Line" name="line">
@@ -217,242 +477,6 @@
          <enum>Qt::Vertical</enum>
         </property>
        </widget>
-      </item>
-      <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="3" column="7" colspan="2">
-         <widget class="QCheckBox" name="checkBox_enable_segment">
-          <property name="text">
-           <string>Enable auto segmentation</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="6" rowspan="4">
-         <widget class="Line" name="line_2">
-          <property name="lineWidth">
-           <number>1</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QLabel" name="label_metric">
-          <property name="text">
-           <string>Spectral distance</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="7">
-         <widget class="QPushButton" name="pushButton_class_selection">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
-          </property>
-          <property name="text">
-           <string>Start selection</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="4">
-         <widget class="QPushButton" name="run_btn">
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(173, 173, 173);</string>
-          </property>
-          <property name="text">
-           <string>Segmentation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="7">
-         <widget class="QPushButton" name="pushButton_erase_selected_pix">
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(255, 206, 206);</string>
-          </property>
-          <property name="text">
-           <string>Erase Selected</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2" colspan="2">
-         <widget class="QComboBox" name="comboBox_ClassifMode">
-          <item>
-           <property name="text">
-            <string>Supervised</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Unsupervised</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="2">
-         <widget class="QLabel" name="label_class_type">
-          <property name="text">
-           <string>Classification type</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="8">
-         <widget class="QLabel" name="label_selec_mode">
-          <property name="text">
-           <string>Select mode</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QLabel" name="nclass_label">
-          <property name="text">
-           <string># Classes:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="5" rowspan="2">
-         <widget class="QSlider" name="slider_class_thr">
-          <property name="minimum">
-           <number>0</number>
-          </property>
-          <property name="maximum">
-           <number>100</number>
-          </property>
-          <property name="value">
-           <number>100</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="tickPosition">
-           <enum>QSlider::NoTicks</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="4">
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <widget class="QStackedWidget" name="stackedWidget">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <widget class="QWidget" name="page_distance">
-             <layout class="QHBoxLayout" name="horizontalLayout">
-              <item>
-               <widget class="QComboBox" name="comboBox_distance">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>cosine</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>sqeuclidean</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>correlation</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="page_normalized">
-             <layout class="QHBoxLayout" name="horizontalLayout_3">
-              <item>
-               <widget class="QComboBox" name="comboBox_normalized">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Raw</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Normalize</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="2" column="8">
-         <widget class="QComboBox" name="comboBox_pixel_selection_mode">
-          <item>
-           <property name="text">
-            <string>rectangle</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>ellipse</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>pixel</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="nclass_box">
-          <property name="minimum">
-           <number>2</number>
-          </property>
-          <property name="maximum">
-           <number>20</number>
-          </property>
-          <property name="value">
-           <number>3</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QLabel" name="label_thr">
-          <property name="text">
-           <string>thr</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
       <item>
        <widget class="QFrame" name="frame_legend">
@@ -473,80 +497,100 @@
        </widget>
       </item>
       <item>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="1" column="3">
-         <widget class="QSlider" name="horizontalSlider_transparency_GT">
-          <property name="minimumSize">
-           <size>
-            <width>60</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximum">
-           <number>100</number>
-          </property>
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="sliderPosition">
-           <number>0</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="label_GT_3">
-          <property name="text">
-           <string>GT transparency</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QCheckBox" name="live_cb">
-          <property name="text">
-           <string>Spectra visualization</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QCheckBox" name="checkBox_seeGTspectra">
-          <property name="text">
-           <string>See GT spectra</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3">
-         <widget class="QCheckBox" name="checkBox_see_selection_overlay">
-          <property name="text">
-           <string>See selection</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QPushButton" name="pushButton_band_selection">
-          <property name="text">
-           <string>Band selection</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Image Overlays</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QLabel" name="label_GT_3">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>GT transparency</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="horizontalSlider_transparency_GT">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="sliderPosition">
+            <number>0</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_see_selection_overlay">
+           <property name="text">
+            <string>See selection</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Spectra</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <item>
+          <widget class="QCheckBox" name="checkBox_live_spectra">
+           <property name="text">
+            <string>Live</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_seeGTspectra">
+           <property name="text">
+            <string>See GT spectra</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_band_selection">
+           <property name="text">
+            <string>Band selection</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </item>
       <item>
        <widget class="Line" name="line_5">
@@ -572,7 +616,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_keep_GT">
+         <widget class="QPushButton" name="pushButton_save_GT">
           <property name="text">
            <string>Save GT map</string>
           </property>
