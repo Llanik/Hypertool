@@ -195,7 +195,7 @@ GT_cmap=np.array([[0.        , 1.        , 0.24313725, 0.22745098, 0.37254902,
         0.        , 0.        , 0.        , 0.49019608, 0.09803922,
         0.8627451 , 0.74509804, 0.58823529, 0.39215686, 0.19607843]])
 
-class ZoomableGraphicsView(QGraphicsView):
+class le (QGraphicsView):
     def __init__(self,cursor_style='default'):
         super().__init__()
         self.setScene(QGraphicsScene())
