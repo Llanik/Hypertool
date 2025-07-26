@@ -651,6 +651,12 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             return
 
         label_map = np.array(img)  # contains GT_labels like 3, 7, 12...
+
+        if label_map.shape[0]!=self.data.shape[0] or label_map.shape[1]!=self.data.shape[1]:
+            QMessageBox.warning(self, 'Problem with GT png loading',
+                                'The PNG image does not have the same size as cube.data. \nPlease check if your image is well associates to your cube.')
+            return
+
         palette = np.array(img.getpalette()).reshape((-1, 3))  # shape: (256, 3)
 
         self.fill_from_loaded_gt(label_map=label_map,rgb_dic=palette)
