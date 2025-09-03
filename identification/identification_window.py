@@ -367,7 +367,7 @@ class Ui_IdentificationWidget(object):
         self.verticalLayout.setStretch(1, 6)
 
         self.retranslateUi(IdentificationWidget)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         self.tabWidget_2.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(IdentificationWidget)
 
@@ -430,7 +430,7 @@ class Ui_IdentificationWidget(object):
         self.radioButton_overlay_identification.setText(_translate("IdentificationWidget", "Classification"))
         self.pushButton_show_all.setText(_translate("IdentificationWidget", "Show All"))
         self.pushButton_save_map.setToolTip(_translate("IdentificationWidget", "Save segmented image and Ground Truth information in metadata of hypercube file"))
-        self.pushButton_save_map.setText(_translate("IdentificationWidget", "Save active map"))
+        self.pushButton_save_map.setText(_translate("IdentificationWidget", "Save map(s)"))
         self.horizontalSlider_overlay_transparency.setToolTip(_translate("IdentificationWidget", "Choose transparency of GT image overlay on cube representation."))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tabWidgetPage2_2), _translate("IdentificationWidget", "Image Overlays"))
         self.viewer_left.setToolTip(_translate("IdentificationWidget", "Promote to ZoomableGraphicsView"))
