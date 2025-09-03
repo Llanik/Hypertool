@@ -4,10 +4,14 @@ import sys
 import os
 import numpy as np
 import cv2
-from PyQt5.QtWidgets import (QWidget, QApplication, QFileDialog, QSizePolicy, QMessageBox, QSplitter,
-                             QDialog,QPushButton,QTableWidgetItem,QHeaderView,QProgressBar,QVBoxLayout,
-                             QScrollArea, QLabel, QHBoxLayout
+from PIL import Image
+import h5py
+
+from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QTableWidgetItem,QHeaderView,QProgressBar,
+                            QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton,
+                             QDialogButtonBox, QCheckBox, QScrollArea, QWidget, QFileDialog, QMessageBox
                              )
+
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt,QObject, pyqtSignal, QRunnable, QThreadPool, pyqtSlot
 
@@ -23,12 +27,52 @@ from hypercubes.hypercube import Hypercube
 from ground_truth.ground_truth_tool import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
-# todo : crop cube before binarization/classification
 # todo : parfaire le chargement des cubes
+# todo : crop cube before binarization/classification
 # todo : save classification (h5p ou image classique avec meta)
 # todo : save in temp classification app in progress ?
 # todo : legend and update legend
 # todo : add QDialogs before remove, launch selected, reinit selected if DONE
+# todo : check if h5 save OK.
+
+def fused_cube(cube1,cube2):
+    cubes={}
+    if cube1.wl[0]<500 and  cube2.wl[0]>800:
+        cubes['VNIR']=cube1
+        cubes['SWIR']=cube2
+    elif cube1.wl[0]>800 and  cube2.wl[0]<500:
+        cubes['VNIR'] = cube2
+        cubes['SWIR'] = cube1
+    else:
+        print('error with cubes range')
+        return
+
+    target_ranges = {'VNIR': (400, 950), 'SWIR': (955, 1700)}
+
+    # Vérification couverture
+    full_covered = all(
+        key in cubes and
+        cubes[key].wl[0] <= target_ranges[key][0] and
+        cubes[key].wl[-1] >= target_ranges[key][1]
+        for key in target_ranges
+    )
+
+    if full_covered:
+        hyps_cut = {}
+        for key in target_ranges:
+            wl = cubes[key].wl
+            data = cubes[key].data
+            start_idx = np.argmin(np.abs(wl - target_ranges[key][0]))
+            end_idx = np.argmin(np.abs(wl - target_ranges[key][1]))
+            data_cut = data[:, :, start_idx:end_idx + 1]
+            wl_cut = wl[start_idx:end_idx + 1]
+            hyps_cut[key] = Hypercube(data=data_cut, wl=wl_cut,
+                                      cube_info=cubes[key].cube_info)
+
+        data_fused = np.concatenate((hyps_cut['VNIR'].data, hyps_cut['SWIR'].data), axis=2)
+        wl_fused = np.concatenate((hyps_cut['VNIR'].wl, hyps_cut['SWIR'].wl))
+
+        return data_fused,wl_fused
 
 class ClassifySignals(QObject):
     finished = pyqtSignal()                          # fin (toujours émis)
@@ -142,45 +186,6 @@ class ClassificationJob:
         self._t0 = None
         self.class_map: Optional[np.ndarray] = None
 
-def fused_cube(cube1,cube2):
-    cubes={}
-    if cube1.wl[0]<500 and  cube2.wl[0]>800:
-        cubes['VNIR']=cube1
-        cubes['SWIR']=cube2
-    elif cube1.wl[0]>800 and  cube2.wl[0]<500:
-        cubes['VNIR'] = cube2
-        cubes['SWIR'] = cube1
-    else:
-        print('error with cubes range')
-        return
-
-    target_ranges = {'VNIR': (400, 950), 'SWIR': (955, 1700)}
-
-    # Vérification couverture
-    full_covered = all(
-        key in cubes and
-        cubes[key].wl[0] <= target_ranges[key][0] and
-        cubes[key].wl[-1] >= target_ranges[key][1]
-        for key in target_ranges
-    )
-
-    if full_covered:
-        hyps_cut = {}
-        for key in target_ranges:
-            wl = cubes[key].wl
-            data = cubes[key].data
-            start_idx = np.argmin(np.abs(wl - target_ranges[key][0]))
-            end_idx = np.argmin(np.abs(wl - target_ranges[key][1]))
-            data_cut = data[:, :, start_idx:end_idx + 1]
-            wl_cut = wl[start_idx:end_idx + 1]
-            hyps_cut[key] = Hypercube(data=data_cut, wl=wl_cut,
-                                      cube_info=cubes[key].cube_info)
-
-        data_fused = np.concatenate((hyps_cut['VNIR'].data, hyps_cut['SWIR'].data), axis=2)
-        wl_fused = np.concatenate((hyps_cut['VNIR'].wl, hyps_cut['SWIR'].wl))
-
-        return data_fused,wl_fused
-
 class LoadCubeDialog(QDialog, Ui_Dialog):
     def __init__(self, parent=None, wl_step=5):
         super().__init__(parent)
@@ -287,6 +292,151 @@ class LoadCubeDialog(QDialog, Ui_Dialog):
                 self.accept()
                 self.result_data = (self.cubes, None, None)
 
+class SaveClassMapDialog(QDialog):
+    """
+    Dialog to select save options for classification maps:
+      - Save formats (HDF5 / PNG)
+      - Models to include
+      - Base filename
+    """
+    def __init__(self, model_names, default_base_name="result", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Save Classification Map(s)")
+        self.setModal(True)
+
+        self.chk_h5  = QCheckBox("HDF5 (.h5)")
+        self.chk_png = QCheckBox("PNG (.png)")
+        self.chk_h5.setChecked(True)
+        self.chk_png.setChecked(True)
+
+        # Base name input
+        self.base_name_edit = QLineEdit(default_base_name)
+
+        # Model checkboxes in scrollable area
+        self.model_checks = []
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        inner = QWidget()
+        vbox_models = QVBoxLayout(inner)
+
+        for name in model_names:
+            cb = QCheckBox(name)
+            cb.setChecked(True)
+            self.model_checks.append(cb)
+            vbox_models.addWidget(cb)
+
+        scroll.setWidget(inner)
+
+        # OK / Cancel buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self._on_accept)
+        buttons.rejected.connect(self.reject)
+
+        # Layout
+        form = QFormLayout()
+        form.addRow(QLabel("<b>Save formats</b>"))
+        row_fmt = QHBoxLayout()
+        row_fmt.addWidget(self.chk_h5)
+        row_fmt.addWidget(self.chk_png)
+        form.addRow(row_fmt)
+        form.addRow("Base name:", self.base_name_edit)
+
+        main = QVBoxLayout(self)
+        main.addLayout(form)
+        main.addWidget(QLabel("<b>Models</b>"))
+        main.addWidget(scroll)
+        main.addWidget(buttons)
+
+        self._selected_models = []
+        self._base_name = None
+        self._want_h5 = True
+        self._want_png = True
+
+    def _on_accept(self):
+        base = self.base_name_edit.text().strip()
+        if not base:
+            QMessageBox.warning(self, "Missing name", "Please enter a base name.")
+            return
+
+        selected = [cb.text() for cb in self.model_checks if cb.isChecked()]
+        if not selected:
+            QMessageBox.warning(self, "No model selected", "Please select at least one model.")
+            return
+
+        if not (self.chk_h5.isChecked() or self.chk_png.isChecked()):
+            QMessageBox.warning(self, "No format selected", "Please select at least one format (HDF5 or PNG).")
+            return
+
+        self._selected_models = selected
+        self._base_name = base
+        self._want_h5 = self.chk_h5.isChecked()
+        self._want_png = self.chk_png.isChecked()
+        self.accept()
+
+    @property
+    def selected_models(self):
+        return self._selected_models
+
+    @property
+    def base_name(self):
+        return self._base_name
+
+    @property
+    def want_h5(self):
+        return self._want_h5
+
+    @property
+    def want_png(self):
+        return self._want_png
+
+def _ensure_unique_path(folder, filename_no_ext, ext):
+    """Ensure unique filename by appending (n) if needed."""
+    candidate = os.path.join(folder, f"{filename_no_ext}{ext}")
+    if not os.path.exists(candidate):
+        return candidate
+    n = 1
+    while True:
+        candidate = os.path.join(folder, f"{filename_no_ext} ({n}){ext}")
+        if not os.path.exists(candidate):
+            return candidate
+        n += 1
+
+def _write_h5_class_map(path, class_map, classifier_name, classifier_type,
+                        class_labels, palette_rgb):
+    """Write class_map + metadata into HDF5 file."""
+    class_map = np.asarray(class_map)
+    with h5py.File(path, "w") as f:
+        dset = f.create_dataset("class_map", data=class_map.astype(np.int32), compression="gzip")
+        f.attrs["classifier_name"] = str(classifier_name)
+        f.attrs["classifier_type"] = str(classifier_type)
+
+        # Labels
+        if isinstance(class_labels, dict):
+            max_idx = int(np.max(class_map)) if class_map.size else -1
+            labels_list = [class_labels.get(i, f"class_{i}") for i in range(max_idx+1)]
+        else:
+            labels_list = list(class_labels)
+        f.attrs["class_labels"] = np.array(labels_list, dtype=object)
+
+        # Palette
+        pal = np.asarray(palette_rgb, dtype=np.uint8)
+        f.attrs["palette"] = pal
+
+def _write_indexed_png(path, class_map, palette_rgb):
+    """Write class_map as indexed PNG with palette."""
+    if class_map.dtype != np.uint8:
+        if class_map.max() > 255:
+            raise ValueError("Class map has indices >255, cannot save as indexed PNG.")
+        class_map = class_map.astype(np.uint8)
+
+    img = Image.fromarray(class_map, mode="P")
+
+    pal = np.zeros((256, 3), dtype=np.uint8)
+    n = min(256, palette_rgb.shape[0])
+    pal[:n, :] = palette_rgb[:n, :]
+    img.putpalette(pal.reshape(-1).tolist())
+    img.save(path, format="PNG")
+
 class IdentificationWidget(QWidget, Ui_IdentificationWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -327,7 +477,6 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.pushButton_launch_bin.clicked.connect(self.launch_binarization)
         self.horizontalSlider_overlay_transparency.valueChanged.connect(self.update_alpha)
         self.comboBox_bin_algorith_choice.currentIndexChanged.connect(self.update_bin_defaults)
-
         self.pushButton_clas_add_ink.clicked.connect(
             lambda: self.add_job(self.comboBox_clas_ink_model.currentText()))
         self.pushButton_clas_remove.clicked.connect(self.remove_selected_job)
@@ -339,6 +488,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.pushButton_clas_stop.clicked.connect(self.stop_queue)
         self.pushButton_clas_reinit.clicked.connect(self.reinit_selected_job)
         self.pushButton_show_all.clicked.connect(self._show_all_results_dialog)
+        self.pushButton_save_map.clicked.connect(self.on_click_save_map)
 
         self.sliders_rgb = [
             self.horizontalSlider_red_channel,
@@ -374,10 +524,16 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         self.update_bin_defaults()
         self.palette_bgr = {
-            0: (128, 128, 128),  # Substrate (gris)
-            3: (211, 0, 148),  # MGP (violet)
-            2: (0, 255, 255),  # CC (jaune)
+            0: (128, 128, 128),  # Substrate (grey)
+            3: (211, 0, 148),  # MGP (purpe)
+            2: (0, 255, 255),  # CC (yellow)
             1: (0, 165, 255)  # NCC (orange)
+        }
+        self.labels={
+            0: 'Substrate',
+            3:  'MGP' ,
+            2: 'CC',
+            1: 'NCC'
         }
 
     def bgr_to_rgb(self, bgr):
@@ -1165,7 +1321,6 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             job.class_map = np.zeros(mask.shape, dtype=np.uint8)
 
             spectra = self.data[mask, :]
-            print(f'[LAUNCH JOB] data size : {self.data.shape} ; spectra size : {spectra.shape}')
             N = spectra.shape[0]
             target_steps = 50
             min_chunk = 20
@@ -1333,6 +1488,107 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         self._refresh_table()
         self._refresh_show_model_combo()
+
+    def on_click_save_map(self):
+        # 1) Collect available models
+        models = self._get_available_models()
+        if not models:
+            QMessageBox.warning(self, "No models", "No classification models available.")
+            return
+
+        # 2) Open dialog
+        dlg = SaveClassMapDialog(models, default_base_name="classification", parent=self)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        base = dlg.base_name
+        selected_models = dlg.selected_models
+        want_h5 = dlg.want_h5
+        want_png = dlg.want_png
+
+        # 3) Ask output folder
+        out_dir = QFileDialog.getExistingDirectory(self, "Select output folder")
+        if not out_dir:
+            return
+
+        saved_files = []
+
+        # 4) Save each selected model
+        for model in selected_models:
+            try:
+                job = self.jobs[model]
+                class_map = job.class_map
+            except Exception as e:
+                QMessageBox.warning(self, "Missing class map", f"No class map for '{model}':\n{e}")
+                continue
+
+            classifier_name, classifier_type = self._get_classifier_meta_for_model(model)
+
+            filename_base = f"{base}_{model}_map"
+            labels=self.labels
+            palette_rgb = [0] * (256 * 3)  # init black
+            for idx, (b, g, r) in self.palette_bgr.items():
+                palette_rgb[idx * 3:idx * 3 + 3] = [r, g, b]  # PIL wants RGB
+            palette_rgb = np.asarray(palette_rgb, dtype=np.uint8).reshape((-1, 3))
+
+            if want_h5:
+                path_h5 = _ensure_unique_path(out_dir, filename_base, ".h5")
+                _write_h5_class_map(path_h5, class_map, classifier_name, classifier_type, labels, palette_rgb)
+                saved_files.append(path_h5)
+
+            if want_png:
+                path_png = _ensure_unique_path(out_dir, filename_base, ".png")
+                _write_indexed_png(path_png, class_map, palette_rgb)
+                saved_files.append(path_png)
+
+        if saved_files:
+            QMessageBox.information(self, "Done", "Files saved:\n- " + "\n- ".join(saved_files))
+
+
+    def _get_available_models(self):
+        """
+        Return all model names present in comboBox_clas_show_model.
+        """
+        cb = self.comboBox_clas_show_model
+        return [cb.itemText(i) for i in range(cb.count())]
+
+    def _get_class_map_for_model(self, model_name: str):
+        """
+        Fetch the 2D class_map for a model from self.jobs[model_name].clas_map.
+        """
+        if not hasattr(self, "jobs") or model_name not in self.jobs:
+            raise KeyError(f"Model '{model_name}' not found in self.jobs.")
+        job = self.jobs[model_name]
+
+        if not hasattr(job, "class_map"):
+            raise AttributeError(f"Job for '{model_name}' has no 'clas_map' attribute.")
+
+        cm = np.asarray(job.class_map)
+        if cm.ndim != 2:
+            raise ValueError(f"Expected a 2D class_map for '{model_name}', got shape {cm.shape}.")
+        return cm
+
+    def _get_classifier_meta_for_model(self, model_name: str):
+        """
+        Return (classifier_name, classifier_type) for HDF5 attributes.
+        Pulls from common job attributes; falls back to (model_name, "unknown").
+        """
+        job = self.jobs.get(model_name) if hasattr(self, "jobs") else None
+        if job is not None:
+            # Common attribute names you might have on your job:
+            #  - name / model_name: human-readable name of the classifier
+            #  - backend / framework / kind / model_type: library or family ("sklearn", "pytorch", ...)
+            name = getattr(job, "name", None) or getattr(job, "model_name", None) or model_name
+            backend = (
+                    getattr(job, "backend", None)
+                    or getattr(job, "framework", None)
+                    or getattr(job, "kind", None)
+                    or getattr(job, "model_type", None)
+                    or "unknown"
+            )
+            return str(name), str(backend)
+        return model_name, "unknown"
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
