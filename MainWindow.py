@@ -23,6 +23,7 @@ from interface.hypercube_manager import HypercubeManager
 from metadata.metadata_tool import MetadataTool
 from ground_truth.ground_truth_tool import GroundTruthWidget
 from minicube.minicube_tool import MiniCubeTool
+from identification.identification_tool import IdentificationWidget
 
 # grafics to control changes
 import matplotlib.pyplot as plt
@@ -232,9 +233,12 @@ class MainApp(QtWidgets.QMainWindow):
         self.reg_dock=self._add_dock("Registration",   RegistrationApp,     QtCore.Qt.RightDockWidgetArea)
         self.gt_dock=self._add_dock("Ground Truth",   GroundTruthWidget,     QtCore.Qt.RightDockWidgetArea)
         self.minicube_dock=self._add_dock("Minicube Extract",   MiniCubeTool,     QtCore.Qt.RightDockWidgetArea)
+        self.identification_dock=self._add_dock("Identification", IdentificationWidget, QtCore.Qt.RightDockWidgetArea)
         self.tabifyDockWidget(self.reg_dock, self.gt_dock)
         self.tabifyDockWidget(self.reg_dock, self.data_viz_dock)
         self.tabifyDockWidget(self.reg_dock, self.minicube_dock)
+        self.tabifyDockWidget(self.reg_dock, self.identification_dock)
+
         self.gt_dock.raise_()
 
         # Tool menu
@@ -254,7 +258,7 @@ class MainApp(QtWidgets.QMainWindow):
         act_data = self.onToolButtonPress(self.data_viz_dock, "icon_data_viz.svg", "Data Vizualisation")
         act_reg = self.onToolButtonPress(self.reg_dock, "registration_icon.png", "Registration")
         act_gt =self.onToolButtonPress(self.gt_dock, "GT_icon_1.png", "Ground Truth")
-
+        act_ident=self.onToolButtonPress(self.identification_dock,"Ident_icon.png","Identification")
         self.toolbar.addSeparator()
 
         # Cubes "list"
@@ -841,11 +845,11 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
-    # fname = '00189-VNIR-mock-up.h5'
-    #
-    # filepath = os.path.join(folder, fname)
-    # main._on_add_cube([filepath,filepath.replace('189','191')])
+    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
+    fname = '00189-VNIR-mock-up.h5'
+
+    filepath = os.path.join(folder, fname)
+    main._on_add_cube([filepath,filepath.replace('189','191')])
 
     try:
         import matlab.engine
