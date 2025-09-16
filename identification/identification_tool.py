@@ -10,7 +10,8 @@ import h5py
 from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QTableWidgetItem,QHeaderView,QProgressBar,
                             QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton,
                              QDialogButtonBox, QCheckBox, QScrollArea, QWidget, QFileDialog, QMessageBox,
-                             QRadioButton)
+                             QRadioButton,QInputDialog
+                             )
 
 from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt,QObject, pyqtSignal, QRunnable, QThreadPool, pyqtSlot, QRectF
@@ -32,6 +33,7 @@ from identification.load_cube_dialog import Ui_Dialog
 # todo : reset all ?
 # todo : convert numpy in list at saving
 # todo : finish training implementation (refresh table, queue training, save trained, load trained)
+# todo : check for interpolation possible when different wl
 
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
@@ -233,7 +235,7 @@ class ClassificationJob:
     clean_param= None           # clean parameters
     binary_algo= None           # binary algo
     binary_param = None         # binary param
-    spectral_range_used = None
+    spectral_range_used = None  # to save
 
     def reinit(self):
         if self.trained:
@@ -1179,10 +1181,10 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             qimg = QImage(rgb.data, rgb.shape[1], rgb.shape[0], rgb.strides[0], fmt)
         return QPixmap.fromImage(qimg).copy()
 
-    def load_classifier(self,model_name):
+    def load_classifier(self,path):
         models_dir = "identification/data"
 
-        if model_name == "CNN 1D":
+        if "CNN 1D" in path:
             import torch
             from classifier_train import SpectralCNN1D
             input_length = self.data.shape[2]
@@ -1195,9 +1197,11 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         else:
             import joblib
-            filename = f"model_{model_name.lower()}.joblib"
-            self.classifier = joblib.load(os.path.join(models_dir, filename))
+
+            model=joblib.load(path)
+            self.classifier = model['pipeline']
             self.classifier_type = "sklearn"
+            self.classifier_wl=model['train_wl']
 
     def _on_classif_progress(self, value):
         try:
@@ -1543,19 +1547,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         return
 
     def add_job(self, name: str):
+
         clf_type=name
-        if clf_type=="Add from disk...":
-            QMessageBox.information(self,'TODO ;-)','TODO ;-)')
-            ## dialog to open file
-
-            ## check if joblib (no pth for now)
-
-            ## check if same number of features with message
-
-            ## validate and ask a name (and kind ?)
-
-            return
-
         if getattr(sys, 'frozen', False):  # pynstaller case
             BASE_DIR = sys._MEIPASS
         else:
@@ -1563,6 +1556,52 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         save_model_folder = os.path.join(BASE_DIR,
                                          "identification/data")
+        filename = f"model_{clf_type.lower()}.joblib"
+        savepath=os.path.join(save_model_folder, filename)
+
+        if clf_type=="Add from disk...":
+            ## dialog to open file
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                f"Load model",
+                os.path.join(BASE_DIR,"identification/data"),
+                "joblib files (*.joblib)"
+            )
+            if not path:
+                return
+
+            ## check if same number of features with message
+            import joblib
+            model=joblib.load(path)
+
+            train_wl=model['train_wl']
+            ## validate and ask a name (and kind ?)
+            if self.features_compatible(train_wl):
+                try:
+                    kind_temp=model['pipeline'].steps[1][0]
+                    print('kind from pipeline : ',kind_temp)
+                except:
+                    try:
+                        kind_temp = model['pipeline'].__class__.__name__
+                        print('kind from raw : ', kind_temp)
+
+                    except:
+                        kind_temp='Unkown'
+                        print('kind not found')
+
+                kind={'kneighborsclassifier':'KNN','RandomForestClassifier':'RDF','LinearDiscriminantAnalysis':'LDA','svc':'SVM'}[kind_temp]
+
+                model_name, ok = QInputDialog.getText(self, 'Classifier loaded', f'Classifier {kind} loaded. Enter name :',text=kind)
+                if ok :
+                    if model_name:
+                        print("User entered:", model_name)
+                    else:
+                        model_name='USERS'
+                        print("User No entered name. Default name:", model_name)
+
+                    name = model_name
+                    savepath=path
+
 
         if len(self.wl) != len(self.train_wl):
             trained=False
@@ -1573,24 +1612,22 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             if reply==QMessageBox.No:
                 return
             else:
-
                 if name not in ['KNN','RDF','LDA','SVM']:
                     QMessageBox.warning(self, 'Model can be trained',
                                         'Model can not be trained.\nPlease choose between LDA, KNN, RDF or SVM')
                     return
 
+                spectral_range_name=f'_{self.wl[0]}-{self.wl[-1]}'
 
                 savepath, _ = QFileDialog.getSaveFileName(
                     self,
                     "Choose Model filename",
-                    os.path.join(save_model_folder, name),
+                    os.path.join(save_model_folder, name+spectral_range_name),
                     "joblib (*.joblib)"
                 )
 
-
         else:
             trained=True
-            savepath=save_model_folder
 
         # enforce uniqueness on 'name'
         unique = self._ensure_unique_name(name)
@@ -1604,11 +1641,14 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             kind = ['Ink 3 classes']
 
         job = ClassificationJob(unique, clf_type, kind)
+        if not trained:
+            job.status='To Train'
         job.binary_param=self.binary_param
         job.binary_algo=self.binary_algo
         job.spectral_range_used=[self.wl[0],self.wl[-1]]
         job.trained=trained
         job.trained_path=savepath
+
         self.jobs[unique] = job
         self.job_order.append(unique)
         self._refresh_table()
@@ -1826,7 +1866,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             self._update_row_from_job(name)
 
             # Load classifier and create worker
-            self.load_classifier(job.clf_type)
+
+            self.load_classifier(job.trained_path)
 
             mask = self.binary_map.astype(bool)
             job._mask_indices = np.flatnonzero(mask.ravel())  # indices plats des pixels True
@@ -2535,6 +2576,19 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             obj.clean_map=self.run_cleaning(class_map, params)
             obj.clean_param=params
             self.show_classification_result()
+
+    def features_compatible(self,wl_ref, tol_nm: float = 1):
+
+        if wl_ref is not None:
+            wl_ref = np.asarray(wl_ref, dtype=float)
+
+            if wl_ref.shape == self.wl.shape and np.allclose(wl_ref, self.wl, atol=tol_nm, rtol=0):
+                return True, "Exact wavelength grid match."
+            else:
+                return False, (f"Wavelength grid mismatch: "
+                               f"model bands={wl_ref.size}, cube bands={self.wl.size}")
+
+        return False, "Cannot verify feature compatibility (no train_wl in model)."
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
