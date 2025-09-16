@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : Gestion of uncomplete spectral range -&gt; crop and interp. &#10;started implementation of learning with shorter spectral range.">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : Dilog ofr opening saved model ok">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identification/identification_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,14 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00037" summary="QSplitter OK&#10;Loading cube with reste state OK">
-      <option name="closed" value="true" />
-      <created>1748517410329</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1748517410329</updated>
     </task>
     <task id="LOCAL-00038" summary="GT_table_viz works now very nice. To be inserted in GT tool.">
       <option name="closed" value="true" />
@@ -529,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1757682310555</updated>
     </task>
-    <option name="localTasksCounter" value="86" />
+    <task id="LOCAL-00086" summary="[IDENTIFICATION] : Dilog ofr opening saved model ok">
+      <option name="closed" value="true" />
+      <created>1758035819028</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1758035819029</updated>
+    </task>
+    <option name="localTasksCounter" value="87" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -581,7 +580,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[main] correction of suggestions suprresion" />
     <MESSAGE value="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save." />
     <MESSAGE value="Lot of things but most of all matlab.engine" />
     <MESSAGE value="Ground Truth Features fixed.&#10;- cursor cross interference fixed,&#10;- updating spectra fixed&#10;- max R fixed &#10;- groups of widgets in tabs to have more space&#10;- add check box for live toggle&#10;- all made again because of a fucking error of merging :-/" />
@@ -606,6 +604,7 @@
     <MESSAGE value="[Identification] : Added saving in h5 and png &#10;with dialog options." />
     <MESSAGE value="[BACK_UP] : Reintialisation of git ang gitignore" />
     <MESSAGE value="[IDENTIFICATION] : Gestion of uncomplete spectral range -&gt; crop and interp. &#10;started implementation of learning with shorter spectral range." />
-    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : Gestion of uncomplete spectral range -&gt; crop and interp. &#10;started implementation of learning with shorter spectral range." />
+    <MESSAGE value="[IDENTIFICATION] : Dilog ofr opening saved model ok" />
+    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : Dilog ofr opening saved model ok" />
   </component>
 </project>

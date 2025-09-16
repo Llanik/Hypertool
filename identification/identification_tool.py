@@ -35,6 +35,7 @@ from identification.load_cube_dialog import Ui_Dialog
 # todo : finish training implementation (refresh table, queue training, save trained, load trained)
 # todo : check for interpolation possible when different wl
 
+
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
     if isinstance(md, dict):
@@ -134,14 +135,13 @@ class ClassifySignals(QObject):
 class ClassifyWorker(QRunnable):
     """
     Exécute une classification sur 'spectra' (np.ndarray [N_pixels, N_bands]) en CHUNKS.
-    - classifier: scikit-learn pipeline/estim. OU modèle PyTorch (eval).
+    - classifier: scikit-learn pipeline/estim.
     - classifier_type: "sklearn" ou "cnn".
     - chunk_size: nb de pixels par batch (équilibre RAM/vitesse).
     - emit_partial: si True, émet result_partial(start, end, preds_chunk) à chaque chunk.
       -> permet d'afficher la class_map PROGRESSIVEMENT.
     """
-    def __init__(self, spectra: np.ndarray, classifier, classifier_type: str,
-                 chunk_size: int = 100_000, emit_partial: bool = True):
+    def __init__(self, spectra, classifier, classifier_type,chunk_size= 100_000, emit_partial= True):
         super().__init__()
         self.spectra = spectra
         self.classifier = classifier
@@ -215,6 +215,149 @@ class ClassifyWorker(QRunnable):
         except Exception as e:
             tb = traceback.format_exc()
             self.signals.error.emit(f"{e}\n{tb}")
+        finally:
+            self.signals.finished.emit()
+
+class TrainSignals(QObject):
+    finished = pyqtSignal()           # always emitted
+    error = pyqtSignal(str)
+    progress = pyqtSignal(int)        # 0..100
+    saved = pyqtSignal(str)           # path to saved model
+
+class TrainWorker(QRunnable):
+    """
+    Trains a model for (clf_type, kind) on the local training set, then saves it to savepath.
+    Emits .saved(savepath) on success.
+    """
+    def __init__(self, clf_type: str, kind: str, savepath: str, train_wl: np.ndarray):
+        super().__init__()
+        self.clf_type = (clf_type or "").upper()
+        self.kind = kind
+        self.savepath = savepath
+        self.train_wl = np.asarray(train_wl, float)
+        self.signals = TrainSignals()
+        self._cancel = False
+
+    def cancel(self): self._cancel = True
+
+    def crop_training_to_target_wl(self,X_train):
+        """
+        Crops columns of X_train (assumed to be on 400..1700 nm @ 5 nm) so they match wl_tgt.
+        Returns (X_crop, wl_used) with wl_used == wl_tgt.
+        """
+        BASE_MIN_NM = 400.0
+        BASE_MAX_NM = 1700.0
+        BASE_STEP_NM = 5.0
+
+        wl_tgt=self.train_wl
+
+        # quick sanity checks
+        if wl_tgt.size == 0:
+            raise ValueError("wl_tgt is empty.")
+        if (wl_tgt.min() < BASE_MIN_NM - 1e-9) or (wl_tgt.max() > BASE_MAX_NM + 1e-9):
+            raise ValueError(f"wl_tgt must be within [{BASE_MIN_NM}, {BASE_MAX_NM}] nm.")
+
+        # Expected source wavelengths for the training dataset
+        wl_src = np.arange(BASE_MIN_NM, BASE_MAX_NM + BASE_STEP_NM, BASE_STEP_NM, dtype=float)
+
+        # Map target wavelengths to integer indices on the 5 nm grid
+        # idx = (wl - 400) / 5  -> integer
+        idx = np.rint((wl_tgt - BASE_MIN_NM) / BASE_STEP_NM).astype(int)
+
+        # Bounds check
+        if (idx < 0).any() or (idx >= wl_src.size).any():
+            raise ValueError("Some target wavelengths are outside the training grid.")
+
+        # Shape check: X_train columns must match full wl_src length
+        if X_train.shape[1] != wl_src.size:
+            raise ValueError(
+                f"X_train has {X_train.shape[1]} bands but expected {wl_src.size} "
+                "for 400..1700 nm @ 5 nm. Ensure you load the full training feature set."
+            )
+
+        X_crop = X_train[:, idx]
+        # wl_src[idx] should equal wl_tgt (numerically)
+        return X_crop, wl_tgt
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            import os, joblib, numpy as np
+            # ---- Load training data, following your classifier_train.py ----
+            # Adjust paths to your repo layout if needed
+            from pathlib import Path
+            base = Path(__file__).resolve().parents[1] / "identification" / "data"
+
+            X_train = None; y_train = None
+            if "background" in self.kind.lower():
+                import h5py
+                fname = "XY_train_background_10pct.h5" if "10pct" in self.kind.lower() else "XY_train_background.mat"
+                f = h5py.File(base / fname, "r")
+                X_train = np.array(f['X']).T
+                y_train = np.array(f['Y'][0])
+            else:
+                import scipy.io
+                data = scipy.io.loadmat(base / "XY_train_3classes.mat")
+                X_train = data['X']
+                y_train = data['Y'].ravel()
+
+            X_aligned, wl_used = self.crop_training_to_target_wl(X_train)
+
+            # ---- Build model pipeline (same choices as your UI) ----
+            if self.clf_type == "KNN":
+                from sklearn.pipeline import make_pipeline
+                from sklearn.preprocessing import StandardScaler
+                from sklearn.neighbors import KNeighborsClassifier
+                model = make_pipeline(StandardScaler(),
+                                      KNeighborsClassifier(n_neighbors=1, metric='cosine', weights='uniform'))
+            elif self.clf_type == "SVM":
+                from sklearn.pipeline import make_pipeline
+                from sklearn.preprocessing import StandardScaler
+                from sklearn.svm import SVC
+                model = make_pipeline(StandardScaler(),
+                                      SVC(kernel='rbf', C=10, gamma='scale', decision_function_shape='ovo'))
+            elif self.clf_type == "LDA":
+                from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+                model = LinearDiscriminantAnalysis(solver='svd')
+            elif self.clf_type == "RDF":
+                from sklearn.ensemble import RandomForestClassifier
+                rf = RandomForestClassifier(
+                    n_estimators=0, max_features=None, max_leaf_nodes=751266,
+                    bootstrap=True, warm_start=True, n_jobs=-1
+                )
+                # incremental build like your script
+                import math
+                n_total = 30
+                for i in range(1, n_total+1):
+                    if self._cancel:
+                        self.signals.error.emit("Training canceled.")
+                        self.signals.finished.emit()
+                        return
+                    rf.set_params(n_estimators=i)
+                    rf.fit(X_train, y_train)
+                    self.signals.progress.emit(int(i*100/n_total))
+                model = rf
+            else:
+                raise ValueError(f"Training not supported for '{self.clf_type}'.")
+
+            if self.clf_type != "RDF":
+                model.fit(X_aligned, y_train)
+                self.signals.progress.emit(100)
+
+            # Save a payload that mirrors what load_classifier() expects
+            payload = {
+                "pipeline": model,
+                "train_wl": wl_used.astype(float)
+            }
+
+            os.makedirs(os.path.dirname(self.savepath), exist_ok=True)
+            joblib.dump(payload, self.savepath)
+
+            self.signals.saved.emit(self.savepath)
+
+        except Exception as e:
+            import traceback
+            self.signals.error.emit(f"{e}\n{traceback.format_exc()}")
         finally:
             self.signals.finished.emit()
 
@@ -1578,20 +1721,22 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             ## validate and ask a name (and kind ?)
             if self.features_compatible(train_wl):
                 try:
-                    kind_temp=model['pipeline'].steps[1][0]
-                    print('kind from pipeline : ',kind_temp)
+                    clf_type_temp=model['pipeline'].steps[1][0]
+                    print('kind from pipeline : ',clf_type_temp)
                 except:
                     try:
-                        kind_temp = model['pipeline'].__class__.__name__
-                        print('kind from raw : ', kind_temp)
+                        clf_type_temp = model['pipeline'].__class__.__name__
+                        print('kind from raw : ', clf_type_temp)
 
                     except:
-                        kind_temp='Unkown'
+                        clf_type_temp='Unkown'
                         print('kind not found')
+                try:
+                    clf_type={'kneighborsclassifier':'KNN','RandomForestClassifier':'RDF','LinearDiscriminantAnalysis':'LDA','svc':'SVM'}[clf_type_temp]
+                except:
+                    clf_type=clf_type_temp
 
-                kind={'kneighborsclassifier':'KNN','RandomForestClassifier':'RDF','LinearDiscriminantAnalysis':'LDA','svc':'SVM'}[kind_temp]
-
-                model_name, ok = QInputDialog.getText(self, 'Classifier loaded', f'Classifier {kind} loaded. Enter name :',text=kind)
+                model_name, ok = QInputDialog.getText(self, 'Classifier loaded', f'Classifier {clf_type} loaded. Enter name :',text=clf_type)
                 if ok :
                     if model_name:
                         print("User entered:", model_name)
@@ -1837,6 +1982,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             name = self.job_order[self._running_idx]
             job = self.jobs[name]
 
+
             # Skip jobs that are already Done if they remain in the queue
             if job.status == "Done":
                 if self._skip_done_on_run:
@@ -1848,6 +1994,42 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                     job.progress = 0
                     job.duration_s = None
                     self._update_row_from_job(name)
+
+            if job.status == "To Train":
+                # flip to running (training)
+                job.status = "Running"
+                job.progress = 0
+                job._t0 = time.time()
+                self._update_row_from_job(name)
+
+                # Prepare TrainWorker
+                kind_str = ("/".join(job.kind)).lower()  # e.g., "ink 3 classes" or "background"
+                # pick a canonical "kind" token for your datasets
+                train_kind = "3_inks_classes" if "ink" in kind_str else (
+                    "background_10pct" if "10pct" in kind_str else "background")
+
+                w = TrainWorker(job.clf_type, train_kind, job.trained_path, self.wl)
+                n = job.name
+                w.signals.progress.connect(lambda v, n=n: self._on_job_progress(n, v))
+                w.signals.error.connect(lambda msg, n=n: self._on_job_error(n, msg))
+
+                def _on_saved(path, n=n):
+                    j = self.jobs.get(n)
+                    if not j: return
+                    j.trained = True
+                    j.trained_path = path
+                    j.status = "Queued"  # queue it for classification right away
+                    j.duration_s = None if j._t0 is None else (time.time() - j._t0)
+                    self._update_row_from_job(n)
+                    # Immediately proceed to (re)launch on the same index
+                    self._launch_next_job()
+
+                w.signals.saved.connect(_on_saved)
+                w.signals.finished.connect(lambda n=n: None)  # keep if you need cleanup
+
+                self._current_worker = w
+                self.threadpool.start(w)
+                return
 
             # Check preconditions
             if self.binary_map is None or self.data is None:
