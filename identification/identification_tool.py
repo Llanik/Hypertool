@@ -27,8 +27,11 @@ from interface.some_widget_for_interface  import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # todo : check all workflow of substrate classification and implement retraining and load from disk like ink classification
-# todo : fixed rectangle desaparition (and look also on binary map ?)
 # todo : on open new cube : dialog box to propose to save classification maps.
+# todo : no rectangle selections on viewer_right
+# todo : check refresh info
+# todo : in training phase, status "Training..."
+# todo : Crop before/after if only VNIR or SWIR as input ?
 
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
@@ -787,7 +790,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.substrate_label= 'Unknown Substrate'
         self.alpha = self.horizontalSlider_overlay_transparency.value() / 100.0
 
-        self.train_wl=np.arange(400, 1705, 5)
+        self.TRAIN_WL=np.arange(400, 1705, 5)
         self.whole_range = None
 
         # Connections
@@ -1046,8 +1049,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         # test spectral range
 
-        mask = (self.train_wl >= float(self.wl.min())) & (self.train_wl <= float(self.wl.max()))
-        target = self.train_wl[mask]
+        mask = (self.TRAIN_WL >= float(self.wl.min())) & (self.TRAIN_WL <= float(self.wl.max()))
+        target = self.TRAIN_WL[mask]
 
         data_i, wl_i = self.cube.get_interpolate_cube(wl_interp=target, interp_kind='linear')
 
@@ -1177,15 +1180,15 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.update_legend()
         self._set_info_rows()
 
-    def update_overlay(self):
+    def update_overlay(self,only_images=False):
         if self.radioButton_overlay_binary.isChecked():
-            self.show_binary_result(only_images=True)
+            self.show_binary_result(only_images)
         elif self.radioButton_overlay_identification.isChecked():
-            self.show_classification_result(only_images=True)
+            self.show_classification_result(only_images)
 
     def update_alpha(self, value):
         self.alpha = value / 100.0
-        self.update_overlay()
+        self.update_overlay(only_images=True)
 
     def _show_all_results_dialog(self):
         # Récupère les jobs ayant une carte brute
@@ -1383,7 +1386,36 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             self.classifier_type = "sklearn"
             self.classifier_wl=model['train_wl']
 
-    def classify_substrate(self):
+    # Loading logic (single point of truth)
+    def _load_substrate_model(self, model_name, trained_path=None):
+        if trained_path:
+            self.load_classifier(trained_path)
+            return
+
+        if model_name == "Add from disk.":
+            path, _ = QFileDialog.getOpenFileName(
+                self, "Load substrate model",
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "identification/data"),
+                "joblib files (*.joblib)"
+            )
+            if not path:
+                raise RuntimeError("No model selected.")
+            import joblib
+            payload = joblib.load(path)
+            self.classifier = payload["pipeline"]
+            self.classifier_type = "sklearn"
+            self.classifier_wl = payload.get("train_wl", None)
+            return
+
+        # Built-in models
+        if getattr(sys, 'frozen', False):
+            BASE_DIR = sys._MEIPASS
+        else:
+            BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+        filename = f"model_{model_name.lower()}_background_10pct.joblib"
+        self.load_classifier(os.path.join(BASE_DIR, "identification", "data", filename))
+
+    def classify_substrate(self,trained_path=None):
         model_name=self.comboBox_clas_substrate_model.currentText()
         rect = self._get_selected_rect()
 
@@ -1394,20 +1426,19 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                              15 : 'Translucent paper'
         }
 
-        if rect is None:
-            if self.binary_map is not None:
-                choice = QMessageBox.question(
-                    self, "No rectangle selected",
-                    "The whole sample is selected\nDo you want to classify the whole substrate of the binary map ?",
-                    QMessageBox.Yes | QMessageBox.No
-                )
-                if choice == QMessageBox.No:
-                    return
-
-            else:
-                QMessageBox.Warning(self, "No rectangle selected",
-                    "Select a rectangle first and/or launch binarization")
+        if trained_path:
+            try:
+                self.load_classifier(trained_path)
+            except Exception as e:
+                QMessageBox.critical(self, "Model error", f"Could not load substrate model:\n{e}")
                 return
+
+        if self.binary_map is None:
+            QMessageBox.Warning(self, "No binarization map",
+                                "Launch binarization first")
+            return
+
+        if rect is None:
 
             sub_map=self.binary_map
             sub_data=self.data
@@ -1424,21 +1455,60 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             return
         X = sub_data[mask_sub, :]  # (N, B)
 
-        if getattr(sys, 'frozen', False):  # pynstaller case
-            BASE_DIR = sys._MEIPASS
-        else:
-            BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
-        model_folder = os.path.join(BASE_DIR,
-                                         "identification/data")
-
-        clf_type=model_name.lower()+'_background_10pct'
-        filename = f"model_{clf_type}.joblib"
-        model_path=os.path.join(model_folder, filename)
         try:
-            self.load_classifier(model_path)
+            self._load_substrate_model(model_name, trained_path=trained_path)
         except Exception as e:
             QMessageBox.critical(self, "Model error", f"Could not load substrate model:\n{e}")
+            return
+
+        # Check wavelength compatibility & propose training if needed ---
+        ok, msg = self.features_compatible(getattr(self, "classifier_wl", None))
+        if not ok:
+            reply = QMessageBox.question(
+                self, "Train substrate model?",
+                f"{msg}\n\nTrain a new *background (10%)* model for the current spectral range?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply == QMessageBox.No:
+                return
+
+            if model_name not in ['KNN', 'RDF', 'LDA', 'SVM']:
+                QMessageBox.warning(self, 'Model can be trained',
+                                    'Model can not be trained.\nPlease choose between LDA, KNN, RDF or SVM')
+                return
+
+
+            # Build a filename that embeds the spectral range
+            spectral_tag = f"_{int(self.wl[0])}-{int(self.wl[-1])}"
+            if getattr(sys, 'frozen', False):
+                BASE_DIR = sys._MEIPASS
+            else:
+                BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+            out_dir = os.path.join(BASE_DIR, "identification", "data")
+            os.makedirs(out_dir, exist_ok=True)
+            savepath = os.path.join(out_dir, f"model_{model_name.lower()}_background_10pct{spectral_tag}.joblib")
+
+            # Launch TrainWorker (same as ink path)
+            worker = TrainWorker(
+                clf_type=model_name,
+                kind="background_10pct",
+                savepath=savepath,
+                train_wl=self.wl
+            )
+
+            def _on_saved(path):
+                try:
+                    # reload the freshly trained model
+                    print('[SUBSTRATE IDENTIFICATION] : Model trained and saved at : ', path)
+                    self.classify_substrate(trained_path=path)
+                except Exception as e:
+                    QMessageBox.critical(self, "Training", f"Model trained but failed to reload:\n{e}")
+
+            worker.signals.saved.connect(_on_saved)
+            worker.signals.error.connect(lambda msg: QMessageBox.critical(self, "Training error", msg))
+            worker.signals.progress.connect(lambda v: None)  # optional: wire a small progress UI
+            self.threadpool.start(worker)
             return
 
         if self.checkBox_classify_substrate_fast.isChecked():
@@ -1581,20 +1651,27 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         layout.addStretch(1)
 
     def show_classification_result(self,only_images=False):
-        # Récupère le job actuellement sélectionné (ou abandonne s'il n'y en a pas)
-        job = getattr(self, "_current_job", None)
-        job = job() if callable(job) else self._current_job()
-        if not job or job.class_map is None:
-            return
 
         def _colorize(cm: np.ndarray) -> np.ndarray:
-            """Convertit une class_map en image RGB via self.palette_bgr."""
+            """class_map to RGB using self.palette_bgr."""
             colors = self.palette_bgr
             h, w = cm.shape
             result_rgb = np.zeros((h, w, 3), dtype=np.uint8)
             for val, bgr in colors.items():
                 result_rgb[cm == val] = bgr
             return result_rgb
+
+        # Récupère le job actuellement sélectionné (ou abandonne s'il n'y en a pas)
+        job = getattr(self, "_current_job", None)
+        job = job() if callable(job) else self._current_job()
+        if not job or job.class_map is None:
+            self.update_legend()
+            self._set_info_rows()
+            cm_clean= np.zeros((self.data.shape[0],self.data.shape[1]))
+            rgb_right = _colorize(cm_clean)
+            self.viewer_right.setImage(self._np2pixmap(rgb_right))
+            self.label_viewer_right.setText("RAW map ")
+            return
 
         show_raw = self.radioButton_clean_show_raw.isChecked()
         show_clean =self.radioButton_clean_show_cleaned.isChecked()
@@ -1851,6 +1928,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
     def add_job(self, name: str):
 
+        trained=False
+
         if 'SUB_' in name:
             kind='Substrate'
         else:
@@ -1882,10 +1961,14 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             ## check if same number of features with message
             import joblib
             model=joblib.load(path)
-
             train_wl=model['train_wl']
+
+            print('[Add from disk...] len wl :',len(train_wl))
+
             ## validate and ask a name (and kind ?)
-            if self.features_compatible(train_wl):
+            compatible, _ = self.features_compatible(train_wl)
+            print('[Add from disk...] compatible :', compatible)
+            if compatible:
                 try:
                     clf_type_temp=model['pipeline'].steps[1][0]
                     print('kind from pipeline : ',clf_type_temp)
@@ -1912,33 +1995,34 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
                     name = model_name
                     savepath=path
+                    trained=True
 
-
-        if len(self.wl) != len(self.train_wl):
-            trained=False
-            reply=QMessageBox.question(self,
-                                 'Train new ?',
-                                 'Spectral range smaller than pretrained model. \nDo you want to train model first ?',
-                                 QMessageBox.Yes | QMessageBox.No)
-            if reply==QMessageBox.No:
-                return
-            else:
-                if name not in ['KNN','RDF','LDA','SVM']:
-                    QMessageBox.warning(self, 'Model can be trained',
-                                        'Model can not be trained.\nPlease choose between LDA, KNN, RDF or SVM')
+        if not trained :
+            if len(self.wl) != len(self.TRAIN_WL):
+                trained=False
+                reply=QMessageBox.question(self,
+                                     'Train new ?',
+                                     'Spectral range smaller than pretrained model. \nDo you want to train model first ?',
+                                     QMessageBox.Yes | QMessageBox.No)
+                if reply==QMessageBox.No:
                     return
+                else:
+                    if name not in ['KNN','RDF','LDA','SVM']:
+                        QMessageBox.warning(self, 'Model can be trained',
+                                            'Model can not be trained.\nPlease choose between LDA, KNN, RDF or SVM')
+                        return
 
-                spectral_range_name=f'_{self.wl[0]}-{self.wl[-1]}'
+                    spectral_range_name=f'_{self.wl[0]}-{self.wl[-1]}'
 
-                savepath, _ = QFileDialog.getSaveFileName(
-                    self,
-                    "Choose Model filename",
-                    os.path.join(save_model_folder, name+spectral_range_name),
-                    "joblib (*.joblib)"
-                )
+                    savepath, _ = QFileDialog.getSaveFileName(
+                        self,
+                        "Choose Model filename",
+                        os.path.join(save_model_folder, name+spectral_range_name),
+                        "joblib (*.joblib)"
+                    )
 
-        else:
-            trained=True
+            else:
+                trained=True
 
         # enforce uniqueness on 'name'
         unique = self._ensure_unique_name(name)
@@ -1973,6 +2057,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         table = self.tableWidget_classificationList
         for row in range(table.rowCount()):
             self.remove_job(-1, confirm_done=False)
+
+        self.update_overlay()
 
     def remove_job(self,row,confirm_done = True):
         table = self.tableWidget_classificationList
@@ -2030,6 +2116,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         table = self.tableWidget_classificationList
         row = table.currentRow()
         self.remove_job(row)
+        self.update_overlay()
 
     def start_selected_job(self):
         table = self.tableWidget_classificationList
@@ -2153,7 +2240,6 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             name = self.job_order[self._running_idx]
             job = self.jobs[name]
 
-
             # Skip jobs that are already Done if they remain in the queue
             if job.status == "Done":
                 if self._skip_done_on_run:
@@ -2174,11 +2260,10 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                 self._update_row_from_job(name)
 
                 # Prepare TrainWorker
-                kind_str = ("/".join(job.kind)).lower()  # e.g., "ink 3 classes" or "background"
+                kind_str = job.kind.lower()  # e.g., "ink 3 classes" or "background"
                 # pick a canonical "kind" token for your datasets
                 train_kind = "3_inks_classes" if "ink" in kind_str else (
                     "background_10pct" if "10pct" in kind_str else "background")
-
                 w = TrainWorker(job.clf_type, train_kind, job.trained_path, self.wl)
                 n = job.name
                 w.signals.progress.connect(lambda v, n=n: self._on_job_progress(n, v))
@@ -2221,11 +2306,60 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
             self.load_classifier(job.trained_path)
 
+            # --- make sure model grid matches current cube; train if needed
+            ok, msg = self.features_compatible(getattr(self, "classifier_wl", None))
+            if not ok:
+                # ask/auto-train a compatible ink model
+                reply = QMessageBox.question(
+                    self, "Train ink model?",
+                    f"{msg}\n\nTrain a new ink classifier for the current spectral range?",
+                    QMessageBox.Yes | QMessageBox.No
+                )
+                if reply == QMessageBox.No:
+                    job.status = "Canceled"
+                    self._update_row_from_job(name)
+                    self._running_idx += 1
+                    continue
+
+                # Build a filename that embeds the spectral range
+                spectral_tag = f"_{int(self.wl[0])}-{int(self.wl[-1])}"
+                if getattr(sys, 'frozen', False):
+                    BASE_DIR = sys._MEIPASS
+                else:
+                    BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+                out_dir = os.path.join(BASE_DIR, "identification", "data")
+                os.makedirs(out_dir, exist_ok=True)
+                savepath = os.path.join(out_dir, f"model_{job.clf_type.lower()}{spectral_tag}.joblib")
+
+                # Launch a TrainWorker for the 3-ink-classes training set
+                w = TrainWorker(
+                    clf_type=job.clf_type,
+                    kind="3classes",
+                    savepath=savepath,
+                    train_wl=self.wl
+                )
+
+                # when saved, update the job and immediately relaunch prediction on the same job
+                def _on_saved(path, n=name):
+                    j = self.jobs.get(n)
+                    if not j: return
+                    j.trained = True
+                    j.trained_path = path
+                    j.status = "Queued"
+                    self._update_row_from_job(n)
+                    self._launch_next_job()
+
+                w.signals.saved.connect(_on_saved)
+                w.signals.error.connect(lambda m, n=name: self._on_job_error(n, m))
+                w.signals.finished.connect(lambda n=name: None)
+                self._current_worker = w
+                self.threadpool.start(w)
+                return
+
             mask = self.binary_map.astype(bool)
 
             if job.rect is not None:
                 x, y, w, h = job.rect
-                print('[JOB INIT] rectanle : ',x,y,w,h)
                 roi_mask = np.zeros_like(mask, dtype=bool)
                 roi_mask[x:(x+w), y:(y+h)] = True
                 mask &= roi_mask
@@ -2961,6 +3095,5 @@ if __name__ == "__main__":
     filepath1 = os.path.join(folder, fname1)
     filepath2 = os.path.join(folder, fname2)
     cube=fused_cube(Hypercube(filepath1,load_init=True),Hypercube(filepath2,load_init=True))
-
     w.load_cube(cube=cube)
     sys.exit(app.exec_())
