@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : ROI uptaded for jobs and blinking overlay fixed">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : ROI selection, add from disk, traint/predict with reduces channels cube OK FOR INK AND SUBSTRATE">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identification/identification_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,14 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00041" summary="handle of classe suppresion ok">
-      <option name="closed" value="true" />
-      <created>1748866959279</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1748866959279</updated>
     </task>
     <task id="LOCAL-00042" summary="Add, suppres and reset bands working (on the graph)">
       <option name="closed" value="true" />
@@ -529,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758183124062</updated>
     </task>
-    <option name="localTasksCounter" value="90" />
+    <task id="LOCAL-00090" summary="[IDENTIFICATION] : ROI selection, add from disk, traint/predict with reduces channels cube OK FOR INK AND SUBSTRATE">
+      <option name="closed" value="true" />
+      <created>1758208417129</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1758208417130</updated>
+    </task>
+    <option name="localTasksCounter" value="91" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -581,7 +580,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[Register]ui + [Main] save on exit + [GT] keep GT_label_map in metadata y png with palette" />
     <MESSAGE value="[Hypercube] matlab files with browser OK for v7.3 and v old without hypercube.&#10;Load and save envie." />
     <MESSAGE value="[METADATA]+[DATAVIZ] : update of metadada simflification display" />
     <MESSAGE value="Cube_info.pathS homogene pour tous les outils -&gt; mise en memoire choix browser&#10;Envi files ok for reading" />
@@ -606,6 +604,7 @@
     <MESSAGE value="[IDENTIFICATION] : learning process with croped features and save_load model OK" />
     <MESSAGE value="[IDENTIFICATION] : Substrate double implementation (fast and slow) added and propagated to save file." />
     <MESSAGE value="[IDENTIFICATION] : ROI uptaded for jobs and blinking overlay fixed" />
-    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : ROI uptaded for jobs and blinking overlay fixed" />
+    <MESSAGE value="[IDENTIFICATION] : ROI selection, add from disk, traint/predict with reduces channels cube OK FOR INK AND SUBSTRATE" />
+    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : ROI selection, add from disk, traint/predict with reduces channels cube OK FOR INK AND SUBSTRATE" />
   </component>
 </project>

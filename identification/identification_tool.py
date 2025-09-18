@@ -391,7 +391,7 @@ class LoadCubeDialog(QDialog):
     Simple dialog to load exactly two cubes (VNIR + SWIR),
     show their filepaths and spectral ranges, and validate coverage softly.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None,vnir_cube=None, swir_cube=None):
         super().__init__(parent)
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -399,6 +399,18 @@ class LoadCubeDialog(QDialog):
         # Internal state
         self.cubes = {"VNIR": None, "SWIR": None}
         self._wl_ranges = {"VNIR": None, "SWIR": None}
+
+        # Prefill from provided cubes (if any)
+        def _set(kind, cube):
+            if cube is None:
+                return
+            self.cubes[kind] = cube
+            wl = getattr(cube, "wl", None)
+            if isinstance(wl, np.ndarray) and wl.size > 0:
+                self._wl_ranges[kind] = (float(wl.min()), float(wl.max()))
+
+        _set("VNIR", vnir_cube)
+        _set("SWIR", swir_cube)
 
         # Wire buttons
         self.ui.pushButton_load_cube_1.clicked.connect(lambda: self._load("VNIR"))
@@ -780,6 +792,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self._replace_placeholder('viewer_left', ZoomableGraphicsView)
         self._replace_placeholder('viewer_right', ZoomableGraphicsView)
 
+        self._last_vnir = None
+        self._last_swir = None
         self.cube = None
         self.data = None
         self.wl = None
@@ -891,11 +905,14 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.update_rgb_controls()
 
     def open_load_cube_dialog(self):
-        dlg = LoadCubeDialog(self)
+        dlg = LoadCubeDialog(self, vnir_cube=self._last_vnir, swir_cube=self._last_swir)
         if dlg.exec_() == QDialog.Accepted:
             # Prefer fusing VNIR+SWIR if both available; otherwise passthrough a single cube
             vnir = dlg.cubes.get("VNIR")
             swir = dlg.cubes.get("SWIR")
+
+            self._last_vnir = vnir
+            self._last_swir = swir
 
             if vnir is not None or swir is not None:
                 self.cube = fused_cube(vnir, swir) if (vnir is not None and swir is not None) else (vnir or swir)
