@@ -261,6 +261,7 @@ class MainApp(QtWidgets.QMainWindow):
         act_data = self.onToolButtonPress(self.data_viz_dock, "icon_data_viz.svg", "Data Vizualisation")
         act_reg = self.onToolButtonPress(self.reg_dock, "registration_icon.png", "Registration")
         act_gt =self.onToolButtonPress(self.gt_dock, "GT_icon_1.png", "Ground Truth")
+        self.toolbar.addSeparator()
         act_ident=self.onToolButtonPress(self.identification_dock,"Ident_icon.png","Identification")
         self.toolbar.addSeparator()
 
@@ -548,6 +549,22 @@ class MainApp(QtWidgets.QMainWindow):
             hc.cube_info = ci
             widget.load_cube(filepath=ci.filepath,cube_info=ci,i_mov=imov,cube=hc)
 
+    def _send_to_identification(self,filepath,icube):
+        widget = self.identification_dock.widget()
+        ci = self.hypercube_manager.add_or_sync_cube(filepath)
+        hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
+
+        range=['VNIR','SWIR'][icube]
+
+        if hc.data is None:
+            widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range)
+        else:
+            print('Try registered with cube sended')
+            hc.cube_info = ci
+            widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range,cube=hc)
+            print(f'[SEND TO IDENT] path : {filepath} of range {range}')
+        pass
+
     def _send_to_minicube(self,filepath):
         widget = self.minicube_dock.widget()
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
@@ -668,6 +685,21 @@ class MainApp(QtWidgets.QMainWindow):
             act_gt = QtWidgets.QAction("Send to GT", self)
             act_gt.triggered.connect(lambda checked, p=path: self._send_to_gt(p))
             sub.addAction(act_gt)
+
+            # Envoyer au dock ident
+            menu_load_ident = QtWidgets.QMenu("Send to Identification Tool", sub)
+            act_ident_vnir = QtWidgets.QAction("VNIR Cube", self)
+            act_ident_vnir.triggered.connect(
+                lambda _, p=path: self._send_to_identification(p, 0)
+            )
+            menu_load_ident.addAction(act_ident_vnir)
+            # Action Moving
+            act_ident_swir = QtWidgets.QAction("SWIR Cube", self)
+            act_ident_swir.triggered.connect(
+                lambda _, p=path: self._send_to_identification(p, 1)
+            )
+            menu_load_ident.addAction(act_ident_swir)
+            sub.addMenu(menu_load_ident)
 
             # White calibration
             sub.addSeparator()

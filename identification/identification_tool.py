@@ -1038,14 +1038,39 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.show_rgb_image()
         self.update_overlay()
 
-    def load_cube(self,filepath=None,cube=None):
+    def load_cube(self,filepath=None,cube=None,cube_info=None,range=None):
         flag_loaded=False
         if cube is not None:
             try:
-                self.cube = cube
-                self.data = self.cube.data
-                self.wl = self.cube.wl
-                flag_loaded=True
+                if cube_info is not None:
+                    cube.metadata=cube.cube_info.metadata_temp
+
+                if range is None:
+                    self.cube = cube
+                    flag_loaded=True
+                else:
+                    print('Range : ',range)
+                    if range=='VNIR':
+                        self._last_vnir=cube
+                        if self._last_swir is not None:
+                            self.cube = fused_cube(self._last_vnir, self._last_swir)
+                        else:
+                            self.cube=cube
+
+                        flag_loaded=True
+
+                    elif range=='SWIR':
+                        self._last_swir=cube
+                        if self._last_vnir is not None:
+                            self.cube = fused_cube(self._last_vnir, self._last_swir)
+                        else:
+                            self.cube=cube
+
+                        flag_loaded = True
+
+                    else :
+                        print('Problem with cube range in parameter')
+
             except:
                 print('Problem with cube in parameter')
 
@@ -1057,14 +1082,43 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                 if not filepath:
                     return
             try:
-                self.cube = Hypercube(filepath=filepath, load_init=True)
-                self.data = self.cube.data
-                self.wl = self.cube.wl
+                cube = Hypercube(filepath=filepath, load_init=True)
+
+                try:
+                    if cube_info is not None:
+                        cube.metadata = cube.cube_info.metadata_temp
+
+                    if range is None:
+                        self.cube = cube
+                    else:
+                        if range == 'VNIR':
+                            self._last_vnir = cube
+                            if self._last_swir is not None:
+                                self.cube = fused_cube(self._last_vnir, self._last_swir)
+                            else:
+                                self.cube = cube
+
+                        elif range == 'SWIR':
+                            self._last_swir = cube
+                            if self._last_vnir is not None:
+                                self.cube = fused_cube(self._last_vnir, self._last_swir)
+                            else:
+                                self.cube = cube
+
+                        else:
+                            print('Problem with cube range in parameter')
+
+                except:
+                    print('Problem with cube in parameter')
+
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to load cube: {e}")
                 return
 
         # test spectral range
+
+        self.data=self.cube.data
+        self.wl=self.cube.wl
 
         mask = (self.TRAIN_WL >= float(self.wl.min())) & (self.TRAIN_WL <= float(self.wl.max()))
         target = self.TRAIN_WL[mask]
@@ -1076,6 +1130,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self.cube = Hypercube(data=self.data, wl=self.wl, cube_info=self.cube.cube_info)
         self.update_rgb_controls()
         self.show_rgb_image()
+        self.update_overlay()
 
     def show_rgb_image(self):
 

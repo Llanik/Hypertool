@@ -169,3 +169,24 @@ Traceback (most recent call last):
                ~~~~~~^^^^
 TypeError: 'NoneType' object is not subscriptable
 
+2025-09-19 11:41:12,428 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 693, in <lambda>
+    lambda _, p=path: self._send_to_identification(p, 0)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 564, in _send_to_identification
+    widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range,cube=hc)
+TypeError: RegistrationApp.load_cube() got an unexpected keyword argument 'range'
+
+2025-09-19 11:42:14,662 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 693, in <lambda>
+    lambda _, p=path: self._send_to_identification(p, 0)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 564, in _send_to_identification
+    widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range,cube=hc)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 1119, in load_cube
+    mask = (self.TRAIN_WL >= float(self.wl.min())) & (self.TRAIN_WL <= float(self.wl.max()))
+                                   ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'min'
+
