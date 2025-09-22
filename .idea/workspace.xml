@@ -4,11 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube">
+      <change beforePath="$PROJECT_DIR$/.idea/Hypertool.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Hypertool.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identification/identification_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/some_widget_for_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identification/identification_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identification/identification_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,6 +110,9 @@
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="SDK_NAME" value="Python 3.12" />
       <option name="WORKING_DIRECTORY" value="C:\Users\Usuario\Documents\GitHub\Hypertool" />
@@ -137,14 +144,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00045" summary="Bugg of metadata loading finally fixed :-p">
-      <option name="closed" value="true" />
-      <created>1750075741719</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1750075741719</updated>
     </task>
     <task id="LOCAL-00046" summary="Loading GT_tool with cubeInfo&#10;GT tool inserted in main">
       <option name="closed" value="true" />
@@ -530,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758283799872</updated>
     </task>
-    <option name="localTasksCounter" value="94" />
+    <task id="LOCAL-00094" summary="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube">
+      <option name="closed" value="true" />
+      <created>1758293782826</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1758293782826</updated>
+    </task>
+    <option name="localTasksCounter" value="95" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -582,7 +589,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[Hypercube] -&gt; Calibration window OK.&#10;Add : white from norway and load file .txt" />
     <MESSAGE value="[Main]+[Hypercube]&#10;Gestion du cache a priori sans nouveau bugg - cubeLoaded.emit(Hyeprcube)&#10;Calibration white OK with graph to vizualize." />
     <MESSAGE value="[Data Viz] : one or three iamges + transorm" />
     <MESSAGE value="plein de truc." />
@@ -607,6 +613,7 @@
     <MESSAGE value="[IDENTIFICATION] : Loading Dialog prefilled with current value (if opened with dialog)" />
     <MESSAGE value="[IDENTIFICATION] : Inserted in the MainWindow Correctly" />
     <MESSAGE value="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters" />
-    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters" />
+    <MESSAGE value="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube" />
+    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube" />
   </component>
 </project>

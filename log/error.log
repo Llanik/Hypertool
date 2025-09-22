@@ -190,3 +190,33 @@ Traceback (most recent call last):
                                    ^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'min'
 
+2025-09-19 18:06:46,016 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 354, in open_suggestion_box
+    self.suggestion_window = SuggestionWidget()
+                             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 780, in __init__
+    self.submit_button = QPushButton("Submit")
+                         ^^^^^^^^^^^
+NameError: name 'QPushButton' is not defined
+
+2025-09-19 18:06:46,971 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 354, in open_suggestion_box
+    self.suggestion_window = SuggestionWidget()
+                             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 780, in __init__
+    self.submit_button = QPushButton("Submit")
+                         ^^^^^^^^^^^
+NameError: name 'QPushButton' is not defined
+
+2025-09-19 18:07:46,491 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 354, in open_suggestion_box
+    self.suggestion_window = SuggestionWidget()
+                             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 780, in __init__
+    self.submit_button = QPushButton("Submit")
+                         ^^^^^^^^^^^
+NameError: name 'QPushButton' is not defined
+

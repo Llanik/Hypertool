@@ -113,6 +113,7 @@ def fused_cube(cube1, cube2, *, copy_common_meta: bool = True):
     fused.metadata["source_roles"]  = ["VNIR", "SWIR"]
     fused.metadata["source_files"]  = [_safe_filename_from(VNIR), _safe_filename_from(SWIR)]
     fused.metadata["source_names"]  = [_safe_name_from(VNIR),     _safe_name_from(SWIR)]
+
     return fused
 
 class ClassifySignals(QObject):
@@ -213,6 +214,7 @@ class TrainSignals(QObject):
     error = pyqtSignal(str)
     progress = pyqtSignal(int)        # 0..100
     saved = pyqtSignal(str)           # path to saved model
+    progress_indeterminate = pyqtSignal(bool)
 
 class TrainWorker(QRunnable):
     """
@@ -273,10 +275,13 @@ class TrainWorker(QRunnable):
     def run(self):
         try:
             import joblib
-            # ---- Load training data, following your classifier_train.py ----
-            # Adjust paths to your repo layout if needed
             from pathlib import Path
             base = Path(__file__).resolve().parents[1] / "identification" / "data"
+
+            # --- early bail
+            if self._cancel:
+                self.signals.error.emit("Training canceled.")
+                return
 
             X_train = None; y_train = None
             if "background" in self.kind.lower():
@@ -291,7 +296,15 @@ class TrainWorker(QRunnable):
                 X_train = data['X']
                 y_train = data['Y'].ravel()
 
+            if self._cancel:
+                self.signals.error.emit("Training canceled.")
+                return
+
             X_aligned, wl_used = self.crop_training_to_target_wl(X_train)
+
+            if self._cancel:
+                self.signals.error.emit("Training canceled.")
+                return
 
             # ---- Build model pipeline (same choices as your UI) ----
             if self.clf_type == "KNN":
@@ -309,6 +322,7 @@ class TrainWorker(QRunnable):
             elif self.clf_type == "LDA":
                 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
                 model = LinearDiscriminantAnalysis(solver='svd')
+
             elif self.clf_type == "RDF":
                 from sklearn.ensemble import RandomForestClassifier
                 rf = RandomForestClassifier(
@@ -330,9 +344,19 @@ class TrainWorker(QRunnable):
             else:
                 raise ValueError(f"Training not supported for '{self.clf_type}'.")
 
+            if self._cancel:
+                self.signals.error.emit("Training canceled.")
+                return
+
             if self.clf_type != "RDF":
+                self.signals.progress_indeterminate.emit(True)
                 model.fit(X_aligned, y_train)
+                self.signals.progress_indeterminate.emit(False)
                 self.signals.progress.emit(100)
+
+            if self._cancel:
+                self.signals.error.emit("Training canceled.")
+                return
 
             # Save a payload that mirrors what load_classifier() expects
             payload = {
@@ -356,7 +380,7 @@ class ClassificationJob:
     name: str                 # unique key shown in table (e.g., "SVM (RBF)")
     clf_type: str             # "knn" | "cnn" | "svm" etc...
     kind: str                 # e.g., ["Substrate","Ink 3 classes" ...]
-    status: str = "Queued"    # "Queued" | "Running" | "Done" | "Canceled" | "Error" | "To train" | "Training..."
+    status: str = "Queued"    # "Queued" | "Running" | "Done" | "Canceled" | "Error" | "To Train" | "Training..."
     trained = True
     trained_path = 'Default'
     progress: int = 0         # 0..100
@@ -528,7 +552,7 @@ class LoadCubeDialog(QDialog):
         if missing:
             QMessageBox.information(
                 self, "Heads-up",
-                f"The following cube(s) are not loaded: {', '.join(missing)}.\n"
+                f"The whole spectral range is not covered.\n"
                 f"You can still proceed, but classification performance may be degraded."
             )
             return
@@ -750,9 +774,9 @@ def _write_indexed_png(path, class_map, palette_rgb):
     img.save(path, format="PNG")
 
 CLEAN_PRESETS = {
-    "Soft":      {"window_pct": 2, "iterations": 1, "min_area": 2},
-    "Balanced":  {"window_pct": 5, "iterations": 10, "min_area": 5},
-    "Strong":    {"window_pct": 10, "iterations": 15,  "min_area": 10},
+    "Soft":      {"window_pct": 0, "iterations": 1, "min_area": 2},
+    "Balanced":  {"window_pct": 2, "iterations": 10, "min_area": 5},
+    "Strong":    {"window_pct": 5, "iterations": 15,  "min_area": 10},
 }
 
 class IdentificationWidget(QWidget, Ui_IdentificationWidget):
@@ -1099,6 +1123,12 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                 QMessageBox.warning(self, "Error", "No cube loaded.")
                 return
 
+            try:
+                self.cube.normalize_spectral(self.TRAIN_WL, min_wl=400, max_wl=1700, interp_kind="linear", in_place=True)
+            except ValueError as e:
+                QMessageBox.warning(self, "Spectral error", str(e))
+                return
+
             # Ensure UI buffers are in sync
             self.data = self.cube.data
             self.wl = self.cube.wl
@@ -1182,19 +1212,17 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         # test spectral range
 
-        self.data=self.cube.data
-        self.wl=self.cube.wl
+        try:
+            self.cube.normalize_spectral(
+                self.TRAIN_WL, min_wl=400, max_wl=1700,
+                interp_kind="linear", in_place=True
+            )
+        except ValueError as e:
+            QMessageBox.warning(self, "Spectral error", str(e))
+            return
 
-        mask = (self.TRAIN_WL >= float(self.wl.min())) & (self.TRAIN_WL <= float(self.wl.max()))
-        target = self.TRAIN_WL[mask]
-
-        data_i, wl_i = self.cube.get_interpolate_cube(wl_interp=target, interp_kind='linear')
-        old_md = dict(getattr(self.cube, "metadata", {}) or {})
-
-        self.data = data_i
-        self.wl = wl_i
-        self.cube = Hypercube(data=self.data, wl=self.wl, cube_info=self.cube.cube_info)
-        self.cube.metadata = dict(old_md)
+        self.data = self.cube.data
+        self.wl = self.cube.wl
         self.update_rgb_controls()
         self.show_rgb_image()
         self.update_overlay()
@@ -1307,6 +1335,21 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         # Affichage de la carte à droite
         self.viewer_right.setImage(self._np2pixmap(result_bgr))
         self._draw_current_rect(surface=False)
+
+        if not hasattr(self, "rgb_image") or self.rgb_image is None:
+            self.show_rgb_image()
+
+        # If sizes mismatch (e.g., new cube), rebuild or resize
+        if self.rgb_image is None or self.rgb_image.ndim != 3 or self.rgb_image.shape[:2] != result_bgr.shape[:2]:
+            # Rebuild from current data; if still mismatch, resize the overlay map
+            self.show_rgb_image()
+            if self.rgb_image is None or self.rgb_image.shape[:2] != result_bgr.shape[:2]:
+                result_bgr = cv2.resize(result_bgr, (self.rgb_image.shape[1], self.rgb_image.shape[0]),
+                                        interpolation=cv2.INTER_NEAREST)
+
+        # Alpha default (in case update_alpha wasn't called yet)
+        if not hasattr(self, "alpha") or self.alpha is None:
+            self.alpha = 0.5
 
         # Overlay sur l’image RGB avec alpha (comme la classification)
         overlay = cv2.addWeighted(self.rgb_image, 1 - self.alpha, result_bgr, self.alpha, 0)
@@ -2154,7 +2197,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                                             'Model can not be trained.\nPlease choose between LDA, KNN, RDF or SVM')
                         return
 
-                    spectral_range_name=f'_{self.wl[0]}-{self.wl[-1]}'
+                    spectral_range_name=f'_{int(self.wl[0])}-{int(self.wl[-1])}'
 
                     savepath, _ = QFileDialog.getSaveFileName(
                         self,
@@ -2357,7 +2400,10 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                 running_name = self.job_order[self._running_idx]
                 job = self.jobs.get(running_name)
                 if job:
-                    job.status = "Canceled"
+                    if job.status=='Training ...':
+                        job.status = "To Train"
+                    else :
+                        job.status = "Canceled"
                     job.progress = 0
                     job.duration_s = None
                     self._update_row_from_job(running_name)
@@ -2372,6 +2418,9 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                     job.progress = 0
                     job.duration_s = None
                     self._update_row_from_job(name)
+                elif job and job.status in ("To Train", "Training ..."):
+                    job.status = "To Train"
+                    job.progress = 0
 
     def _launch_next_job(self):
         """Launch the next job in the queue if available."""
@@ -2417,10 +2466,13 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                 n = job.name
                 w.signals.progress.connect(lambda v, n=n: self._on_job_progress(n, v))
                 w.signals.error.connect(lambda msg, n=n: self._on_job_error(n, msg))
+                w.signals.progress.connect(lambda v, n=n: self._on_job_progress(n, v))
 
                 def _on_saved(path, n=n):
                     j = self.jobs.get(n)
                     if not j: return
+                    if self._stop_all or j.status == "Canceled":
+                        return
                     j.trained = True
                     j.trained_path = path
                     j.status = "Queued"  # queue it for classification right away
@@ -2465,7 +2517,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                     QMessageBox.Yes | QMessageBox.No
                 )
                 if reply == QMessageBox.No:
-                    job.status = "Canceled"
+                    job.status = "To Train"
                     self._update_row_from_job(name)
                     self._running_idx += 1
                     continue
@@ -2492,6 +2544,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
                 def _on_saved(path, n=name):
                     j = self.jobs.get(n)
                     if not j: return
+                    if self._stop_all or j.status == "Canceled":
+                        return
                     j.trained = True
                     j.trained_path = path
                     j.status = "Queued"
@@ -2521,7 +2575,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             N = spectra.shape[0]
             target_steps = 50
             min_chunk = 20
-            max_chunk = 200000
+            max_chunk = 20000
             chunk_size = max(1, min(max_chunk, max(min_chunk, N // target_steps)))
 
             worker = ClassifyWorker(
@@ -2554,7 +2608,7 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         # Progress
         pb = self.tableWidget_classificationList.cellWidget(row, 3)
         if isinstance(pb, QProgressBar):
-            if job.status == "Running":
+            if job.status in ["Running","Training..."]:
                 pb.setVisible(True)
                 pb.setValue(int(job.progress))
             elif job.status in ("Canceled", "Error", "Done"):
@@ -2578,7 +2632,10 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         if not job: return
         # différencier une vraie erreur d’une annulation volontaire
         if "canceled" in message.lower() or "cancelled" in message.lower():
-            job.status = "Canceled"
+            if job.status=='Training ...':
+                job.status = "To Train"
+            else:
+                job.status = "Canceled"
             job.progress = 0
         else:
             job.status = "Error"
@@ -2704,10 +2761,13 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
 
         # 2) Open dialog
         dft_name=self.cube.metadata.get('source_names')
+
         try:
             if len(dft_name)==0:
                 dft_name='BaseFileName'
-            if len(dft_name)==2:
+            elif len(dft_name)==1:
+                dft_name=dft_name[0]
+            elif len(dft_name)==2:
                 dft_name='-'.join(dft_name)
         except:
             dft_name = 'BaseFileName'

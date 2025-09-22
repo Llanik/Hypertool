@@ -185,6 +185,64 @@ class Hypercube:
         self.wl       = None
         self.metadata = {}
 
+    def normalize_spectral(self, train_wl, *, min_wl=400.0, max_wl=1700.0,
+                           interp_kind="linear", in_place=False):
+        """
+        Clamp to [min_wl, max_wl] and interpolate onto `train_wl` (e.g. np.arange(400,1705,5)).
+        - Validates that wl exists, is finite, and increasing (sorts data/bands if needed).
+        - Intersects desired bounds with cube coverage and training grid.
+        - Uses get_interpolate_cube(wl_interp=...) to resample.
+        Returns a NEW Hypercube unless in_place=True.
+        Raises ValueError with a clear message if normalization is impossible.
+        """
+        import numpy as np
+
+        if self.wl is None:
+            raise ValueError("Cube has no wavelengths; cannot normalize.")
+        wl = np.asarray(self.wl, dtype=float)
+        if wl.ndim != 1 or wl.size < 2:
+            raise ValueError(f"Unexpected wl shape/size: {wl.shape if hasattr(wl, 'shape') else type(wl)}")
+
+        # Remove non-finite wavelengths and corresponding bands
+        finite = np.isfinite(wl)
+        if not finite.all():
+            wl = wl[finite]
+            if wl.size < 2:
+                raise ValueError("Too few valid wavelengths after cleaning.")
+            self.data = self.data[:, :, finite]
+
+        # Enforce strictly increasing order (sort bands if needed)
+        if not np.all(np.diff(wl) > 0):
+            order = np.argsort(wl)
+            wl = wl[order]
+            self.data = self.data[:, :, order]
+
+        # Compute overlap with desired bounds and with the cube’s own coverage
+        lo = max(min_wl, float(wl.min()))
+        hi = min(max_wl, float(wl.max()))
+        if not (lo < hi):
+            raise ValueError(f"No spectral overlap with {min_wl}–{max_wl} nm.")
+
+        train_wl = np.asarray(train_wl, dtype=float)
+        if train_wl.ndim != 1 or train_wl.size < 2:
+            raise ValueError("`train_wl` must be a 1D array of target wavelengths.")
+
+        target = train_wl[(train_wl >= lo) & (train_wl <= hi)]
+        if target.size < 2:
+            raise ValueError("Not enough target wavelengths inside the overlapped range.")
+
+        # Interpolate onto the target grid (uses your existing helper)
+        data_i, wl_i = self.get_interpolate_cube(wl_interp=target, interp_kind=interp_kind)
+
+        if in_place:
+            self.data = data_i
+            self.wl = wl_i
+            # keep metadata/cube_info as-is
+            return self
+        else:
+            new_cube = Hypercube(data=data_i, wl=wl_i, metadata=dict(self.metadata), cube_info=self.cube_info)
+            return new_cube
+
     def get_interpolate_cube(self, _wl_step=None, wl_interp=None, interp_kind='linear'):
         """
         Interpole le cube le long de l'axe spectral.
@@ -1162,11 +1220,17 @@ class Hypercube:
 
         # sq local mean
         mean_sq = averagefilter(image ** 2, window, padding)
-        deviation = np.sqrt(mean_sq - mean_p ** 2)
+        var = np.maximum(mean_sq - mean_p ** 2, 0.0)
+        deviation = np.sqrt(var, dtype=np.float64)
 
         # Sauvola
-        R = np.max(deviation)
-        threshold = mean_p * (1 + k * (deviation / R - 1))
+        R = float(np.max(deviation))
+
+        if not np.isfinite(R) or R <= 0:
+            threshold = mean_p
+        else:
+            threshold = mean_p * (1 + k * (deviation / R - 1))
+
         BW = image < threshold
         return BW
 
@@ -1192,9 +1256,10 @@ class Hypercube:
 
         m = averagefilter(X, window=window, padding=padding)
         m_sq = averagefilter(X ** 2, window=window, padding=padding)
-        std = np.sqrt(m_sq - m ** 2)
+        var = np.maximum(m_sq - m ** 2, 0.0)
+        std = np.sqrt(var, dtype=np.float64)
 
-        R = np.max(std)
+        R = float(np.max(std))
         M = np.min(X)
         thresh = (1 - k) * m + k * std / R * (m - M) + k * M
         return X < thresh

@@ -8,7 +8,7 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFont,QIcon, QPalette
-from PyQt5.QtWidgets import (QStyleFactory, QAction, QSizePolicy,
+from PyQt5.QtWidgets import (QStyleFactory, QAction, QSizePolicy,QPushButton,
                              QTextEdit)
 
 ## Python import
@@ -35,7 +35,7 @@ def apply_fusion_border_highlight(app,
                                   border_color: str = "#888888",
                                   title_bg:      str = "#E0E0E0",
                                   separator_hover: str = "#AAAAAA",
-                                  window_bg:     str = "#F5F5F5",   # ← ton nouveau fond
+                                  window_bg:     str = "#F5F5F5",
                                   base_bg:       str = "#EFEFEF"):  # ← pour QTextEdit, etc.
     # 1) Fusion
     app.setStyle(QStyleFactory.create("Fusion"))
@@ -880,11 +880,10 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
-    fname = '00189-VNIR-mock-up.h5'
-
-    filepath = os.path.join(folder, fname)
-    main._on_add_cube([filepath,filepath.replace('189','191')])
+    # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
+    # fname = '00189-VNIR-mock-up.h5'
+    # filepath = os.path.join(folder, fname)
+    # main._on_add_cube([filepath,filepath.replace('189','191')])
 
     try:
         import matlab.engine
