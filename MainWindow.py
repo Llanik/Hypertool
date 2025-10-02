@@ -28,9 +28,6 @@ from identification.identification_tool import IdentificationWidget
 # grafics to control changes
 import matplotlib.pyplot as plt
 
-# todo : add send to identification in cube menu
-# todo : identification_tool icon
-
 def apply_fusion_border_highlight(app,
                                   border_color: str = "#888888",
                                   title_bg:      str = "#E0E0E0",
@@ -283,13 +280,11 @@ class MainApp(QtWidgets.QMainWindow):
 
         # signal from register tool
         reg_widget = self.reg_dock.widget()
-        # todo : signal if registered cube save -> check if working
 
         # Save with menu
         self.saveBtn = QtWidgets.QToolButton(self)
         self.saveBtn.setText("Save Cube")
         # self.saveBtn.setIcon(QIcon(os.path.join(self.ICONS_DIR, "save_icon.png")))
-        # todo : add icon for save cube
         self.saveBtn.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.saveMenu = QtWidgets.QMenu(self)
         self.saveBtn.setMenu(self.saveMenu)
@@ -738,8 +733,6 @@ class MainApp(QtWidgets.QMainWindow):
         else:
             event.ignore()  # Cancel the close event
 
-#todo : ask if cube associated when saving GT
-
 # Configure error logging
 # Get absolute path of log folder (support PyInstaller frozen mode)
 if getattr(sys, 'frozen', False):
@@ -870,7 +863,7 @@ def check_resolution_change():
 
 if __name__ == "__main__":
 
-    sys.excepthook = excepthook #set the exception handler
+    # sys.excepthook = excepthook #set the exception handler
 
     app = QtWidgets.QApplication(sys.argv)
 

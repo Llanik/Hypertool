@@ -220,3 +220,55 @@ Traceback (most recent call last):
                          ^^^^^^^^^^^
 NameError: name 'QPushButton' is not defined
 
+2025-10-01 11:50:46,250 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 473, in eventFilter
+    self._handle_selection(coords) # close selection
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1228, in _handle_selection
+    self.update_legend()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1565, in update_legend
+    txt+='-'+str(self.class_ncount[c])+'px'
+                 ~~~~~~~~~~~~~~~~~^^^
+KeyError: 2
+
+2025-10-01 11:50:59,947 - ERROR - User comment: SELECTING class 2
+
+2025-10-01 11:51:18,258 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 473, in eventFilter
+    self._handle_selection(coords) # close selection
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1228, in _handle_selection
+    self.update_legend()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1565, in update_legend
+    txt+='-'+str(self.class_ncount[c])+'px'
+                 ~~~~~~~~~~~~~~~~~^^^
+KeyError: 2
+
+2025-10-01 11:51:22,731 - ERROR - User comment: same
+
+2025-10-01 11:51:28,145 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 473, in eventFilter
+    self._handle_selection(coords) # close selection
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1228, in _handle_selection
+    self.update_legend()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1565, in update_legend
+    txt+='-'+str(self.class_ncount[c])+'px'
+                 ~~~~~~~~~~~~~~~~~^^^
+KeyError: 2
+
+2025-10-01 11:51:45,776 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 473, in eventFilter
+    self._handle_selection(coords) # close selection
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1228, in _handle_selection
+    self.update_legend()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1565, in update_legend
+    txt+='-'+str(self.class_ncount[c])+'px'
+                 ~~~~~~~~~~~~~~~~~^^^
+KeyError: 2
+
