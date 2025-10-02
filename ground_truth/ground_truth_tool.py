@@ -1917,7 +1917,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             full_means = {}
             full_stds = {}
 
-            for c in range(len(classes)):
+            for c in np.unique(self.cls_map):
                 mask_c = (self.cls_map == c)  # True pour tous les pixels de la classe c
                 pixels_spectre_complet = self.data[mask_c]  # shape = (N_pixels_classe, F)
                 if pixels_spectre_complet.size == 0:

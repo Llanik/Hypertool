@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,14 +134,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00047" summary="Back to main organisation&#10;Ground Truth tool operationnel">
-      <option name="closed" value="true" />
-      <created>1750774362538</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1750774362538</updated>
     </task>
     <task id="LOCAL-00048" summary="added">
       <option name="closed" value="true" />
@@ -530,7 +519,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758544886117</updated>
     </task>
-    <option name="localTasksCounter" value="96" />
+    <task id="LOCAL-00096" summary="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting">
+      <option name="closed" value="true" />
+      <created>1759409194306</created>
+      <option name="number" value="00096" />
+      <option name="presentableId" value="LOCAL-00096" />
+      <option name="project" value="LOCAL" />
+      <updated>1759409194306</updated>
+    </task>
+    <option name="localTasksCounter" value="97" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -582,7 +579,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[Data Viz] : one or three iamges + transorm" />
     <MESSAGE value="plein de truc." />
     <MESSAGE value="Refonte totale de hypercube manager -&gt; Ordered dic au lieu de liste&#10;MAIS attention : filepath pour trouver GT seul bugg...a revoir" />
     <MESSAGE value="path problems with .splt('/') fixed with os.path" />
@@ -607,6 +603,7 @@
     <MESSAGE value="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters" />
     <MESSAGE value="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube" />
     <MESSAGE value="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class" />
-    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class" />
+    <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting" />
+    <option name="LAST_COMMIT_MESSAGE" value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting" />
   </component>
 </project>
