@@ -19,7 +19,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 
 
-from PyQt5.QtWidgets import (QWidget,QSizePolicy,QMainWindow,QWidget,
+from PyQt5.QtWidgets import (QWidget,QSizePolicy,QMainWindow,QWidget,QCheckBox,
     QApplication, QFileDialog, QMessageBox, QDialog, QTreeWidgetItem,QVBoxLayout,QHBoxLayout,
 )
 from PyQt5.QtCore   import pyqtSignal, QEventLoop, QRectF,QTimer,pyqtSlot
@@ -894,6 +894,8 @@ class Hypercube:
                 self.ui = Ui_dialog_white_calibration()
                 self.ui.setupUi(self)
                 self.cube_calib=None
+                self.reflectance_white=None
+                self.wl_white=None
                 self.other_white_capture=False # if other file loaded.
 
                 # Add ZoomableGraphicsView into frame_image
@@ -991,7 +993,190 @@ class Hypercube:
                 self.toggle_manual_value_fields()
 
             def load_white_corection_file(self):
-                QMessageBox.information(self,"Ups","Not implemented yet. Wait for update")
+                """
+                Load a 2-column text/CSV file containing (wavelength, reflectance) or
+                (reflectance, wavelength), let the user confirm column order and
+                whether to skip the first row, then set self.wl_white / self.reflectance_white
+                and refresh the preview plot.
+                """
+                # ---- 1) Ask for a file ----
+                start_dir = os.path.dirname(
+                    self.cube_calib.cube_info.filepath) if self.cube_calib and self.cube_calib.cube_info and self.cube_calib.cube_info.filepath else ""
+                fname, _ = QFileDialog.getOpenFileName(
+                    self, "Open white correction file", start_dir,
+                    "Text/CSV files (*.txt *.csv);;All files (*)"
+                )
+                if not fname:
+                    return
+
+                # ---- 2) Read file and detect delimiter ----
+                def _detect_delimiter(sample_line: str):
+                    if ',' in sample_line:
+                        return ','
+                    if ';' in sample_line:
+                        return ';'
+                    if '\t' in sample_line:
+                        return '\t'
+                    return None  # means split on any whitespace
+
+                # Read lines (ignore empties)
+                try:
+                    with open(fname, 'r', encoding='utf-8') as f:
+                        raw_lines = [ln.strip() for ln in f.readlines()]
+                except UnicodeDecodeError:
+                    with open(fname, 'r', encoding='latin-1') as f:
+                        raw_lines = [ln.strip() for ln in f.readlines()]
+                lines = [ln for ln in raw_lines if ln != ""]
+                if not lines:
+                    QMessageBox.warning(self, "Empty file", "The selected file is empty.")
+                    return
+
+                delim = _detect_delimiter(lines[0])
+
+                # Tokenize all rows to preview (keep original text tokens as strings)
+                def _tokenize(ln):
+                    return ln.split(delim) if delim else ln.split()
+
+                tokens = [_tokenize(ln) for ln in lines]
+                # Keep only rows with at least 2 tokens
+                tokens = [row for row in tokens if len(row) >= 2]
+                if not tokens:
+                    QMessageBox.warning(self, "Invalid file", "Could not find rows with at least two columns.")
+                    return
+
+                # Heuristic: if first row has any non-float token, default skip_first_row = True
+                def _is_float(s):
+                    try:
+                        float(s)
+                        return True
+                    except Exception:
+                        return False
+
+                first_row_has_nonnumeric = (not _is_float(tokens[0][0])) or (not _is_float(tokens[0][1]))
+                default_skip = first_row_has_nonnumeric
+
+                # ---- 3) Small preview dialog with options ----
+                class TablePreviewDialog(QDialog):
+                    def __init__(self, parent, fname, tokens, default_skip):
+                        super().__init__(parent)
+                        self.setWindowTitle("Preview white correction table")
+                        self.setMinimumWidth(520)
+                        self.setMinimumHeight(420)
+
+                        self.tokens = tokens
+                        self.skip_first = default_skip
+                        self.swap_cols = False
+
+                        layout = QVBoxLayout(self)
+
+                        layout.addWidget(QLabel(f"File: {os.path.basename(fname)}"))
+
+                        # Table preview (first 50 rows)
+                        from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
+                        self.table = QTableWidget(self)
+                        n_show = min(50, len(tokens))
+                        self.table.setRowCount(n_show)
+                        self.table.setColumnCount(2)
+                        self.table.setHorizontalHeaderLabels(["Column 0", "Column 1"])
+                        for i in range(n_show):
+                            c0 = QTableWidgetItem(str(tokens[i][0]))
+                            c1 = QTableWidgetItem(str(tokens[i][1]))
+                            self.table.setItem(i, 0, c0)
+                            self.table.setItem(i, 1, c1)
+                        self.table.resizeColumnsToContents()
+                        layout.addWidget(self.table)
+
+                        # Options
+                        opts = QHBoxLayout()
+                        self.cb_skip = QCheckBox("Skip first row")
+                        self.cb_skip.setChecked(default_skip)
+                        self.cb_swap = QCheckBox("Swap columns (col0=reflectance, col1=wavelength)")
+                        self.cb_swap.setChecked(False)
+                        opts.addWidget(self.cb_skip)
+                        opts.addWidget(self.cb_swap)
+                        opts.addStretch()
+                        layout.addLayout(opts)
+
+                        # Info/blurb
+                        info = QLabel("Default: Column 0 = wavelength (nm), Column 1 = reflectance (0–1).\n"
+                                      "Enable 'Swap columns' if your file has the opposite order.")
+                        info.setStyleSheet("color: gray;")
+                        layout.addWidget(info)
+
+                        # Buttons
+                        from PyQt5.QtWidgets import QPushButton
+                        btns = QHBoxLayout()
+                        btn_ok = QPushButton("Accept")
+                        btn_cancel = QPushButton("Cancel")
+                        btn_ok.clicked.connect(self.accept)
+                        btn_cancel.clicked.connect(self.reject)
+                        btns.addStretch()
+                        btns.addWidget(btn_cancel)
+                        btns.addWidget(btn_ok)
+                        layout.addLayout(btns)
+
+                    def get_choices(self):
+                        return self.cb_skip.isChecked(), self.cb_swap.isChecked()
+
+                dlg = TablePreviewDialog(self, fname, tokens, default_skip)
+                if dlg.exec_() != QDialog.Accepted:
+                    return
+                skip_first, swap_cols = dlg.get_choices()
+
+                # ---- 4) Build numeric arrays based on user choices ----
+                start_idx = 1 if skip_first and len(tokens) > 1 else 0
+                usable = tokens[start_idx:]
+
+                # Convert to float with best effort (drop rows that fail)
+                wl_vals = []
+                r_vals = []
+                for row in usable:
+                    try:
+                        a = float(row[0])
+                        b = float(row[1])
+                        if swap_cols:
+                            wl_vals.append(b)
+                            r_vals.append(a)
+                        else:
+                            wl_vals.append(a)
+                            r_vals.append(b)
+                    except Exception:
+                        # silently skip malformed lines
+                        continue
+
+                import numpy as _np
+                wl_vals = _np.asarray(wl_vals, dtype=float)
+                r_vals = _np.asarray(r_vals, dtype=float)
+
+                # Basic validation
+                if wl_vals.size < 2 or r_vals.size < 2:
+                    QMessageBox.warning(self, "Not enough data",
+                                        "After applying your options, fewer than two valid rows remain.")
+                    return
+                if wl_vals.size != r_vals.size:
+                    n = min(wl_vals.size, r_vals.size)
+                    wl_vals = wl_vals[:n]
+                    r_vals = r_vals[:n]
+
+                # Optional clamp reflectance to [0, 1.1]
+                r_vals = _np.clip(r_vals, 0.0, 1.1)
+
+                # Sort by wavelength if needed
+                order = _np.argsort(wl_vals)
+                wl_vals = wl_vals[order]
+                r_vals = r_vals[order]
+
+                # ---- 5) Store & refresh ----
+                self.wl_white = wl_vals
+                self.reflectance_white = r_vals
+
+                # Notify the user and refresh plot
+                QMessageBox.information(self, "Loaded",
+                                        f"Loaded {wl_vals.size} rows.\n"
+                                        f"Column order: {'(reflectance, wavelength)' if swap_cols else '(wavelength, reflectance)'}\n"
+                                        f"{'Skipped first row' if skip_first else 'Used first row'}.")
+
+                self.update_white_spectrum()
 
             def plot_white_reflectance(self, wavelengths, reflectance,name='white_ref'):
                 self.canvas_white.ax.clear()
@@ -1018,17 +1203,21 @@ class Hypercube:
                     self.plot_white_reflectance(self.cube_calib.wl, reflectance, name)
                     return
 
-                elif name == "Personal (load file)":
-                    self.canvas_white.ax.clear()
-                    self.canvas_white.ax.grid(True)
-                    self.canvas_white.ax.set_ylim(0, 1.1)
-                    self.canvas_white.ax.set_xlim(self.cube_calib.wl[0], self.cube_calib.wl[-1])
-                    self.canvas_white.draw()
-                    return
+                if name == "Personal (load file)":
+                    try:
+                        if self.wl_white is None:
+                            QMessageBox.warning(self,"Load white correction file first")
+                            return
+                        else:
+                            reflectance = self.cube_calib.get_ref_white(name,self.wl_white,self.reflectance_white)
+                    except:
+                        return
+                else:
+                    reflectance = self.cube_calib.get_ref_white(name)
 
-                reflectance = self.cube_calib.get_ref_white(name)
                 if 'Sphere Optics' in name:
                     name=name.replace('Sphere Optics','SphOpt')
+
                 self.plot_white_reflectance(self.cube_calib.wl, reflectance,name)
 
             def accept(self):
@@ -1104,7 +1293,7 @@ class Hypercube:
             if ans == QMessageBox.Yes:
                 self.save_calib = True
 
-    def get_ref_white(self,white_name):
+    def get_ref_white(self,white_name,_wl_white=None,_reflectance_white=None):
         from scipy.io import loadmat
         from scipy.interpolate import interp1d
 
@@ -1144,6 +1333,10 @@ class Hypercube:
             data = loadmat(white_path)
             wl_white = data['wl_multi_90white'].squeeze()
             reflectance_white = data['Multi_90white'].squeeze()
+
+        elif 'Personal' in white_name :
+            wl_white=_wl_white
+            reflectance_white=_reflectance_white
 
         else:
             print('[HYP Calibration] Unknown white reference label')
