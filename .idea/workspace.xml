@@ -4,17 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[BACK_UP] : Reintialisation of git ang gitignore">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identification/checkh5.py" afterDir="false" />
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/classifier_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/classifier_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -143,110 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00036" summary="Merging GT and manual added&#10;add legend of color class when selecting">
-      <option name="closed" value="true" />
-      <created>1748488219203</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1748488219203</updated>
-    </task>
-    <task id="LOCAL-00037" summary="QSplitter OK&#10;Loading cube with reste state OK">
-      <option name="closed" value="true" />
-      <created>1748517410329</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1748517410329</updated>
-    </task>
-    <task id="LOCAL-00038" summary="GT_table_viz works now very nice. To be inserted in GT tool.">
-      <option name="closed" value="true" />
-      <created>1748618417812</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1748618417812</updated>
-    </task>
-    <task id="LOCAL-00039" summary="Supression of .ui previous try of class assignment">
-      <option name="closed" value="true" />
-      <created>1748618728900</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1748618728900</updated>
-    </task>
-    <task id="LOCAL-00040" summary="Connection table and GT tools. &#10;right click interaction added on table.">
-      <option name="closed" value="true" />
-      <created>1748866354558</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1748866354558</updated>
-    </task>
-    <task id="LOCAL-00041" summary="handle of classe suppresion ok">
-      <option name="closed" value="true" />
-      <created>1748866959279</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1748866959279</updated>
-    </task>
-    <task id="LOCAL-00042" summary="Add, suppres and reset bands working (on the graph)">
-      <option name="closed" value="true" />
-      <created>1748944467930</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1748944467930</updated>
-    </task>
-    <task id="LOCAL-00043" summary="Added normalizarion for Unsupervised">
-      <option name="closed" value="true" />
-      <created>1748964150591</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1748964150591</updated>
-    </task>
-    <task id="LOCAL-00044" summary="pixel_averaged added + saving GT started">
-      <option name="closed" value="true" />
-      <created>1749819042738</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1749819042738</updated>
-    </task>
-    <task id="LOCAL-00045" summary="Bugg of metadata loading finally fixed :-p">
-      <option name="closed" value="true" />
-      <created>1750075741719</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1750075741719</updated>
-    </task>
-    <task id="LOCAL-00046" summary="Loading GT_tool with cubeInfo&#10;GT tool inserted in main">
-      <option name="closed" value="true" />
-      <created>1750081807480</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1750081807480</updated>
-    </task>
-    <task id="LOCAL-00047" summary="Back to main organisation&#10;Ground Truth tool operationnel">
-      <option name="closed" value="true" />
-      <created>1750774362538</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1750774362538</updated>
-    </task>
-    <task id="LOCAL-00048" summary="added">
-      <option name="closed" value="true" />
-      <created>1750774382912</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1750774382912</updated>
     </task>
     <task id="LOCAL-00049" summary="added">
       <option name="closed" value="true" />
@@ -536,7 +424,111 @@
       <option name="project" value="LOCAL" />
       <updated>1757663424312</updated>
     </task>
-    <option name="localTasksCounter" value="85" />
+    <task id="LOCAL-00085" summary="[IDENTIFICATION] : Gestion of uncomplete spectral range -&gt; crop and interp. &#10;started implementation of learning with shorter spectral range.">
+      <option name="closed" value="true" />
+      <created>1757682310555</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1757682310555</updated>
+    </task>
+    <task id="LOCAL-00086" summary="[IDENTIFICATION] : Dilog ofr opening saved model ok">
+      <option name="closed" value="true" />
+      <created>1758035819028</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1758035819029</updated>
+    </task>
+    <task id="LOCAL-00087" summary="[IDENTIFICATION] : learning process with croped features and save_load model OK">
+      <option name="closed" value="true" />
+      <created>1758039279445</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1758039279445</updated>
+    </task>
+    <task id="LOCAL-00088" summary="[IDENTIFICATION] : Substrate double implementation (fast and slow) added and propagated to save file.">
+      <option name="closed" value="true" />
+      <created>1758113545422</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1758113545423</updated>
+    </task>
+    <task id="LOCAL-00089" summary="[IDENTIFICATION] : ROI uptaded for jobs and blinking overlay fixed">
+      <option name="closed" value="true" />
+      <created>1758183124061</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1758183124062</updated>
+    </task>
+    <task id="LOCAL-00090" summary="[IDENTIFICATION] : ROI selection, add from disk, traint/predict with reduces channels cube OK FOR INK AND SUBSTRATE">
+      <option name="closed" value="true" />
+      <created>1758208417129</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1758208417130</updated>
+    </task>
+    <task id="LOCAL-00091" summary="[IDENTIFICATION] : Loading Dialog prefilled with current value (if opened with dialog)">
+      <option name="closed" value="true" />
+      <created>1758209527520</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1758209527520</updated>
+    </task>
+    <task id="LOCAL-00092" summary="[IDENTIFICATION] : Inserted in the MainWindow Correctly">
+      <option name="closed" value="true" />
+      <created>1758275492539</created>
+      <option name="number" value="00092" />
+      <option name="presentableId" value="LOCAL-00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1758275492539</updated>
+    </task>
+    <task id="LOCAL-00093" summary="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters">
+      <option name="closed" value="true" />
+      <created>1758283799871</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1758283799872</updated>
+    </task>
+    <task id="LOCAL-00094" summary="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube">
+      <option name="closed" value="true" />
+      <created>1758293782826</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1758293782826</updated>
+    </task>
+    <task id="LOCAL-00095" summary="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class">
+      <option name="closed" value="true" />
+      <created>1758544886116</created>
+      <option name="number" value="00095" />
+      <option name="presentableId" value="LOCAL-00095" />
+      <option name="project" value="LOCAL" />
+      <updated>1758544886117</updated>
+    </task>
+    <task id="LOCAL-00096" summary="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting">
+      <option name="closed" value="true" />
+      <created>1759409194306</created>
+      <option name="number" value="00096" />
+      <option name="presentableId" value="LOCAL-00096" />
+      <option name="project" value="LOCAL" />
+      <updated>1759409194306</updated>
+    </task>
+    <task id="LOCAL-00097" summary="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas.">
+      <option name="closed" value="true" />
+      <created>1759410689873</created>
+      <option name="number" value="00097" />
+      <option name="presentableId" value="LOCAL-00097" />
+      <option name="project" value="LOCAL" />
+      <updated>1759410689873</updated>
+    </task>
+    <option name="localTasksCounter" value="98" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -588,19 +580,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Cube info loading and saving are syncronized with all tools (except visualize)&#10;[registration] manual features supression" />
-    <MESSAGE value="[main] correction of suggestions suprresion" />
-    <MESSAGE value="[main] open all bugg fixed&#10;[register] modif features, sliders bugg and labels and groups, click to select, auto load other, progress bar reset all, cubeinfo unique and parent cube editable at save." />
-    <MESSAGE value="Lot of things but most of all matlab.engine" />
-    <MESSAGE value="Ground Truth Features fixed.&#10;- cursor cross interference fixed,&#10;- updating spectra fixed&#10;- max R fixed &#10;- groups of widgets in tabs to have more space&#10;- add check box for live toggle&#10;- all made again because of a fucking error of merging :-/" />
-    <MESSAGE value="[Register]ui + [Main] save on exit + [GT] keep GT_label_map in metadata y png with palette" />
-    <MESSAGE value="[Hypercube] matlab files with browser OK for v7.3 and v old without hypercube.&#10;Load and save envie." />
-    <MESSAGE value="[METADATA]+[DATAVIZ] : update of metadada simflification display" />
-    <MESSAGE value="Cube_info.pathS homogene pour tous les outils -&gt; mise en memoire choix browser&#10;Envi files ok for reading" />
-    <MESSAGE value="[Hypercube] -&gt; Calibration window OK.&#10;Add : white from norway and load file .txt" />
-    <MESSAGE value="[Main]+[Hypercube]&#10;Gestion du cache a priori sans nouveau bugg - cubeLoaded.emit(Hyeprcube)&#10;Calibration white OK with graph to vizualize." />
-    <MESSAGE value="[Data Viz] : one or three iamges + transorm" />
-    <MESSAGE value="plein de truc." />
     <MESSAGE value="Refonte totale de hypercube manager -&gt; Ordered dic au lieu de liste&#10;MAIS attention : filepath pour trouver GT seul bugg...a revoir" />
     <MESSAGE value="path problems with .splt('/') fixed with os.path" />
     <MESSAGE value="check if loaded GT good size" />
@@ -613,6 +592,19 @@
     <MESSAGE value="[Identification] : Added streaming, all images, false rgb sliders fixed, reinit and lauch selected" />
     <MESSAGE value="[Identification] : Added saving in h5 and png &#10;with dialog options." />
     <MESSAGE value="[BACK_UP] : Reintialisation of git ang gitignore" />
-    <option name="LAST_COMMIT_MESSAGE" value="[BACK_UP] : Reintialisation of git ang gitignore" />
+    <MESSAGE value="[IDENTIFICATION] : Gestion of uncomplete spectral range -&gt; crop and interp. &#10;started implementation of learning with shorter spectral range." />
+    <MESSAGE value="[IDENTIFICATION] : Dilog ofr opening saved model ok" />
+    <MESSAGE value="[IDENTIFICATION] : learning process with croped features and save_load model OK" />
+    <MESSAGE value="[IDENTIFICATION] : Substrate double implementation (fast and slow) added and propagated to save file." />
+    <MESSAGE value="[IDENTIFICATION] : ROI uptaded for jobs and blinking overlay fixed" />
+    <MESSAGE value="[IDENTIFICATION] : ROI selection, add from disk, traint/predict with reduces channels cube OK FOR INK AND SUBSTRATE" />
+    <MESSAGE value="[IDENTIFICATION] : Loading Dialog prefilled with current value (if opened with dialog)" />
+    <MESSAGE value="[IDENTIFICATION] : Inserted in the MainWindow Correctly" />
+    <MESSAGE value="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters" />
+    <MESSAGE value="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube" />
+    <MESSAGE value="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class" />
+    <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting" />
+    <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas." />
+    <option name="LAST_COMMIT_MESSAGE" value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas." />
   </component>
 </project>
