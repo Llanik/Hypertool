@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas.">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[HYPERCUBE] : Calibration -&gt; added than user can load ref reflectance file">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identification/classifier_predict.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/classifier_predict.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/registration/register_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_tool.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,6 +105,9 @@
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="SDK_NAME" value="Python 3.12" />
       <option name="WORKING_DIRECTORY" value="C:\Users\Usuario\Documents\GitHub\Hypertool" />
@@ -135,14 +139,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00049" summary="added">
-      <option name="closed" value="true" />
-      <created>1750778641386</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1750778641386</updated>
     </task>
     <task id="LOCAL-00050" summary="fixed bugg meta wl with register cube&#10;fixed rgb save bugg register">
       <option name="closed" value="true" />
@@ -528,7 +524,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759410689873</updated>
     </task>
-    <option name="localTasksCounter" value="98" />
+    <task id="LOCAL-00098" summary="[HYPERCUBE] : Calibration -&gt; added than user can load ref reflectance file">
+      <option name="closed" value="true" />
+      <created>1759491318156</created>
+      <option name="number" value="00098" />
+      <option name="presentableId" value="LOCAL-00098" />
+      <option name="project" value="LOCAL" />
+      <updated>1759491318157</updated>
+    </task>
+    <option name="localTasksCounter" value="99" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -580,7 +584,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Refonte totale de hypercube manager -&gt; Ordered dic au lieu de liste&#10;MAIS attention : filepath pour trouver GT seul bugg...a revoir" />
     <MESSAGE value="path problems with .splt('/') fixed with os.path" />
     <MESSAGE value="check if loaded GT good size" />
     <MESSAGE value="[registration] -&gt; individual transforms OK" />
@@ -605,6 +608,7 @@
     <MESSAGE value="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class" />
     <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting" />
     <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas." />
-    <option name="LAST_COMMIT_MESSAGE" value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas." />
+    <MESSAGE value="[HYPERCUBE] : Calibration -&gt; added than user can load ref reflectance file" />
+    <option name="LAST_COMMIT_MESSAGE" value="[HYPERCUBE] : Calibration -&gt; added than user can load ref reflectance file" />
   </component>
 </project>
