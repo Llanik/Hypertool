@@ -24,6 +24,7 @@ from metadata.metadata_tool import MetadataTool
 from ground_truth.ground_truth_tool import GroundTruthWidget
 from minicube.minicube_tool import MiniCubeTool
 from identification.identification_tool import IdentificationWidget
+from illumination.illumination_tool import IlluminationWidget
 
 # grafics to control changes
 import matplotlib.pyplot as plt
@@ -234,10 +235,13 @@ class MainApp(QtWidgets.QMainWindow):
         self.gt_dock=self._add_dock("Ground Truth",   GroundTruthWidget,     QtCore.Qt.RightDockWidgetArea)
         self.minicube_dock=self._add_dock("Minicube Extract",   MiniCubeTool,     QtCore.Qt.RightDockWidgetArea)
         self.identification_dock=self._add_dock("Identification", IdentificationWidget, QtCore.Qt.RightDockWidgetArea)
+        self.illumination_dock=self._add_dock("Illumination", IlluminationWidget, QtCore.Qt.RightDockWidgetArea)
         self.tabifyDockWidget(self.reg_dock, self.gt_dock)
         self.tabifyDockWidget(self.reg_dock, self.data_viz_dock)
         self.tabifyDockWidget(self.reg_dock, self.minicube_dock)
         self.tabifyDockWidget(self.reg_dock, self.identification_dock)
+        self.tabifyDockWidget(self.reg_dock, self.illumination_dock)
+
 
         self.gt_dock.raise_()
 
@@ -256,6 +260,7 @@ class MainApp(QtWidgets.QMainWindow):
         self.toolbar.addSeparator()
         act_mini=self.onToolButtonPress(self.minicube_dock, "minicube_icon.png", "Minicube Extract")
         act_data = self.onToolButtonPress(self.data_viz_dock, "icon_data_viz.svg", "Data Vizualisation")
+        act_illumination = self.onToolButtonPress(self.illumination_dock, "illumination_icon.png", "Illumination")
         act_reg = self.onToolButtonPress(self.reg_dock, "registration_icon.png", "Registration")
         act_gt =self.onToolButtonPress(self.gt_dock, "GT_icon_1.png", "Ground Truth")
         self.toolbar.addSeparator()
@@ -593,6 +598,18 @@ class MainApp(QtWidgets.QMainWindow):
         # 4) Affichage du dock
         # widget.show()
 
+    def _send_to_illumination(self, filepath):
+        print('Send to illumination')
+        widget = self.illumination_dock.widget()
+        ci = self.hypercube_manager.add_or_sync_cube(filepath)
+        hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
+
+        if hc.data is None:
+            widget.on_load_cube(cube_info=ci)
+        else:
+            widget.on_load_cube(cube_info=ci, cube=hc)
+
+
     def _send_to_all(self,filepath):
 
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
@@ -604,6 +621,7 @@ class MainApp(QtWidgets.QMainWindow):
         self._send_to_registration(filepath,1)
         self._send_to_browser(filepath)
         self._send_to_minicube(filepath)
+        self._send_to_illumination(filepath)
 
     def _on_tool_loaded_cube(self, hc: Hypercube, tool_widget):
         # Chemin résolu du cube
@@ -688,6 +706,12 @@ class MainApp(QtWidgets.QMainWindow):
                 lambda _, p=path: self._send_to_identification(p, 0)
             )
             menu_load_ident.addAction(act_ident_vnir)
+
+            # Envoyer au dock illum
+            act_illum = QtWidgets.QAction("Send to Illumination", self)
+            act_illum.triggered.connect(lambda checked, p=path: self._send_to_illumination(p))
+            sub.addAction(act_illum)
+
             # Action Moving
             act_ident_swir = QtWidgets.QAction("SWIR Cube", self)
             act_ident_swir.triggered.connect(

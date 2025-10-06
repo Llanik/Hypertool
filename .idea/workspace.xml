@@ -6,7 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/Illuminants.csv" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/Illuminants.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/illumination_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/test_ui.ui" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,6 +48,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -64,24 +70,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.HyperdocApp_core_v3.5.1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.HyperdocApp_main_.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Hyperdoc_GUI_design.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Run in console.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Test_update.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Unnamed.executor&quot;: &quot;Run&quot;,
-    &quot;Python.hypercube_app_v26.executor&quot;: &quot;Run&quot;,
-    &quot;Python.open.executor&quot;: &quot;Run&quot;,
-    &quot;Python.register_images.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Usuario/Documents/GitHub/Hypertool/identificacion&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.HyperdocApp_core_v3.5.1.executor": "Run",
+    "Python.HyperdocApp_main_.executor": "Run",
+    "Python.Hyperdoc_GUI_design.executor": "Run",
+    "Python.MainWindow.executor": "Run",
+    "Python.Run in console.executor": "Run",
+    "Python.Test_update.executor": "Run",
+    "Python.Unnamed.executor": "Run",
+    "Python.hypercube_app_v26.executor": "Run",
+    "Python.illumination_tool.executor": "Run",
+    "Python.open.executor": "Run",
+    "Python.register_images.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/Usuario/Documents/GitHub/Hypertool/identificacion",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "preferences.keymap"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Usuario\Documents\GitHub\Hypertool\identificacion" />
@@ -105,11 +114,11 @@
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.12" />
       <option name="WORKING_DIRECTORY" value="C:\Users\Usuario\Documents\GitHub\Hypertool" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$FilePath$" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
@@ -606,5 +615,9 @@
     <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting" />
     <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas." />
     <option name="LAST_COMMIT_MESSAGE" value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting&#10;-&gt; Fixed except si les numeros de classes ne se suivent pas." />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Hypertool$MainWindow.coverage" NAME="MainWindow Coverage Results" MODIFIED="1759747008186" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Hypertool$illumination_tool.coverage" NAME="illumination_tool Coverage Results" MODIFIED="1759745701420" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/illumination" />
   </component>
 </project>
