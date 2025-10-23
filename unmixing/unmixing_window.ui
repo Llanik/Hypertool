@@ -31,7 +31,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0,0,0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,5,1,3">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
@@ -88,33 +88,24 @@
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="3" column="2" colspan="2">
-             <widget class="QComboBox" name="comboBox_normalisation">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+            <item row="2" column="2" colspan="2">
+             <widget class="QLabel" name="label_normalisation">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>20</height>
+               </size>
               </property>
-              <property name="toolTip">
-               <string>Choose distance for supervised classification</string>
+              <property name="text">
+               <string>Normalisation</string>
               </property>
-              <item>
-               <property name="text">
-                <string>L2 (Euclidian)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>L1 (Sum=1)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>None</string>
-               </property>
-              </item>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
+            </item>
+            <item row="1" column="4">
+             <layout class="QVBoxLayout" name="verticalLayout_4"/>
             </item>
             <item row="1" column="2" colspan="2">
              <widget class="QComboBox" name="comboBox_endmembers_get">
@@ -143,22 +134,110 @@
               </item>
              </widget>
             </item>
-            <item row="5" column="4">
-             <widget class="QPushButton" name="run_btn">
+            <item row="3" column="2" colspan="2">
+             <widget class="QComboBox" name="comboBox_normalisation">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="toolTip">
-               <string>Lauch segmentation with parameters</string>
+               <string>Choose distance for supervised classification</string>
               </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(173, 173, 173);</string>
-              </property>
+              <item>
+               <property name="text">
+                <string>L2 (Euclidian)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>L1 (Sum=1)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QLabel" name="label_n_EM">
               <property name="text">
-               <string>End Members Extraction</string>
+               <string># Endmembers:</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="4">
-             <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item row="4" column="3">
+             <widget class="QSpinBox" name="nclass_box">
+              <property name="toolTip">
+               <string>Number of class to segment. Another class will be added in supervised mode if threashold not at maximum.</string>
+              </property>
+              <property name="minimum">
+               <number>2</number>
+              </property>
+              <property name="maximum">
+               <number>20</number>
+              </property>
+              <property name="value">
+               <number>3</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QStackedWidget" name="stackedWidget">
+            <property name="currentIndex">
+             <number>2</number>
+            </property>
+            <widget class="QWidget" name="From_Library">
+             <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
+               <widget class="QPushButton" name="pushButton_load_EM">
+                <property name="text">
+                 <string>Load Endmembers</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_file_endmembers">
+                <property name="text">
+                 <string>No file loaded</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="Manual">
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="1" column="1">
+               <widget class="QComboBox" name="comboBox_pixel_selection_mode">
+                <property name="toolTip">
+                 <string>Shape used for pixel selection.</string>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>rectangle</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>ellipse</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>pixel</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="0" column="0">
                <widget class="QPushButton" name="pushButton_class_selection">
                 <property name="enabled">
                  <bool>true</bool>
@@ -177,132 +256,84 @@
                 </property>
                </widget>
               </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="pushButton_erase_selected_pix">
+                <property name="toolTip">
+                 <string>To erase a previous selection. Only useful if you have assigned piel to a class that you want to be determined by segmentation.</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgb(255, 206, 206);</string>
+                </property>
+                <property name="text">
+                 <string>Erase Selected</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_selec_mode">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Select mode</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
              </layout>
-            </item>
-            <item row="2" column="2" colspan="2">
-             <widget class="QLabel" name="label_normalisation">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Normalisation</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="5">
-             <widget class="QComboBox" name="comboBox_pixel_selection_mode">
-              <property name="toolTip">
-               <string>Shape used for pixel selection.</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>rectangle</string>
-               </property>
+            </widget>
+            <widget class="QWidget" name="Automatic">
+             <layout class="QGridLayout" name="gridLayout_5">
+              <item row="0" column="1" colspan="2">
+               <widget class="QPushButton" name="run_btn">
+                <property name="toolTip">
+                 <string>Lauch segmentation with parameters</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgb(173, 173, 173);</string>
+                </property>
+                <property name="text">
+                 <string>End Members Extraction</string>
+                </property>
+               </widget>
               </item>
-              <item>
-               <property name="text">
-                <string>ellipse</string>
-               </property>
+              <item row="1" column="2">
+               <widget class="QSpinBox" name="niter_box">
+                <property name="toolTip">
+                 <string>Number of class to segment. Another class will be added in supervised mode if threashold not at maximum.</string>
+                </property>
+                <property name="minimum">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+                <property name="value">
+                 <number>10</number>
+                </property>
+               </widget>
               </item>
-              <item>
-               <property name="text">
-                <string>pixel</string>
-               </property>
+              <item row="1" column="1">
+               <widget class="QLabel" name="n_iteration">
+                <property name="text">
+                 <string># iterations :</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
               </item>
-             </widget>
-            </item>
-            <item row="2" column="4">
-             <widget class="QPushButton" name="pushButton_erase_selected_pix">
-              <property name="toolTip">
-               <string>To erase a previous selection. Only useful if you have assigned piel to a class that you want to be determined by segmentation.</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 206, 206);</string>
-              </property>
-              <property name="text">
-               <string>Erase Selected</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="5">
-             <widget class="QLabel" name="label_selec_mode">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Select mode</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="5">
-             <widget class="QPushButton" name="pushButton_load_EM">
-              <property name="text">
-               <string>Load Endmembers</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="5">
-             <widget class="QSpinBox" name="nclass_box">
-              <property name="toolTip">
-               <string>Number of class to segment. Another class will be added in supervised mode if threashold not at maximum.</string>
-              </property>
-              <property name="minimum">
-               <number>2</number>
-              </property>
-              <property name="maximum">
-               <number>20</number>
-              </property>
-              <property name="value">
-               <number>3</number>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="4">
-             <widget class="QLabel" name="label_n_EM">
-              <property name="text">
-               <string># Endmembers:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="2">
-             <widget class="QLabel" name="n_iteration">
-              <property name="text">
-               <string># iterations :</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="3">
-             <widget class="QSpinBox" name="niter_box">
-              <property name="toolTip">
-               <string>Number of class to segment. Another class will be added in supervised mode if threashold not at maximum.</string>
-              </property>
-              <property name="minimum">
-               <number>2</number>
-              </property>
-              <property name="maximum">
-               <number>20</number>
-              </property>
-              <property name="value">
-               <number>3</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
+             </layout>
+            </widget>
+           </widget>
           </item>
          </layout>
         </widget>

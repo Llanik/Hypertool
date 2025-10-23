@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_IdentificationWidget(object):
     def setupUi(self, IdentificationWidget):
         IdentificationWidget.setObjectName("IdentificationWidget")
-        IdentificationWidget.resize(1472, 1176)
+        IdentificationWidget.resize(1472, 0)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -530,7 +530,7 @@ class Ui_IdentificationWidget(object):
         self.verticalLayout.setStretch(1, 8)
 
         self.retranslateUi(IdentificationWidget)
-        self.tabWidget_Process.setCurrentIndex(1)
+        self.tabWidget_Process.setCurrentIndex(0)
         self.comboBox_clean_preset.setCurrentIndex(1)
         self.tabWidget_Image.setCurrentIndex(0)
         self.tabWidget_info_classification.setCurrentIndex(0)

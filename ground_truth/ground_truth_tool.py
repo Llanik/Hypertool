@@ -1660,9 +1660,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         else:
 
             # 1) Construire seg_color (H x W x 3) en BGR
-
             H, W = self.cls_map.shape
-
             seg_color = np.zeros((H, W, 3), dtype=np.uint8)
 
             for cls, (b, g, r) in self.class_colors.items():
@@ -1673,20 +1671,15 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 seg_color[mask] = [b, g, r]
 
             # 2) Si vous avez défini une classe “other” (indice = n_classes),
-
             #    et que vous n’avez pas de couleur pour elle, vous pouvez la mettre en grisé, ex.:
 
             other_idx = set(np.unique(self.cls_map)) - set(self.class_colors.keys())
-
             for cls in other_idx:
                 gray = 128
-
                 mask = (self.cls_map == cls)
-
                 seg_color[mask] = [gray, gray, gray]
 
             # 3) Faire l’overlay final avec la transparence
-
             overlay = cv2.addWeighted(rgb, 1 - self.alpha, seg_color, self.alpha, 0)
 
         if self.cls_map is None:

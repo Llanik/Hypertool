@@ -33,10 +33,9 @@ from unmixing.unmixing_backend import*
 from unmixing.unmixing_window import Ui_GroundTruthWidget
 from hypercubes.hypercube import Hypercube
 from interface.some_widget_for_interface import ZoomableGraphicsView
-from identification.load_cube_dialog import Ui_Dialog
+from identification.load_cube_dialog import Ui_Dialogg
 
-# todo: show endmembers spectra at the end of endmembers extraction
-# todo : add manual selection of endmembers
+# todo : manual selection of endmembers -> continue
 
 class LoadCubeDialog(QDialog):
     """
@@ -481,7 +480,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # Remplacer placeholders par ZoomableGraphicsView
         self._replace_placeholder('viewer_left', ZoomableGraphicsView)
         self._replace_placeholder('viewer_right', ZoomableGraphicsView)
-        self.viewer_left.enable_rect_selection = True
+        self.viewer_left.enable_rect_selection = False  # no rectangle selection for left view
         self.viewer_right.enable_rect_selection = False # no rectangle selection for right view
         self._promote_canvas('spec_canvas', FigureCanvas)
         # Promote spec_canvas placeholder to FigureCanvas
@@ -489,8 +488,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.init_spectrum_canvas()
         self.show_selection = True
 
-
         # for manual selection
+        self.samples={}
+        self.sample_coords = {}
         self.selecting_pixels = False  # mode selection ref activated
         self._pixel_selecting = False  # for manual pixel selection for dragging mode
         self.erase_selection = False  # erase mode on or off
@@ -501,6 +501,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.nclass_box.setValue(self.last_class_number)
         self.class_info = {}  # dictionnary of lists :  {key:[label, name GT,(R,G,B)]}
         self.class_colors = {}  # color of each class
+        self.selected_bands=[] #band selection
+        self.selected_span_patch=[] # rectangle patch of selected bands
 
         # data variable
         self._last_vnir = None
@@ -513,6 +515,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.alpha = self.horizontalSlider_overlay_transparency.value() / 100.0
 
         self.E : Dict[str,np.ndarray]  # {EN_i : (L,pi)}
+        self.class_means = {}  # for spectra of classe
+        self.class_stds = {}  # for spectra of classe
+        self.class_ncount = {}  # for npixels classified
+        self.class_colors ={}  # color of each class
+
+        self.cls_map = None
         self.index_map: Optional[Dict[str, np.ndarray]] = None
         self.A: Optional[np.ndarray] = None  # (p, N)
         self.maps_by_group: Dict[str, np.ndarray] = {}
@@ -521,7 +529,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.load_btn.clicked.connect(self.open_load_cube_dialog)
 
         self.horizontalSlider_overlay_transparency.valueChanged.connect(self.update_alpha)
-
 
         self.sliders_rgb = [
             self.horizontalSlider_red_channel,
@@ -554,6 +561,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         #Endmembers window
         self.run_btn.clicked.connect(self._on_extract_endmembers)
         self.pushButton_load_EM.clicked.connect(self._on_load_library_clicked)
+        self.pushButton_class_selection.toggled.connect(self.on_toggle_selection)
+        self.pushButton_erase_selected_pix.toggled.connect(self.on_toggle_erase)
 
         # Defaults values algorithm
         self.comboBox_unmix_algorithm.setCurrentText('SUnSAL')
@@ -562,6 +571,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.doubleSpinBox_unmix_lambda_4.setValue(1.0)   # rho
         self.checkBox_unmix_ANC.setChecked(True)
         self.checkBox_unmix_ASC.setChecked(False)
+
+        self.comboBox_endmembers_get.currentIndexChanged.connect(self.on_algo_endmember_change)
+        self.on_algo_endmember_change()
 
     # <editor-fold desc="Visual elements">
 
@@ -849,6 +861,32 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.spec_ax.set_title('Spectrum')
         canvas.setVisible(False)
 
+    def update_legend(self):
+
+        if len(self.class_ncount)!=0:
+
+            for i in reversed(range(self.frame_legend.layout().count())):
+                w = self.frame_legend.layout().itemAt(i).widget()
+                self.frame_legend.layout().removeWidget(w)
+                w.deleteLater()
+
+            for c in sorted(self.class_colors):
+                b, g, r = self.class_colors[c]
+                txt=str(c)
+                if self.class_ncount is not None :
+                    txt += '-' + str(self.class_ncount.get(c, 0)) + 'px'
+
+                lbl = QLabel(txt)
+                # lbl.setFixedSize(30, 20)
+                lbl.setAlignment(Qt.AlignCenter)
+                lbl.setStyleSheet(
+                    f"background-color: rgb({r},{g},{b});"
+                    "color: white;"
+                    "border-radius: 3px;"
+                    "font-weight: bold;"
+                )
+                self.frame_legend.layout().addWidget(lbl)
+
     def init_spectrum_canvas(self):
         placeholder = getattr(self, 'spec_canvas')
         parent = placeholder.parent()
@@ -888,10 +926,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             placeholder.deleteLater()
             self.verticalLayout.addWidget(self.spec_canvas)
 
-    def update_spectra(self,x=None,y=None):
+    def update_spectra(self,x=None,y=None,maxR=1):
         self.spec_ax.clear()
         x_graph = self.wl
-        maxR=1
 
         if self.data is None:
             return
@@ -936,9 +973,226 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             # 4) On rafraîchit le canvas
         self.spec_canvas.draw_idle()
 
+    def _assign_initial_colors(self,c=None):
+
+        if c is not None :
+            unique_labels=[c]
+        elif getattr(self, 'class_means', None):  # NEW fallback
+            unique_labels = list(self.class_means.keys())
+        else:
+            return
+
+        cmap = colormaps.get_cmap('tab10')
+
+        for cls in unique_labels:
+            if cls not in self.class_colors:
+                # cmap renvoie un tuple RGBA avec floats 0..1
+                r_f, g_f, b_f, _ = cmap(cls)
+                # on convertit en entiers 0..255
+                r, g, b = int(255 * r_f), int(255 * g_f), int(255 * b_f)
+                # MAIS OpenCV attend BGR, donc on stocke (b,g,r)
+                self.class_colors[cls] = (b, g, r)
+                if cls not in self.class_info:
+                    self.class_info[cls] = [None,None,(0,0,0)]
+                self.class_info[cls][2]=(r,g,b)
+
     # </editor-fold>
 
     # <editor-fold desc="Manual Selection">
+
+    def eventFilter(self, source, event):
+        mode = self.comboBox_pixel_selection_mode.currentText()
+
+        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+            return False      ## to dont block drag
+
+        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.RightButton and (self.selecting_pixels or self.erase_selection):
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            print('Clicked OK')
+            pos = self.viewer_left.mapToScene(event.pos())
+            x0, y0 = int(pos.x()), int(pos.y())
+            if mode == 'pixel':
+                # on commence la collecte
+                self._pixel_selecting = True
+                self._pixel_coords = [(x0, y0)]
+                return True
+            elif mode == 'rectangle':
+                # début du drag
+                from PyQt5.QtWidgets import QRubberBand
+                self.origin = event.pos()
+                self.rubberBand = QRubberBand(QRubberBand.Rectangle,
+                                              self.viewer_left.viewport())
+                self.rubberBand.setGeometry(self.origin.x(),
+                                            self.origin.y(), 1, 1)
+                self.rubberBand.show()
+                return True
+            elif mode == 'ellipse':
+                from PyQt5.QtWidgets import QGraphicsEllipseItem
+                from PyQt5.QtGui import QPen
+
+                self.origin = event.pos()
+                pen = QPen(Qt.red)
+                pen.setStyle(Qt.DashLine)
+                self.ellipse_item = QGraphicsEllipseItem()
+                self.ellipse_item.setPen(pen)
+                self.ellipse_item.setBrush(Qt.transparent)
+                self.viewer_left.scene().addItem(self.ellipse_item)
+                return True
+
+        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.MiddleButton:
+            if not self.selecting_pixels:
+                self.checkBox_live_spectra.toggle()
+        # 2) Mouvement souris → mise à jour de la selection en cours
+        if event.type() == QEvent.MouseMove and self._pixel_selecting and mode == 'pixel':
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            pos = self.viewer_left.mapToScene(event.pos())
+            x, y = int(pos.x()), int(pos.y())
+            if x < 0 or y < 0:
+                return True
+
+            if (x, y) not in self._pixel_coords:
+                self._pixel_coords.append((x, y))
+            if self._preview_mask is None:
+                H, W = self.data.shape[:2]
+                self._preview_mask = np.zeros((H, W), dtype=bool)
+
+            H, W = self._preview_mask.shape
+            if 0 <= y < H and 0 <= x < W:
+                self._preview_mask[y, x] = True
+                self.show_image(preview=True)
+
+            return True
+
+        if event.type() == QEvent.MouseMove and hasattr(self, 'rubberBand'):
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            self.rubberBand.setGeometry(
+                QRect(self.origin, event.pos()).normalized()
+            )
+            return True
+
+        if event.type() == QEvent.MouseMove and mode == 'ellipse' and hasattr(self, 'ellipse_item'):
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            sc_orig = self.viewer_left.mapToScene(self.origin)
+            sc_now = self.viewer_left.mapToScene(event.pos())
+            x0, y0 = sc_orig.x(), sc_orig.y()
+            x1, y1 = sc_now.x(), sc_now.y()
+            rect = QRectF(min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
+            self.ellipse_item.setRect(rect)
+            return True
+
+        # 3) Relâchement souris → calcul de la sélection
+
+        if event.type() == QEvent.MouseButtonRelease and event.button() == Qt.RightButton and mode == 'pixel' and self._pixel_selecting :
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            print('realeased OK')
+            # get pixels
+            coords = self._pixel_coords.copy()
+            #  Si au moins 3 points, propose de fermer le cheminif min 3 points, propose contour
+            if len(coords) >= 3:
+                reply = QMessageBox.question(
+                    self, "Close Path?",
+                    "You have selected multiple pixels.\n"
+                    "Do you want to close the path and include all pixels inside the contour?",
+                    QMessageBox.Yes | QMessageBox.No
+                )
+                if reply == QMessageBox.Yes:
+                    pts = np.array(coords)
+                    poly = Path(pts)
+                    x0, y0 = pts[:, 0].min().astype(int), pts[:, 1].min().astype(int)
+                    x1, y1 = pts[:, 0].max().astype(int), pts[:, 1].max().astype(int)
+                    filled = list(coords)
+                    for yy in range(y0, y1 + 1):
+                        for xx in range(x0, x1 + 1):
+                            if poly.contains_point((xx, yy)):
+                                filled.append((xx, yy))
+
+                    # to avoid dobbles
+                    seen = set()
+                    coords = []
+                    for p in filled:
+                        if p not in seen:
+                            seen.add(p)
+                            coords.append(p)
+
+            if self.erase_selection:
+                self._handle_erasure(coords)
+            else :
+                self._handle_selection(coords) # close selection
+
+            # ready to new selection
+            self._pixel_selecting = False
+            self._erase_selecting = False
+            self._preview_mask = None
+            return True
+
+        if event.type() == QEvent.MouseButtonRelease and hasattr(self, 'rubberBand'):
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            rect = self.rubberBand.geometry()
+            self.rubberBand.hide()
+            # coins en coordonnées image
+            tl = self.viewer_left.mapToScene(rect.topLeft())
+            br = self.viewer_left.mapToScene(rect.bottomRight())
+            x0, y0 = int(tl.x()), int(tl.y())
+            x1, y1 = int(br.x()), int(br.y())
+            # liste de tous les pixels dans le rectangle
+            coords = [
+                (xx, yy)
+                for yy in range(max(0, min(y0, y1)), min(self.data.shape[0], max(y0, y1) + 1))
+                for xx in range(max(0, min(x0, x1)), min(self.data.shape[1], max(x0, x1) + 1))
+            ]
+
+            if self.erase_selection:
+                self._handle_erasure(coords)
+            else:
+                self._handle_selection(coords)  # close selection
+
+            del self.rubberBand
+            return True
+
+        if event.type() == QEvent.MouseButtonRelease and hasattr(self, 'ellipse_item'):
+            if not (self.selecting_pixels or self.erase_selection):
+                return False
+            rect = self.ellipse_item.rect()
+            self.viewer_left.scene().removeItem(self.ellipse_item)
+            del self.ellipse_item
+
+            cx, cy = rect.center().x(), rect.center().y()
+            rx, ry = rect.width() / 2, rect.height() / 2
+            x0, x1 = int(rect.left()), int(rect.right())
+            y0, y1 = int(rect.top()), int(rect.bottom())
+
+            coords = []
+            for yy in range(max(0, y0), min(self.data.shape[0], y1 + 1)):
+                for xx in range(max(0, x0), min(self.data.shape[1], x1 + 1)):
+                    if ((xx - cx) ** 2 / rx ** 2 + (yy - cy) ** 2 / ry ** 2) <= 1:
+                        coords.append((xx, yy))
+
+            if self.erase_selection:
+                self._handle_erasure(coords)
+            else:
+                self._handle_selection(coords)  # close selection
+            return True
+
+        # 4) Mouvement souris pour le live spectrum
+        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and         self.checkBox_live_spectra.isChecked():
+            if self.checkBox_live_spectra.isChecked() and self.data is not None:
+                pos = self.viewer_left.mapToScene(event.pos())
+                x,y=int(pos.x()),int(pos.y())
+                H, W = self.data.shape[0], self.data.shape[1]
+                if 0 <= x < W and 0 <= y < H:
+                    self.update_spectra(x, y)
+
+            return True
+
+        # return super().eventFilter(source, event)
+        return False
+
     def _on_bandselect(self, lambda_min, lambda_max):
         """
         Callback  SpanSelector
@@ -1013,6 +1267,81 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         self.spec_canvas.draw_idle()
 
+    def start_pixel_selection(self):
+
+        self.show_selection = True
+        self.pushButton_class_selection.setText("Stop Selection")
+        self.pushButton_erase_selected_pix.setChecked(False)
+
+        if len(self.samples) > 0:
+            reply = QMessageBox.question(
+                self, "Erase selection?",
+                "Do you want to erase previous selection?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                H, W = self.selection_mask_map.shape
+                # Réinitialise à -1 (aucune classe)
+                self.selection_mask_map[:] = -1
+                self.samples.clear()
+
+        self.selecting_pixels = True
+        # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
+        self.show_rgb_image()
+        self.update_overlay()
+
+    def toggle_show_selection(self):
+
+        self.show_selection = self.checkBox_see_selection_overlay.isChecked()
+        self.show_rgb_image()
+        self.update_overlay()
+
+    def stop_pixel_selection(self):
+
+        self.selecting_pixels = False
+
+        # ready to select
+        self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
+
+        # remet le bouton à l'état initial
+        self.pushButton_class_selection.setText("Start Selection")
+        self.pushButton_class_selection.setChecked(False)
+
+        # efface tout preview en cours
+        self.selecting_pixels = False
+
+        # enfin, on affiche l'image normale (sans preview ni sélection en cours)
+        self.show_rgb_image()
+        self.update_overlay()
+
+    def on_toggle_erase(self, checked):
+        self.erase_selection = checked
+
+        if checked:
+            self._pixel_selecting = False
+            self.stop_pixel_selection()
+
+            self.show_selection = True
+
+            self.pushButton_erase_selected_pix.setText("Stop Erasing")
+            self.pushButton_class_selection.setChecked(False)
+            # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
+
+        else:
+            self.pushButton_erase_selected_pix.setText("Erase Pixels")
+            self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
+
+    def on_toggle_selection(self, checked: bool):
+
+        if checked:
+            self.erase_selection = False
+            self.start_pixel_selection()
+            self.update_legend()
+
+        else:
+            # fin du mode sélection
+            self.stop_pixel_selection()
+
     def _handle_selection(self, coords):
         """Prompt for class and store spectra of the given coordinates."""
         n = self.nclass_box.value() - 1
@@ -1066,7 +1395,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
             # 3) rafraîchir l’affichage
         self.update_counts()
-        self.show_image()
+        self.show_rgb_image()
+        self.update_overlay()
         self.update_legend()
 
     def _handle_erasure(self, coords):
@@ -1093,11 +1423,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     self.class_stds.pop(cls, None)
 
         self.prune_unused_classes()
-        self.show_image()
+        self.show_rgb_image()
+        self.update_overlay()
         self.update_legend()
     # </editor-fold>
 
-    # <editor-fold desc="cube">
+    # <editor-fold desc="Cube">
     def open_load_cube_dialog(self):
 
         if self.no_reset_jobs_on_new_cube():
@@ -1233,6 +1564,15 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
     # <editor-fold desc="Endmembers">
 
+    def on_algo_endmember_change(self):
+        txt=self.comboBox_endmembers_get.currentText()
+        if 'library' in txt:
+            self.stackedWidget.setCurrentIndex(0)
+        elif 'Manual' in txt:
+            self.stackedWidget.setCurrentIndex(1)
+        else:
+            self.stackedWidget.setCurrentIndex(2)
+
     def _on_extract_endmembers(self):
         if self.cube is None:
             QMessageBox.warning(self, 'Unmixing', 'Load a cube first.')
@@ -1257,14 +1597,26 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.threadpool.start(worker)
 
     def _on_em_ready(self, E: np.ndarray, labels: np.ndarray, index_map: Dict[str, np.ndarray]):
-        self.E, self.labels, self.index_map = E, labels, index_map
-        # Populate EM combo for visualization (one by one)
+        self.labels, self.index_map = labels, index_map
         self.comboBox_viz_show_EM.clear()
-        for i in range(E.shape[1]):
-            self.comboBox_viz_show_EM.addItem(f"EM {i:02d}")
+        n=E.shape[1]
+        self.E={}
+        for key in range(n):
+            spec=E[:,key]
+            self.E[key]=spec
+            self.comboBox_viz_show_EM.addItem(f"EM {key:02d}")
         # If you also have groups (labels), you can populate comboBox_viz_show_model too
         print('[ENDMEMBERS]',
-            f"Endmembers ready: E shape {E.shape}, groups: {len(np.unique(labels)) if labels is not None else 0}")
+            f"Endmembers ready: E shape {len(self.E)},{len(self.E[0])}, groups: {len(np.unique(labels)) if labels is not None else 0}")
+
+        for key, spec in self.E.items():  # spec shape (L,)
+            spec = np.asarray(spec)
+            self.class_means[key] = spec  # pas de moyenne scalaire !
+            self.class_stds[key] = np.zeros_like(spec)
+
+        self._assign_initial_colors()
+        self.update_spectra(maxR=0)
+        # self.update_legend()
 
     def _on_load_library_clicked(self):
         # Expect host app to set self.library_groups from a file dialog elsewhere
@@ -1287,6 +1639,15 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         if 'l1' in txt:
             return 'L1'
         return 'none'
+
+    def fill_means_std_classes(self):
+        full_means = {}
+        full_stds = {}
+        for key in self.E:
+            full_means[key] = self.E[key].mean(axis=1)
+            full_stds[key] = self.E[key].std(axis=1)
+        self.class_means = full_means
+        self.class_stds = full_stds
     # </editor-fold>
 
 if __name__ == "__main__":
