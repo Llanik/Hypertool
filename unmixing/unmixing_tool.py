@@ -11,11 +11,12 @@ import numpy as np
 from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QHeaderView,QProgressBar,
                             QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton,
                              QDialogButtonBox, QCheckBox, QScrollArea, QWidget, QFileDialog, QMessageBox,
-                             QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QHeaderView,
+                             QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QHeaderView,QGraphicsView
                              )
 
 from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem,QColor
-from PyQt5.QtCore import Qt,QObject, pyqtSignal, QRunnable, QThreadPool, pyqtSlot, QRectF
+from PyQt5.QtCore import Qt,QObject, pyqtSignal, QRunnable, QThreadPool, pyqtSlot, QRectF,QEvent,QRect, QPoint, QSize
+
 
 # Graphs
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -33,7 +34,7 @@ from unmixing.unmixing_backend import*
 from unmixing.unmixing_window import Ui_GroundTruthWidget
 from hypercubes.hypercube import Hypercube
 from interface.some_widget_for_interface import ZoomableGraphicsView
-from identification.load_cube_dialog import Ui_Dialogg
+from identification.load_cube_dialog import Ui_Dialog
 
 # todo : manual selection of endmembers -> continue
 
@@ -482,6 +483,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._replace_placeholder('viewer_right', ZoomableGraphicsView)
         self.viewer_left.enable_rect_selection = False  # no rectangle selection for left view
         self.viewer_right.enable_rect_selection = False # no rectangle selection for right view
+        self.viewer_left.viewport().installEventFilter(self)
+        self.viewer_left.viewport().setMouseTracking(True)
+        self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
+
         self._promote_canvas('spec_canvas', FigureCanvas)
         # Promote spec_canvas placeholder to FigureCanvas
         self.spec_canvas_layout = self.spec_canvas.layout() if hasattr(self.spec_canvas, 'layout') else None
@@ -503,6 +508,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.class_colors = {}  # color of each class
         self.selected_bands=[] #band selection
         self.selected_span_patch=[] # rectangle patch of selected bands
+        self.selection_mask_map = None
 
         # data variable
         self._last_vnir = None
@@ -691,6 +697,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 element.setEnabled(True)
 
         self.show_rgb_image()
+        self.update_overlay()
 
     def default_rgb_channels(self):
         """Renvoie les canaux RGB par défaut selon plage spectrale"""
@@ -737,7 +744,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             return
 
         self.show_rgb_image()
-        self.update_overlay
+        self.update_overlay()
 
     def _np2pixmap(self, img):
         if img.ndim == 2:
@@ -799,8 +806,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         y, x, h, w = rect_tuple
         return QRectF(float(x), float(y), float(w), float(h))
 
-    def show_rgb_image(self):
-
+    def _make_rgb_from_cube(self) -> np.ndarray:
         if self.data is None:
             return
         if self.radioButton_rgb_default.isChecked():
@@ -823,13 +829,58 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         self.rgb_image = rgb
 
-        self.viewer_left.setImage(self._np2pixmap(rgb))
-        self.viewer_left.fitImage()
-        self._draw_current_rect(surface=False)
 
-    def update_overlay(self,only_images=False):
-        # self.show_classification_result(only_images)
-        pass
+    def show_rgb_image(self):
+        self.update_overlay(recompute_rgb=True, preview=False)
+
+
+    def update_overlay(self, recompute_rgb: bool = False, preview: bool = False):
+        """
+        1) (optionnel) Recalcule self.rgb_image depuis le cube
+        2) Mélange les sélections (selection_mask_map) sur le RGB
+        3) Push viewer_left (composite) et viewer_right (carte couleurs)
+        """
+        if self.data is None:
+            return
+
+        # 1) Garantir un RGB prêt
+        if recompute_rgb or getattr(self, "rgb_image", None) is None:
+            self._make_rgb_from_cube()
+
+        base = self.rgb_image.copy()
+        H, W = base.shape[:2]
+        overlay = base
+
+        # 2) Overlay des classes sélectionnées
+        if getattr(self, "selection_mask_map", None) is not None and getattr(self, "show_selection", True):
+            a = float(getattr(self, "alpha", 0.35))
+            a = max(0.0, min(1.0, a))
+            current = overlay.copy()
+            for cls, (b, g, r) in getattr(self, "class_colors", {}).items():
+                mask2d = (self.selection_mask_map == cls)
+                if not np.any(mask2d):
+                    continue
+                layer = np.zeros_like(overlay, dtype=np.uint8)
+                layer[:] = (b, g, r)
+                blended = cv2.addWeighted(overlay, 1.0 - a, layer, a, 0.0)
+                current = np.where(mask2d[:, :, None], blended, current)
+            overlay = current
+
+        # 3) Aperçu en cours de tracé (facultatif)
+        if preview and getattr(self, "_preview_mask", None) is not None:
+            layer = np.zeros_like(overlay, dtype=np.uint8)
+            layer[:] = (0, 0, 255)
+            mixed = cv2.addWeighted(overlay, 0.7, layer, 0.3, 0.0)
+            overlay = np.where(self._preview_mask[:, :, None], mixed, overlay)
+
+        # 4) Push viewers
+        self.viewer_left.setImage(self._np2pixmap(overlay))
+
+        if getattr(self, "selection_mask_map", None) is not None:
+            seg = np.zeros((H, W, 3), dtype=np.uint8)
+            for cls, (b, g, r) in getattr(self, "class_colors", {}).items():
+                seg[self.selection_mask_map == cls] = (b, g, r)
+            self.viewer_right.setImage(self._np2pixmap(seg))
 
     def update_alpha(self, value):
         self.alpha = value / 100.0
@@ -1003,10 +1054,13 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     def eventFilter(self, source, event):
         mode = self.comboBox_pixel_selection_mode.currentText()
 
+
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
             return False      ## to dont block drag
 
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.RightButton and (self.selecting_pixels or self.erase_selection):
+            print('[MANUAL SELECTION] Right Click taken in account')
+
             if not (self.selecting_pixels or self.erase_selection):
                 return False
             print('Clicked OK')
@@ -1061,7 +1115,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             H, W = self._preview_mask.shape
             if 0 <= y < H and 0 <= x < W:
                 self._preview_mask[y, x] = True
-                self.show_image(preview=True)
+                self.show_rgb_image()
+                self.update_overlay(preview=True)
 
             return True
 
@@ -1180,15 +1235,15 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             return True
 
         # 4) Mouvement souris pour le live spectrum
-        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and         self.checkBox_live_spectra.isChecked():
-            if self.checkBox_live_spectra.isChecked() and self.data is not None:
-                pos = self.viewer_left.mapToScene(event.pos())
-                x,y=int(pos.x()),int(pos.y())
-                H, W = self.data.shape[0], self.data.shape[1]
-                if 0 <= x < W and 0 <= y < H:
-                    self.update_spectra(x, y)
-
-            return True
+        # if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and         self.checkBox_live_spectra.isChecked():
+        #     if self.checkBox_live_spectra.isChecked() and self.data is not None:
+        #         pos = self.viewer_left.mapToScene(event.pos())
+        #         x,y=int(pos.x()),int(pos.y())
+        #         H, W = self.data.shape[0], self.data.shape[1]
+        #         if 0 <= x < W and 0 <= y < H:
+        #             self.update_spectra(x, y)
+        #
+        #     return True
 
         # return super().eventFilter(source, event)
         return False
@@ -1286,7 +1341,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 self.samples.clear()
 
         self.selecting_pixels = True
-        # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
+        self.viewer_left.setDragMode(QGraphicsView.NoDrag)
         self.show_rgb_image()
         self.update_overlay()
 
@@ -1332,7 +1387,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self.viewer_left.setDragMode(QGraphicsView.ScrollHandDrag)
 
     def on_toggle_selection(self, checked: bool):
-
         if checked:
             self.erase_selection = False
             self.start_pixel_selection()
@@ -1394,7 +1448,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 self.samples.setdefault(cls, []).append(self.data[y, x, :])
 
             # 3) rafraîchir l’affichage
-        self.update_counts()
         self.show_rgb_image()
         self.update_overlay()
         self.update_legend()
@@ -1459,6 +1512,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             # Ensure UI buffers are in sync
             self.data = self.cube.data
             self.wl = self.cube.wl
+            H, W = self.data.shape[:2]
+            self.selection_mask_map = np.full((H, W), -1, dtype=int)
+            self.samples = {}
+            self.sample_coords = {}
+            self.class_means = {}
+            self.class_stds = {}
             self.update_rgb_controls()
             self.update_overlay()
 
@@ -1541,6 +1600,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         self.data = self.cube.data
         self.wl = self.cube.wl
+        H, W = self.data.shape[:2]
+        self.selection_mask_map = np.full((H, W), -1, dtype=int)
+        self.samples = {}
+        self.sample_coords = {}
+        self.class_means = {}
+        self.class_stds = {}
         self.update_rgb_controls()
         self.show_rgb_image()
         self.update_overlay()
