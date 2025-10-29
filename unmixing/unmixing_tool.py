@@ -37,6 +37,8 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
+#todo : fix new problem with spectra in manual
+#todo : fix new problem with selection_mask_auto in auto
 #todo : from librarie -> gerer les wl_lib et wl (cube)
 #todo : unmixing -> select endmmembers AND if merge
 #todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
@@ -506,11 +508,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._last_label = 0  # default to 0
         self.last_class_number = 3
         self.nclass_box.setValue(self.last_class_number)
-        self.class_info = {}  # dictionnary of lists :  {key:[label, name GT,(R,G,B)]}
-        self.class_colors = {}  # color of each class
         self.selected_bands=[] #band selection
         self.selected_span_patch=[] # rectangle patch of selected bands
-        self.selection_mask_map = None
 
         # data variable
         self._last_vnir = None
@@ -524,7 +523,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.alpha = self.horizontalSlider_overlay_transparency.value() / 100.0
 
         #endmembers
-        self.E = {} # {EN_i : (L,pi)}
         self.regions = {}  # dict: classe -> [ {'coords': set[(x,y)], 'mean': np.ndarray}, ... ]
 
         self.E_manual= {}
@@ -542,7 +540,20 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.class_means = {}  # for spectra of classe
         self.class_stds = {}  # for spectra of classe
         self.class_ncount = {}  # for npixels classified
-        self.class_colors ={}  # color of each class
+
+        self.class_colors_manual = {}
+        self.class_colors_auto = {}
+        self.class_colors_lib = {}
+
+        self.class_info_manual = {}  # {cid: [label, name, (R,G,B)]}
+        self.class_info_auto = {}
+        self.class_info_lib = {}
+
+        self.norm_params_manual = None
+        self.norm_params_auto = None
+        self.norm_params_lib = None
+
+        self.active_source = 'manual'  # 'manual' | 'auto' | 'lib'
 
         self.cls_map = None
         self.index_map: Optional[Dict[str, np.ndarray]] = None
@@ -1228,7 +1239,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self.data = self.cube.data
             self.wl = self.cube.wl
             H, W = self.data.shape[:2]
-            self.selection_mask_map = np.full((H, W), -1, dtype=int)
+            # self.selection_mask_map = np.full((H, W), -1, dtype=int)
+            self.selection_mask_map_manual = np.full((H, W), -1, np.int32)
+            self.selection_mask_map_auto = np.full((H, W), -1, np.int32)
+            self.selection_mask_map_lib = np.full((H, W), -1, np.int32)
             self.samples = {}
             self.sample_coords = {}
             self.class_means = {}
@@ -1316,7 +1330,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.data = self.cube.data
         self.wl = self.cube.wl
         H, W = self.data.shape[:2]
-        self.selection_mask_map = np.full((H, W), -1, dtype=int)
+        # self.selection_mask_map = np.full((H, W), -1, dtype=int)
+        self.selection_mask_map_manual = np.full((H, W), -1, np.int32)
+        self.selection_mask_map_auto = np.full((H, W), -1, np.int32)
+        self.selection_mask_map_lib = np.full((H, W), -1, np.int32)
         self.samples = {}
         self.sample_coords = {}
         self.class_means = {}
@@ -1380,6 +1397,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
     def _on_em_ready(self, E: np.ndarray,idx_em : np.ndarray, labels: np.ndarray, index_map: Dict[str, np.ndarray]):
         self.labels, self.index_map = labels, index_map
+
+        self.active_source = 'auto'  # pour que class_info/class_colors pointent sur *_auto
+
         for i, lab in enumerate(labels):
             name = str(lab)
             self.set_class_name(i, name)
@@ -1396,8 +1416,24 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         print('[ENDMEMBERS]',
             f"Endmembers ready: E shape {len(self.E_auto)},{len(self.E_auto[0])}, groups: {len(np.unique(labels)) if labels is not None else 0}")
 
-        self._activate_endmembers('auto')
+        if self.selection_mask_map_auto is None:
+            H, W = self.data.shape[:2]
+            self.selection_mask_map_auto = np.full((H, W), -1, np.int32)
+        else:
+            self.selection_mask_map_auto.fill(-1)
 
+        H, W = self.data.shape[:2]
+        idx_em = np.asarray(idx_em)
+        if idx_em.ndim == 1:
+            rows, cols = np.unravel_index(idx_em, (H, W))
+        else:
+            rows, cols = idx_em[:, 0], idx_em[:, 1]
+
+        for cls, (r, c) in enumerate(zip(rows, cols)):
+            if 0 <= r < H and 0 <= c < W:
+                self.selection_mask_map_auto[r, c] = cls
+
+        self._activate_endmembers('auto')
         self._assign_initial_colors()
         self.update_spectra(maxR=0)
         self.comboBox_endmembers_spectra.setCurrentText('Auto')
@@ -1487,6 +1523,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         Construit self.E à partir de la source ('manual'|'auto'|'lib'),
         puis met à jour les moyennes/std et rafraîchit le graphe.
         """
+        assert source in ('manual', 'auto', 'lib')
+        self.active_source = source
         if source == 'manual':
             # E_manual[c] : (n_regions_c, L)  ->  E[c] : (L, n_regions_c)
             self.E = {c: arr.T for c, arr in self.E_manual.items()} if self.E_manual else {}
@@ -1510,12 +1548,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             # Rien à afficher
             self.class_means, self.class_stds = {}, {}
             self.update_spectra()
+            self.update_overlay()
             return
 
         # Met à jour moyennes/écarts-types par classe -> update_spectra les trace
         self.fill_means_std_classes()  # utilise self.E pour calculer mu/std par classe. :contentReference[oaicite:0]{index=0}
         self._assign_initial_colors()  # garde tes couleurs cohérentes
         self.update_spectra(maxR=0)  # rafraîchit la figure spectra. :contentReference[oaicite:1]{index=1}
+        self.update_overlay()
 
     def get_class_name(self, cls: int) -> str:
         """Return human-readable name for class id."""
@@ -1909,7 +1949,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 self.samples.setdefault(cls, []).append(self.data[y, x, :])
 
         self._add_region(cls, coords)
-        self._activate_endmembers('manual')
+        self.active_source='manual'
+        self._activate_endmembers(self.active_source)
         self.update_spectra(maxR=0)
         self.comboBox_endmembers_spectra.setCurrentText('Manual')
 
@@ -2078,6 +2119,43 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             for cls in list(d.keys()):
                 if cls not in labels_in_map:
                     del d[cls]
+
+    def _get_E(self):
+        return {'manual': self.E_manual, 'auto': self.E_auto, 'lib': self.E_lib}[self.active_source]
+
+    def _set_E(self, E):
+        if self.active_source == 'manual':
+            self.E_manual = E
+        elif self.active_source == 'auto':
+            self.E_auto = E
+        else:
+            self.E_lib = E
+
+    E = property(_get_E, _set_E)
+
+    @property
+    def selection_mask_map(self):
+        return {'manual': self.selection_mask_map_manual,
+                'auto': self.selection_mask_map_auto,
+                'lib': self.selection_mask_map_lib}[self.active_source]
+
+    @property
+    def class_colors(self):
+        return {'manual': self.class_colors_manual,
+                'auto': self.class_colors_auto,
+                'lib': self.class_colors_lib}[self.active_source]
+
+    @property
+    def class_info(self):
+        return {'manual': self.class_info_manual,
+                'auto': self.class_info_auto,
+                'lib': self.class_info_lib}[self.active_source]
+
+    @property
+    def norm_params(self):
+        return {'manual': self.norm_params_manual,
+                'auto': self.norm_params_auto,
+                'lib': self.norm_params_lib}[self.active_source]
 
     # </editor-fold>
 
