@@ -184,7 +184,7 @@ def extract_endmembers_atgp(data: np.ndarray, p: int) -> np.ndarray:
     atgp = ATGP()
     E_list = atgp.extract(X, p, normalize=False)
     indices_list=atgp.get_idx()
-    indices=np.asarray(indices_list, dtype=np.float64)
+    indices=np.asarray(indices_list, dtype=np.int32)
     E = np.asarray(E_list, dtype=np.float64).T  # to (L, p)
     return E,indices
 
@@ -207,7 +207,7 @@ def extract_endmembers_nfindr(data: np.ndarray, p: int, maxit: int = 3) -> np.nd
     nf = NFINDR()
     E_list = nf.extract(X, p, maxit=maxit, normalize=False)
     indices_list=nf.get_idx()
-    indices=np.asarray(indices_list, dtype=np.float64)
+    indices=np.asarray(indices_list, dtype=np.int32)
     E = np.asarray(E_list, dtype=np.float64).T
     return E,indices
 

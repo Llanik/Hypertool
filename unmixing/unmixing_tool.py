@@ -46,7 +46,6 @@ from identification.load_cube_dialog import Ui_Dialog
 #todo : add ban selection widget
 #todo : add ROI
 #todo : add one pixel fusion
-
 # </editor-fold>
 
 class LoadCubeDialog(QDialog):
@@ -1431,7 +1430,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         for cls, (r, c) in enumerate(zip(rows, cols)):
             if 0 <= r < H and 0 <= c < W:
-                self.selection_mask_map_auto[r, c] = cls
+                print(f'[ENDMEMBERS] coords EM auto : {cls} -> ({r},{c})')
+                self.selection_mask_map_auto[c, r] = cls
 
         self._activate_endmembers('auto')
         self._assign_initial_colors()
@@ -1526,8 +1526,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         assert source in ('manual', 'auto', 'lib')
         self.active_source = source
         if source == 'manual':
-            # E_manual[c] : (n_regions_c, L)  ->  E[c] : (L, n_regions_c)
-            self.E = {c: arr.T for c, arr in self.E_manual.items()} if self.E_manual else {}
+            # E_manual[c] : (n_regions_c, L)
+            self.E = {c: arr for c, arr in self.E_manual.items()} if self.E_manual else {}
         elif source == 'auto':
             # E_auto[c] : (L,) -> E[c] : (L,1)
             try :
@@ -1889,7 +1889,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.update_overlay()
         print(f'[MANUAL SELECTION] E shape : {len(self.samples)}')
         for key in self.E_manual:
-            print(self.E_manual[key].shape)
+            print(key,'->',self.E_manual[key].shape)
 
         self._activate_endmembers('manual')
         self.update_spectra(maxR=0)
@@ -1949,8 +1949,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 self.samples.setdefault(cls, []).append(self.data[y, x, :])
 
         self._add_region(cls, coords)
-        self.active_source='manual'
-        self._activate_endmembers(self.active_source)
+        self._activate_endmembers('manual')
         self.update_spectra(maxR=0)
         self.comboBox_endmembers_spectra.setCurrentText('Manual')
 
@@ -2049,6 +2048,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         else:
             self.E_manual.pop(cls, None)
 
+        print(f'[MANUAL SELECTION] ONE SELEC E_manual shapes ')
+        for key in self.E_manual:
+            print(key, '->', self.E_manual[key].shape)
+
     def _union_coords_of_class(self, cls: int):
         """Ensemble de tous les pixels déjà pris par des régions de cette classe."""
         s = set()
@@ -2100,9 +2103,27 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     def fill_means_std_classes(self):
         full_means = {}
         full_stds = {}
-        for key in self.E:
-            full_means[key] = self.E[key].mean(axis=1)
-            full_stds[key] = self.E[key].std(axis=1)
+
+        for key, M in self.E.items():
+            M = np.asarray(M)
+
+            # On veut M shape = (L, n_regions)
+            # Si on reçoit (1, L) au lieu de (L,1), on le remet d'équerre
+            if M.ndim == 2:
+                L, N = M.shape
+                if L < N:
+                    # ex: (1, 261) -> transpose en (261, 1)
+                    M = M.T
+            else:
+                # cas dégénéré: vecteur 1D -> on force en (L,1)
+                M = M.reshape(-1, 1)
+
+            mu = M.mean(axis=1)  # (L,)
+            sigma = M.std(axis=1)  # (L,)
+
+            full_means[key] = mu
+            full_stds[key] = sigma
+
         self.class_means = full_means
         self.class_stds = full_stds
 

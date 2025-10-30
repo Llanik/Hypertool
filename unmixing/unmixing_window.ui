@@ -18,7 +18,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>2000</width>
+    <width>16777215</width>
     <height>16777215</height>
    </size>
   </property>
@@ -1082,6 +1082,16 @@ color: rgb(255, 255, 255);</string>
            <widget class="QCheckBox" name="checkBox_showLegend">
             <property name="text">
              <string>Show legend</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_showGraph">
+            <property name="text">
+             <string>Show graph</string>
             </property>
             <property name="checked">
              <bool>true</bool>
