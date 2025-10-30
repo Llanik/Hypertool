@@ -524,20 +524,21 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         self.E_manual= {}
         self.wl_manual=None
-        self.idx_manual = None
+        self.norm_manual=None
+
 
         self.E_lib= {}
         self.wl_lib=None
-        self.idx_lib = None
+        self.norm_lib=None
 
         self.E_auto={}
         self.wl_auto=None
-        self.idx_auto = None
+        self.norm_auto=None
+
 
         self.class_means = {}  # for spectra of classe
         self.class_stds = {}  # for spectra of classe
         self.class_ncount = {}  # for npixels classified
-
 
         self.class_info_manual = {}  # {cid: [label, name, (R,G,B),norm_params]}
         self.class_info_auto = {}
@@ -633,6 +634,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         for key,val in mem_strech_factors.items():
             self.splitter.setStretchFactor(key,val)
         self.mem_sizes=self.splitter.sizes()
+
+        self.fill_form_em('manual')
+        self.fill_form_em('auto')
+        self.fill_form_em('lib')
 
     # <editor-fold desc="Visual elements">
 
@@ -1206,6 +1211,42 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     self.class_info[cls] += [None] * (3 - len(self.class_info[cls]))
                 self.class_info[cls][2] = (b, g, r)
 
+    def fill_form_em(self, source: str):
+        form = {
+            "manual": self.formLayout_em_manual,
+            "auto": self.formLayout_em_auto,
+            "lib": self.formLayout_em_lib,
+        }.get(source)
+
+        if not form:
+            return
+
+        while form.count():
+            item = form.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        # on récupère la dict complète
+        class_info = {
+            "manual": self.class_info_manual,
+            "auto": self.class_info_auto,
+            "lib": self.class_info_lib,
+        }.get(source, {})
+
+        if not class_info:
+            form.addRow(QLabel("Aucune classe enregistrée"))
+            return
+
+        # affichage des paramètres de normalisation de la première classe (par ex)
+        first_cls = next(iter(class_info.values()))
+        norm_params = first_cls.get("norm_params", {})
+        if not norm_params:
+            form.addRow(QLabel("Aucun paramètre de normalisation"))
+            return
+
+        for k, v in norm_params.items():
+            form.addRow(QLabel(str(k)), QLabel(str(v)))
+
     # </editor-fold>
 
     # <editor-fold desc="Cube">
@@ -1382,6 +1423,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         p = int(self.nclass_box.value())
         niter = int(self.niter_box.value())
         norm = self._current_normalization()
+        self.norm_manual=norm
 
         # Gather manual/library groups from host (signals or attributes)
         manual_groups = getattr(self, 'manual_groups', None)
@@ -1438,6 +1480,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._assign_initial_colors()
         self.update_spectra(maxR=0)
         self.comboBox_endmembers_spectra.setCurrentText('Auto')
+        self.fill_form_em('auto')
 
     def _on_load_library_clicked(self):
         """
@@ -1498,6 +1541,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
             # 6) Appelle la pipeline d’activation / affichage
             self._activate_endmembers('lib')
+            self.fill_form_em('lib')
 
             QMessageBox.information(
                 self,
@@ -1955,6 +1999,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.comboBox_endmembers_spectra.setCurrentText('Manual')
 
         # 3) rafraîchir l’affichage
+        self.fill_form_em('manual')
         self.show_rgb_image()
         self.update_overlay()
 
@@ -1998,6 +2043,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.update_spectra(maxR=0)
         self.comboBox_endmembers_spectra.setCurrentText('Manual')
 
+        self.fill_form_em('manual')
         self.update_overlay()
 
     def toggle_show_selection(self):
@@ -2165,6 +2211,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         return {'manual': self.class_info_manual,
                 'auto': self.class_info_auto,
                 'lib': self.class_info_lib}[self.active_source]
+
+    @property
+    def norm_em(self):
+        return {'manual': self.norm_manual,
+                'auto': self.norm_auto,
+                'lib': self.norm_lib}[self.active_source]
 
     # </editor-fold>
 

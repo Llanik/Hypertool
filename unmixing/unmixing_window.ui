@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1048</width>
-    <height>796</height>
+    <width>1052</width>
+    <height>805</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -85,13 +85,13 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_endmembers">
          <attribute name="title">
           <string>Endmembers select</string>
          </attribute>
-         <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,1">
+         <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,2">
           <item>
            <layout class="QGridLayout" name="gridLayout">
             <item row="1" column="2">
@@ -156,35 +156,12 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_file_endmembers">
-                <property name="text">
-                 <string>No file loaded</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QFormLayout" name="formLayout_em_lib"/>
               </item>
              </layout>
             </widget>
             <widget class="QWidget" name="Manual">
              <layout class="QGridLayout" name="gridLayout_4" columnminimumwidth="1,1">
-              <item row="0" column="1">
-               <widget class="QPushButton" name="pushButton_erase_selected_pix">
-                <property name="toolTip">
-                 <string>To erase a previous selection. Only useful if you have assigned piel to a class that you want to be determined by segmentation.</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">background-color: rgb(255, 206, 206);</string>
-                </property>
-                <property name="text">
-                 <string>Erase Selected</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="0">
                <widget class="QLabel" name="label_selec_mode">
                 <property name="maximumSize">
@@ -198,25 +175,6 @@
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QPushButton" name="pushButton_class_selection">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Start selection for supervised mode or manual correction using RIGHT CLICK.</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
-                </property>
-                <property name="text">
-                 <string>Start selection</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -249,33 +207,48 @@
                 </property>
                </widget>
               </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="pushButton_erase_selected_pix">
+                <property name="toolTip">
+                 <string>To erase a previous selection. Only useful if you have assigned piel to a class that you want to be determined by segmentation.</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgb(255, 206, 206);</string>
+                </property>
+                <property name="text">
+                 <string>Erase Selected</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="pushButton_class_selection">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Start selection for supervised mode or manual correction using RIGHT CLICK.</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
+                </property>
+                <property name="text">
+                 <string>Start selection</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <layout class="QFormLayout" name="formLayout_em_manual"/>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="Automatic">
              <layout class="QGridLayout" name="gridLayout_5">
-              <item row="2" column="1">
-               <widget class="QLabel" name="label_n_iteration">
-                <property name="text">
-                 <string># iterations :</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1" colspan="2">
-               <widget class="QPushButton" name="run_btn">
-                <property name="toolTip">
-                 <string>Lauch segmentation with parameters</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">background-color: rgb(173, 173, 173);</string>
-                </property>
-                <property name="text">
-                 <string>End Members Extraction</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="2">
                <widget class="QSpinBox" name="niter_box">
                 <property name="toolTip">
@@ -292,10 +265,13 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="2">
-               <widget class="QPushButton" name="pushButton_save_EM_auto">
+              <item row="1" column="1">
+               <widget class="QLabel" name="label_auto_algo">
                 <property name="text">
-                 <string>Save automatic endmembers</string>
+                 <string>Algorithm :</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                </widget>
               </item>
@@ -316,13 +292,36 @@
                 </item>
                </widget>
               </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="label_auto_algo">
+              <item row="2" column="1">
+               <widget class="QLabel" name="label_n_iteration">
                 <property name="text">
-                 <string>Algorithm :</string>
+                 <string># iterations :</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QPushButton" name="pushButton_save_EM_auto">
+                <property name="text">
+                 <string>Save automatic endmembers</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1" colspan="2">
+               <layout class="QFormLayout" name="formLayout_em_auto"/>
+              </item>
+              <item row="3" column="1">
+               <widget class="QPushButton" name="run_btn">
+                <property name="toolTip">
+                 <string>Lauch segmentation with parameters</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgb(173, 173, 173);</string>
+                </property>
+                <property name="text">
+                 <string>End Members Extraction</string>
                 </property>
                </widget>
               </item>
@@ -728,7 +727,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>1</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
