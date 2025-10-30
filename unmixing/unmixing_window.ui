@@ -728,7 +728,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
@@ -950,7 +950,56 @@ color: rgb(255, 255, 255);</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_10">
           <item>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="title">
+             <string>Show</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QRadioButton" name="radioButton_view_em">
+               <property name="text">
+                <string>Endmembers</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="radioButton_view_abundance">
+               <property name="text">
+                <string>Abundance Maps</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
            <layout class="QGridLayout" name="gridLayout_2">
+            <item row="3" column="3" colspan="2">
+             <widget class="QPushButton" name="pushButton_save_map">
+              <property name="toolTip">
+               <string>Save segmented image and Ground Truth information in metadata of hypercube file</string>
+              </property>
+              <property name="text">
+               <string>Save map(s)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3" colspan="2">
+             <widget class="QLabel" name="label_viz_EM">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>15</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Endmembers to show</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="0" colspan="2">
              <widget class="QLabel" name="label_viz_model">
               <property name="maximumSize">
@@ -967,8 +1016,34 @@ color: rgb(255, 255, 255);</string>
               </property>
              </widget>
             </item>
+            <item row="2" column="0" colspan="2">
+             <widget class="QLabel" name="label_overlay_transparency">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>20</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Result map transparency</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3" colspan="2">
+             <widget class="QComboBox" name="comboBox_viz_show_EM"/>
+            </item>
             <item row="1" column="0" colspan="2">
              <widget class="QComboBox" name="comboBox_viz_show_model"/>
+            </item>
+            <item row="2" column="3" colspan="2">
+             <widget class="QPushButton" name="pushButton_show_all">
+              <property name="text">
+               <string>Show All</string>
+              </property>
+             </widget>
             </item>
             <item row="3" column="0" colspan="2">
              <widget class="QSlider" name="horizontalSlider_overlay_transparency">
@@ -992,58 +1067,6 @@ color: rgb(255, 255, 255);</string>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0" colspan="2">
-             <widget class="QLabel" name="label_overlay_transparency">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Result map transparency</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="3" colspan="2">
-             <widget class="QPushButton" name="pushButton_show_all">
-              <property name="text">
-               <string>Show All</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="3" colspan="2">
-             <widget class="QPushButton" name="pushButton_save_map">
-              <property name="toolTip">
-               <string>Save segmented image and Ground Truth information in metadata of hypercube file</string>
-              </property>
-              <property name="text">
-               <string>Save map(s)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3" colspan="2">
-             <widget class="QComboBox" name="comboBox_viz_show_EM"/>
-            </item>
-            <item row="0" column="3" colspan="2">
-             <widget class="QLabel" name="label_viz_EM">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>15</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Endmembers to show</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>

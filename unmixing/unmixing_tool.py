@@ -37,8 +37,6 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
-#todo : fix new problem with spectra in manual
-#todo : fix new problem with selection_mask_auto in auto
 #todo : from librarie -> gerer les wl_lib et wl (cube)
 #todo : unmixing -> select endmmembers AND if merge
 #todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
@@ -540,17 +538,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.class_stds = {}  # for spectra of classe
         self.class_ncount = {}  # for npixels classified
 
-        self.class_colors_manual = {}
-        self.class_colors_auto = {}
-        self.class_colors_lib = {}
 
-        self.class_info_manual = {}  # {cid: [label, name, (R,G,B)]}
+        self.class_info_manual = {}  # {cid: [label, name, (R,G,B),norm_params]}
         self.class_info_auto = {}
         self.class_info_lib = {}
-
-        self.norm_params_manual = None
-        self.norm_params_auto = None
-        self.norm_params_lib = None
 
         self.active_source = 'manual'  # 'manual' | 'auto' | 'lib'
 
@@ -602,6 +593,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # Spectra window
         self.comboBox_endmembers_spectra.currentIndexChanged.connect(self.on_changes_EM_spectra_viz)
         self.checkBox_showLegend.toggled.connect(self.update_spectra)
+        self.checkBox_showGraph.toggled.connect(self.toggle_spectra)
 
         # Unmix window
 
@@ -637,9 +629,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.pushButton_clas_up.clicked.connect(lambda: self._move_job(-1))
         self.pushButton_clas_down.clicked.connect(lambda: self._move_job(+1))
 
-        self.splitter.setStretchFactor(0, 5)
-        self.splitter.setStretchFactor(2, 5)
-        self.splitter.setStretchFactor(1, 2)
+        mem_strech_factors={0:5,2:5,1:2}
+        for key,val in mem_strech_factors.items():
+            self.splitter.setStretchFactor(key,val)
+        self.mem_sizes=self.splitter.sizes()
 
     # <editor-fold desc="Visual elements">
 
@@ -683,6 +676,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self.viewer_right.setImage(QPixmap())  # plus d’image à droite
 
         self._set_info_rows()
+
+    def toggle_spectra(self):
+        if self.checkBox_showGraph.isChecked():
+            self.splitter.setSizes(self.mem_sizes)
+        else:
+            self.mem_sizes = self.splitter.sizes()
+            sizes=[self.mem_sizes[0],self.mem_sizes[1],0]
+            self.splitter.setSizes(sizes)
 
     def bgr_to_rgb(self, bgr):
         return (bgr[2], bgr[1], bgr[0])
@@ -1000,7 +1001,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             a = float(getattr(self, "alpha", 0.35))
             a = max(0.0, min(1.0, a))
             current = overlay.copy()
-            for cls, (b, g, r) in getattr(self, "class_colors", {}).items():
+            for cls, param in self.class_info.items():
+                b,g,r=param[2]
                 mask2d = (self.selection_mask_map == cls)
                 if not np.any(mask2d):
                     continue
@@ -1022,7 +1024,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         if getattr(self, "selection_mask_map", None) is not None:
             seg = np.zeros((H, W, 3), dtype=np.uint8)
-            for cls, (b, g, r) in getattr(self, "class_colors", {}).items():
+            for cls, param in getattr(self, "class_info", {}).items():
+                b,g,r=param[2]
                 seg[self.selection_mask_map == cls] = (b, g, r)
             self.viewer_right.setImage(self._np2pixmap(seg))
 
@@ -1113,7 +1116,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         if hasattr(self, 'class_means'):
             for c, mu in self.class_means.items():
                 std = self.class_stds[c]
-                b, g, r = self.class_colors[c]
+                b, g, r = self.class_info[c][2]
                 col = (r/255.0, g/255.0, b/255.0)
                 self.spec_ax.fill_between(
                     x_graph, mu - std, mu + std,
@@ -1192,17 +1195,16 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         n_colors = cmap.N
 
         for cls in unique_labels:
-            if cls not in self.class_colors:
-                # cmap renvoie un tuple RGBA avec floats 0..1
-                color_idx = cls % n_colors
-                r_f, g_f, b_f, _ = cmap(color_idx)
-                # on convertit en entiers 0..255
-                r, g, b = int(255 * r_f), int(255 * g_f), int(255 * b_f)
-                # MAIS OpenCV attend BGR, donc on stocke (b,g,r)
-                self.class_colors[cls] = (b, g, r)
-                if cls not in self.class_info:
-                    self.class_info[cls] = [cls,f"Class {cls}",(r, g, b)]
-                self.class_info[cls][2]=(r,g,b)
+            color_idx = cls % n_colors
+            r_f, g_f, b_f, _ = cmap(color_idx)
+            r, g, b = int(255 * r_f), int(255 * g_f), int(255 * b_f)
+            if cls not in self.class_info:
+                self.class_info[cls] = [cls, f"Class {cls}", (b, g, r)]
+            else:
+                if len(self.class_info[cls]) < 3:
+                    # sécurité au cas où
+                    self.class_info[cls] += [None] * (3 - len(self.class_info[cls]))
+                self.class_info[cls][2] = (b, g, r)
 
     # </editor-fold>
 
@@ -1397,7 +1399,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     def _on_em_ready(self, E: np.ndarray,idx_em : np.ndarray, labels: np.ndarray, index_map: Dict[str, np.ndarray]):
         self.labels, self.index_map = labels, index_map
 
-        self.active_source = 'auto'  # pour que class_info/class_colors pointent sur *_auto
+        self.active_source = 'auto'  # pour que class_info pointent sur *_auto
 
         for i, lab in enumerate(labels):
             name = str(lab)
@@ -1430,7 +1432,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         for cls, (r, c) in enumerate(zip(rows, cols)):
             if 0 <= r < H and 0 <= c < W:
-                print(f'[ENDMEMBERS] coords EM auto : {cls} -> ({r},{c})')
                 self.selection_mask_map_auto[c, r] = cls
 
         self._activate_endmembers('auto')
@@ -1920,8 +1921,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._last_label = cls
         if cls not in self.class_info or not self.class_info[cls][1]:
             self.set_class_name(cls, f"Manual_{cls}")
-        if cls not in self.class_colors:
-            self._assign_initial_colors(cls)
+
+        self._assign_initial_colors(cls)
 
         # append spectra
 
@@ -1992,7 +1993,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             if c not in alive:
                 self.class_means.pop(c, None)
                 self.class_stds.pop(c, None)
-                self.class_colors.pop(c, None)
 
         self._activate_endmembers('manual')
         self.update_spectra(maxR=0)
@@ -2129,14 +2129,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
     def prune_unused_classes(self):
         """
-        Supprime de self.class_colors et self.class_info
+        Supprime self.class_info
         tous les labels qui ne figurent plus dans self.cls_map.
         """
-        if self.class_colors is None:
+        if self.class_info is None:
             return
 
         labels_in_map = set(np.unique(self.cls_map))
-        for d in (self.class_colors, self.class_info):
+        for d in (self.class_info):
             for cls in list(d.keys()):
                 if cls not in labels_in_map:
                     del d[cls]
@@ -2161,22 +2161,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 'lib': self.selection_mask_map_lib}[self.active_source]
 
     @property
-    def class_colors(self):
-        return {'manual': self.class_colors_manual,
-                'auto': self.class_colors_auto,
-                'lib': self.class_colors_lib}[self.active_source]
-
-    @property
     def class_info(self):
         return {'manual': self.class_info_manual,
                 'auto': self.class_info_auto,
                 'lib': self.class_info_lib}[self.active_source]
-
-    @property
-    def norm_params(self):
-        return {'manual': self.norm_params_manual,
-                'auto': self.norm_params_auto,
-                'lib': self.norm_params_lib}[self.active_source]
 
     # </editor-fold>
 

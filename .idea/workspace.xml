@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[unmixing] : &#10;- working on endmembers location and normalisation">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[unmixing] : &#10;- affichages des endmembers auto et manual OK">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_backend.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
@@ -138,14 +137,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00060" summary="Cube info loading and saving are syncronized with all tools (except visualize)&#10;[registration] manual features supression">
-      <option name="closed" value="true" />
-      <created>1751934056860</created>
-      <option name="number" value="00060" />
-      <option name="presentableId" value="LOCAL-00060" />
-      <option name="project" value="LOCAL" />
-      <updated>1751934056862</updated>
     </task>
     <task id="LOCAL-00061" summary="[main] correction of suggestions suprresion">
       <option name="closed" value="true" />
@@ -531,7 +522,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761743198706</updated>
     </task>
-    <option name="localTasksCounter" value="109" />
+    <task id="LOCAL-00109" summary="[unmixing] : &#10;- affichages des endmembers auto et manual OK">
+      <option name="closed" value="true" />
+      <created>1761819544132</created>
+      <option name="number" value="00109" />
+      <option name="presentableId" value="LOCAL-00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1761819544133</updated>
+    </task>
+    <option name="localTasksCounter" value="110" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -583,7 +582,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[Identification] : Added saving in h5 and png &#10;with dialog options." />
     <MESSAGE value="[BACK_UP] : Reintialisation of git ang gitignore" />
     <MESSAGE value="[IDENTIFICATION] : Gestion of uncomplete spectral range -&gt; crop and interp. &#10;started implementation of learning with shorter spectral range." />
     <MESSAGE value="[IDENTIFICATION] : Dilog ofr opening saved model ok" />
@@ -608,6 +606,7 @@
     <MESSAGE value="[unmixing] : &#10;- manual selection implemented&#10;- auto selection implemented&#10;- from lib selection implemented" />
     <MESSAGE value="[unmixing] : &#10;- Spectral legend dynamic&#10;- Graphical gestion of colors and names of EM&#10;- Table and job queued of unmixing algo init" />
     <MESSAGE value="[unmixing] : &#10;- working on endmembers location and normalisation" />
-    <option name="LAST_COMMIT_MESSAGE" value="[unmixing] : &#10;- working on endmembers location and normalisation" />
+    <MESSAGE value="[unmixing] : &#10;- affichages des endmembers auto et manual OK" />
+    <option name="LAST_COMMIT_MESSAGE" value="[unmixing] : &#10;- affichages des endmembers auto et manual OK" />
   </component>
 </project>
