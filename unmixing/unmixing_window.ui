@@ -68,7 +68,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_endmembers">
          <attribute name="title">
@@ -162,7 +162,7 @@
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="From_Library">
              <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -187,7 +187,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>495</width>
-                   <height>142</height>
+                   <height>139</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -263,8 +263,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>495</width>
-                   <height>113</height>
+                   <width>98</width>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -415,7 +415,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>198</width>
-                   <height>146</height>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -629,7 +629,7 @@
                </size>
               </property>
               <property name="styleSheet">
-               <string notr="true"/>
+               <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
               </property>
               <property name="text">
                <string>Add process</string>
@@ -814,7 +814,7 @@
             <item>
              <widget class="QPushButton" name="pushButton_clas_start">
               <property name="styleSheet">
-               <string notr="true">background-color: rgb(85, 170, 0);</string>
+               <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
               </property>
               <property name="text">
                <string>Start all</string>
@@ -824,7 +824,7 @@
             <item>
              <widget class="QPushButton" name="pushButton_clas_stop">
               <property name="styleSheet">
-               <string notr="true">background-color: rgb(170, 0, 0);
+               <string notr="true">background-color: rgb(170,50, 50);
 color: rgb(255, 255, 255);</string>
               </property>
               <property name="text">

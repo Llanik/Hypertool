@@ -36,6 +36,7 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
+#todo : BUGG with class name assign
 #todo : from library -> gerer les wl_lib et wl (cube) pour unmixing
 #todo : unmixing -> select endmembers AND if merge
 #todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
@@ -319,7 +320,6 @@ class EMEditDialog(QDialog):
             out.append((idx, name, bgr))
         return out
 
-
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
     if isinstance(md, dict):
@@ -569,7 +569,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # Remplacer placeholders par ZoomableGraphicsView
         self._replace_placeholder('viewer_left', ZoomableGraphicsView)
         self._replace_placeholder('viewer_right', ZoomableGraphicsView)
-        self.viewer_left.enable_rect_selection = False  # no rectangle selection for left view
+        self.viewer_left.enable_rect_selection = True  # no rectangle selection for left view
         self.viewer_right.enable_rect_selection = False # no rectangle selection for right view
         self.viewer_left.viewport().installEventFilter(self)
         self.viewer_left.viewport().setMouseTracking(True)
@@ -1017,34 +1017,27 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         return QPixmap.fromImage(qimg).copy()
 
     def _draw_current_rect(self, *, use_job=False, surface=False):
-        """
-        Dessine le rectangle de sélection sur les deux viewers.
-        - use_job=True : prend le rect du job actuellement sélectionné dans la combo.
-        - sinon : prend self.saved_rec.
-        - surface=False : seulement le contour (plus discret pour l’overlay).
-        """
         rect_tuple = None
         if use_job:
-            idx = self.comboBox_clas_show_model.currentIndex()
-            if idx >= 0:
-                name = (self.comboBox_clas_show_model.itemData(idx, Qt.UserRole)
-                        or self.comboBox_clas_show_model.currentText())
-                job = self.jobs.get(name)
-                if job:
-                    rect_tuple = job.rect
+            ...
         if rect_tuple is None and not use_job:
             rect_tuple = self.saved_rec
 
+        # ➜ fallback: lire le rect courant du viewer si rien en mémoire
+        if rect_tuple is None and hasattr(self.viewer_left, "get_rect_coords"):
+            coords = self.viewer_left.get_rect_coords()
+            if coords:
+                x_min, y_min, w, h = coords
+                rect_tuple = (y_min, x_min, h, w)
+
         qrect = self._rect_to_qrectf(rect_tuple)
         if qrect is None:
-            # Nettoyer d’anciens overlays s’il y en a
             if hasattr(self.viewer_left, "clear_selection_overlay"): self.viewer_left.clear_selection_overlay()
             if hasattr(self.viewer_right, "clear_selection_overlay"): self.viewer_right.clear_selection_overlay()
             return
 
-        # Affiche sur chaque viewer (méthode dispo dans ZoomableGraphicsView)
         self.viewer_left.add_selection_overlay(qrect, surface=surface)
-        self.viewer_right.add_selection_overlay(qrect, surface=surface)
+        # self.viewer_right.add_selection_overlay(qrect, surface=surface)
 
     def _get_selected_rect(self):
         """
@@ -1224,6 +1217,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # 5) Push vers les viewers
         self.viewer_left.setImage(self._np2pixmap(overlay_img))
         self.viewer_right.setImage(self._np2pixmap(seg_img))
+        self._draw_current_rect(surface=False)
 
     def update_alpha(self, value):
         self.alpha = value / 100.0
@@ -1769,6 +1763,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     E_by_name[name] = col
 
             # 4) Store (name-keyed); no library_groups anymore
+            self.active_source = 'lib'  # ensure set_class_name writes into class_info_lib
+            for i, name in enumerate(can_names):
+                self.set_class_name(i, str(name))
             self.wl_lib = wl
             self.E_lib = E_by_name
             self.param_lib['file'] = filepath
@@ -1789,9 +1786,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 f"in {len(E_by_name)} classes from:\n{os.path.basename(filepath)}"
             )
 
-            print(f'[LIBRARY LOADED ] E len : {len(self.E_lib)}')
-            for key in self.E_lib:
-                print(key, '->', self.E_lib[key].shape)
 
         except Exception as e:
             tb = traceback.format_exc()
@@ -1862,14 +1856,32 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 return name
         return f"Class {cls}"
 
-    def set_class_name(self, cls: int, name: str):
-        """Update or create readable name for a class."""
-        if cls not in self.class_info:
-            self.class_info[cls] = [cls, name, (0, 0, 0)]
+    def set_class_name(self, cls: int, name):
+        """
+        Store class name as string in class_info (per-source),
+        keeping your [label, name, (B,G,R)] pattern.
+        """
+        sname = "" if name is None else str(name)
+
+        info = self.class_info
+        if not isinstance(info, dict):
+            return
+
+        entry = info.get(cls)
+        if isinstance(entry, (list, tuple)):
+            lst = list(entry)
+            # ensure [label, name, (B,G,R)]
+            if len(lst) == 0:
+                lst = [cls, sname, (0, 255, 0)]
+            elif len(lst) == 1:
+                lst.append(sname)
+                lst.append((0, 255, 0))
+            else:
+                lst[1] = sname
+            info[cls] = lst
         else:
-            while len(self.class_info[cls]) < 3:
-                self.class_info[cls].append(None)
-            self.class_info[cls][1] = name
+            # create fresh entry with default color
+            info[cls] = [cls, sname, (0, 255, 0)]
 
     def save_endmembers_spectra(self):
         """
@@ -2348,6 +2360,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
         self.show_rgb_image()
         self.update_overlay()
+        self.viewer_left.enable_rect_selection = False
 
     def stop_pixel_selection(self):
 
@@ -2373,6 +2386,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._activate_endmembers('manual')
         self.update_spectra(maxR=1)
         self.comboBox_endmembers_spectra.setCurrentText('Manual')
+        self.viewer_left.enable_rect_selection = True
 
     def _handle_selection(self, coords):
         """Prompt for class and store spectra of the given coordinates."""
