@@ -675,7 +675,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # self._init_cleaning_list()
 
         # Unmix as thread init
-        self.threadpool = QThreadPool()
+        self.threadpool = QThreadPool.globalInstance()
+        self.threadpool.setMaxThreadCount(1)  # clé: 1 seul QRunnable en parallèle
         self._running_idx: int = -1
         self._current_worker = None
         self._stop_all = False
@@ -755,8 +756,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         # connection
         self.load_btn.clicked.connect(self.open_load_cube_dialog)
-
-
         self.sliders_rgb = [
             self.horizontalSlider_red_channel,
             self.horizontalSlider_green_channel,
@@ -798,6 +797,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.checkBox_showLegend.toggled.connect(self.update_spectra)
         self.checkBox_showGraph.toggled.connect(self.toggle_spectra)
         self.pushButton_band_selection.toggled.connect(self.band_selection)
+
+        #Results viz window
+        self.comboBox_viz_show_model.currentIndexChanged.connect(self._refresh_abundance_view)
+        self.comboBox_viz_show_EM.currentIndexChanged.connect(self._refresh_abundance_view)
+        self.radioButton_view_abundance.toggled.connect(self._refresh_abundance_view)
 
 
         # Unmix window
@@ -1682,6 +1686,79 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         for key,item in param.items():
             form.addRow(QLabel(str(key)+" :"), QLabel(str(item)))
+
+    def _refresh_abundance_view(self):
+        """Affiche la carte d'abondance de l'endmember choisi pour le job sélectionné,
+        en utilisant la couleur d'endmember définie."""
+        try:
+            # On ne fait rien si le mode n’est pas activé
+            if not getattr(self, "radioButton_view_abundance", None) or not self.radioButton_view_abundance.isChecked():
+                return
+            if self.data is None:
+                return
+
+            # Récupérer le job sélectionné
+            idx_job = self.comboBox_viz_show_model.currentIndex()
+            if idx_job < 0:
+                return
+            job_name = self.comboBox_viz_show_model.itemText(idx_job)
+            job = self.jobs.get(job_name)
+            if job is None or getattr(job, "A", None) is None:
+                return
+
+            H, W = self.data.shape[:2]
+            A = job.A  # (p, N) ou (H,W,p)
+
+            # Remodeler en (H, W, p)
+            if A.ndim == 2:
+                p, N = A.shape
+                if N != H * W:
+                    # Taille incohérente : on stoppe proprement
+                    return
+                A3 = A.reshape(p, H, W).transpose(1, 2, 0)  # -> (H,W,p)
+            elif A.ndim == 3:
+                A3 = A
+                # on s’assure d’être bien en (H,W,p)
+                if A3.shape[0] == H and A3.shape[1] == W:
+                    pass
+                elif A3.shape[2] == H and A3.shape[1] == W:
+                    A3 = np.transpose(A3, (2, 1, 0))
+                else:
+                    # si ça ne colle pas, on abandonne l’affichage
+                    return
+            else:
+                return
+
+            # Endmember sélectionné
+            em_idx = self.comboBox_viz_show_EM.currentIndex()
+            em_idx = max(0, min(em_idx, A3.shape[2] - 1))
+
+            amap = np.asarray(A3[:, :, em_idx], dtype=float)
+            # Normalisation pour affichage
+            vmin, vmax = float(np.nanmin(amap)), float(np.nanmax(amap))
+            if vmax > vmin:
+                amap_norm = (amap - vmin) / (vmax - vmin)
+            else:
+                amap_norm = np.zeros_like(amap, dtype=float)
+
+            # Couleur d’endmember (BGR) selon la source active
+            # class_info: {cls: [id, name, (b,g,r)]}
+            bgr = (0, 255, 255)  # fallback
+            if hasattr(self, "class_info") and isinstance(self.class_info, dict):
+                if em_idx in self.class_info and len(self.class_info[em_idx]) >= 3 and self.class_info[em_idx][
+                    2] is not None:
+                    bgr = self.class_info[em_idx][2]
+
+            b, g, r = [int(x) for x in bgr]
+            # Teinte: on applique la valeur d’abondance comme intensité sur la couleur
+            # (on reste en BGR pour coller au pipeline _np2pixmap)
+            color_vec = np.array([b, g, r], dtype=float).reshape(1, 1, 3)
+            img = (amap_norm[..., None] * color_vec).clip(0, 255).astype(np.uint8)
+
+            self.viewer_right.setImage(self._np2pixmap(img))
+            self.current_unmix_job_name = job_name
+        except Exception as e:
+            print("[ABUNDANCE VIEW] error:", e)
 
     # </editor-fold>
 
@@ -2969,6 +3046,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # Insère la ligne dans la table
         self._insert_job_row(name, P)
         self.tabWidget.setCurrentIndex(2)
+        self._refresh_viz_model_combo(select_name=name)
 
     def _insert_job_row(self, name: str, P: dict):
         from PyQt5.QtWidgets import QTableWidgetItem
@@ -3019,6 +3097,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         if sorting: table.setSortingEnabled(True)
 
+        self._refresh_viz_model_combo()
+
     def _update_row_from_job(self, name: str):
         """Appelle ceci pendant l’exécution plus tard pour refléter status/progress/duration."""
         table = self.tableWidget_classificationList
@@ -3045,26 +3125,70 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             break
 
     def remove_selected_job(self):
-        row = self.tableWidget_classificationList.currentRow()
-        if row < 0: return
-        name = self.tableWidget_classificationList.item(row, 0).text()
+        """Remove the selected job from the table, with confirmation if it's Done."""
+        table = self.tableWidget_classificationList
+        row = table.currentRow()
+        if row < 0:
+            return
+
+        name_item = table.item(row, 0)
+        if not name_item:
+            return
+        name = name_item.text()
+        job = self.jobs.get(name)
+
+        # 🔒 Ask for confirmation if the job is Done
+        if job and getattr(job, "status", "") == "Done":
+            from PyQt5.QtWidgets import QMessageBox
+            ans = QMessageBox.question(
+                self,
+                "Delete finished job",
+                f"The job “{name}” is marked as Done.\n"
+                f"Do you really want to delete it? Results stored in memory will be lost.",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if ans != QMessageBox.Yes:
+                return
+
+        # Actual deletion
         self.jobs.pop(name, None)
         try:
             self.job_order.remove(name)
         except ValueError:
             pass
-        self.tableWidget_classificationList.removeRow(row)
+        table.removeRow(row)
 
-    def remove_all_jobs(self, ask_confirm=True):
-        if ask_confirm and any(getattr(self.jobs[n], "status", "") in ("Running", "Done") for n in self.job_order):
+        # Refresh UI
+        self._refresh_viz_model_combo()
+        self._refresh_table()
+
+    def remove_all_jobs(self):
+        """Clear all jobs, with confirmation if there are completed ones."""
+        done_count = sum(
+            1 for n in self.job_order
+            if getattr(self.jobs.get(n, None), "status", "") == "Done"
+        )
+
+        if done_count > 0:
             from PyQt5.QtWidgets import QMessageBox
-            if QMessageBox.question(self, "Reset Jobs ?",
-                                    "Some jobs may be running/done. Continue?",
-                                    QMessageBox.Yes | QMessageBox.Cancel) != QMessageBox.Yes:
+            ans = QMessageBox.question(
+                self,
+                "Delete completed jobs",
+                f"There are {done_count} job(s) marked as Done.\n"
+                f"Do you really want to delete them? All stored results will be lost.",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if ans != QMessageBox.Yes:
                 return
+
+        # Actual reset
         self.jobs.clear()
         self.job_order.clear()
         self._init_classification_table(self.tableWidget_classificationList)
+        self._refresh_viz_model_combo()
+        self._refresh_table()
 
     def _move_job(self, delta: int):
         row = self.tableWidget_classificationList.currentRow()
@@ -3078,6 +3202,31 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # Rebuild table (simple)
         self._refresh_table()
         self.tableWidget_classificationList.selectRow(new_row)
+
+    def _refresh_viz_model_combo(self, select_name: str = None):
+        """Rebuild comboBox_viz_show_model with ALL jobs present in job_order (Queued/Running/Done).
+           Keep selection when possible; disable if empty."""
+        cb = self.comboBox_viz_show_model  # UI: defined in unmixing_window.ui/py
+        was_blocked = cb.blockSignals(True)
+        try:
+            # Mémorise la sélection actuelle
+            current_text = cb.currentText() if cb.count() > 0 else None
+
+            cb.clear()
+            for name in self.job_order:
+                if name in self.jobs:
+                    cb.addItem(name)
+
+            # Cible de sélection : priorité à select_name, sinon l'ancienne si encore présente
+            target = select_name or current_text
+            if target:
+                idx = cb.findText(target)
+                if idx != -1:
+                    cb.setCurrentIndex(idx)
+
+            cb.setEnabled(cb.count() > 0)
+        finally:
+            cb.blockSignals(was_blocked)
 
     # </editor-fold>
 
@@ -3093,6 +3242,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         el último añadido. Prepara E/labels desde la fuente elegida
         y arranca el worker en el threadpool.
         """
+        self._stop_all = False
+
         # 1) Resolver qué job lanzar (seleccionado o último)
         table = self.tableWidget_classificationList
         row = table.currentRow()
@@ -3190,82 +3341,69 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                      "lib": getattr(self, "wl_lib", self.wl)}.get(src, self.wl)
 
         # 3) Actualizar estado en la tabla y lanzar el worker
+        job.status = "Queued"
+        job.progress = 0
+        job._t0 = time.time()
+        self._update_row_from_job(name)  # refresca status/progreso/duración en la fila :contentReference[oaicite:4]{index=4}
+
+        # Si rien ne tourne, démarre la queue
+        if self._current_worker is None:
+            self._run_next_in_queue()
+
+    def _run_next_in_queue(self):
+        # Ne lance pas si on a stoppé la chaîne ou si un worker tourne déjà
+        if self._stop_all or (self._current_worker is not None):
+            return
+
+        # Trouve le prochain job en attente
+        next_name = None
+        for n in self.job_order:
+            st = getattr(self.jobs.get(n, None), "status", "")
+            if st in ("", None, "Queued"):
+                next_name = n
+                break
+        if next_name is None:
+            return  # rien à exécuter
+
+        job = self.jobs[next_name]
+
+        # ---- Préparation des endmembers et des inputs ICI ----
+        src_txt = self.comboBox_endmembers_use_for_unmixing.currentText().lower()
+        src = "lib" if "library" in src_txt else ("manual" if "manual" in src_txt else "auto")
+        merge_groups = self.checkBox_unmix_merge_EM_groups.isChecked()
+
+        # (ré)active la source sélectionnée -> remplit self.E standardisée
+        self._activate_endmembers(src)
+
+        # construit E_mat, labels (réinterpole si 'lib' nécessaire)
+        E_mat, labels = self._prepare_job_inputs_from_current_E(src=src, merge_groups=merge_groups)
+
+        # Remplit le job
+        job.cube = np.asarray(self.cube.data, dtype=float)  # H×W×L
+        job.E = E_mat  # L×p
+        job.labels = labels  # (p,)
+        job.roi_mask = getattr(self, "roi_mask", None)
+        job.wl_job = self.wl
+
+        # Marque comme Running
+        import time
         job.status = "Running"
         job.progress = 0
         job._t0 = time.time()
-        self._update_row_from_job(
-            name)  # refresca status/progreso/duración en la fila :contentReference[oaicite:4]{index=4}
+        self._update_row_from_job(next_name)
+        self._refresh_viz_model_combo(select_name=next_name)
 
+        # Crée le worker et mémorise-le comme courant
         worker = UnmixWorker(job)
-        # Señales del worker -> handlers de UI
-        worker.signals.progress.connect(lambda v, n=name: self._on_unmix_progress(n, v))
-        worker.signals.error.connect(lambda msg, n=name: self._on_unmix_error(n, msg))
-        worker.signals.unmix_ready.connect(lambda A, E, maps, n=name: self._on_unmix_ready(n, A, E, maps))
-
-        # Arrancar en el pool
-        self.threadpool.start(worker)
-
-        # Marcar índices de ejecución (útil si luego encadenas cola)
-        try:
-            self._running_idx = self.job_order.index(name)
-        except ValueError:
-            self._running_idx = -1
-
-    def _run_next_in_queue(self):
-        """
-        Toma el siguiente job en cola, le inyecta los datos (cube, E, labels, ROI)
-        según la fuente de EM seleccionada y lo lanza en el threadpool.
-        """
-        if not self.job_order:
-            return
-
-        # El siguiente job pendiente
-        name = None
-        for n in self.job_order:
-            st = getattr(self.jobs.get(n, None), "status", "Queued")
-            if st in (None, "", "Queued"):
-                name = n
-                break
-        if name is None:
-            return  # nada por ejecutar
-
-        job = self.jobs[name]
-        job.status = "Running"
-        job._t0 = time.time()
-        self._update_row_from_job(name)  # solo UI
-
-        # 1) Fuente de endmembers desde UI
-        src_txt = self.comboBox_endmembers_use_for_unmixing.currentText().lower()  # "from library" | "manual" | "auto"
-        if "library" in src_txt:
-            src = "lib"
-        elif "manual" in src_txt:
-            src = "manual"
-        else:
-            src = "auto"  # por descarte
-        merge_groups = self.checkBox_unmix_merge_EM_groups.isChecked()  # merge on/off  :contentReference[oaicite:2]{index=2}
-
-        # Asegura que self.E se corresponda con la fuente elegida
-        self._activate_endmembers(
-            src)  # construye self.E (dict) desde E_manual/E_auto/E_lib  :contentReference[oaicite:3]{index=3}
-
-        # 2) Preparar E (L×p) y labels (p,) a partir de self.E
-        E_mat, labels = self._prepare_job_inputs_from_current_E(
-            src=src,
-            merge_groups=merge_groups
-        )
-
-        # 3) Rellenar el job
-        job.cube = np.asarray(self.cube.data, dtype=float)  # H×W×L
-        job.E = E_mat  # L×p
-        job.labels = labels  # (p,) dtype=object, para mapas por grupo
-        job.roi_mask = getattr(self, "roi_mask", None)  # si tienes ROI, si no None
-
-        # 4) Lanzar el worker
-        worker = UnmixWorker(job)
-        worker.signals.unmix_ready.connect(self._on_unmix_ready)
-        worker.signals.error.connect(self._on_error)
-        worker.signals.progress.connect(lambda v: self._on_unmix_progress(name, v))
         self._current_worker = worker
+        self._running_idx = self.job_order.index(next_name) if next_name in self.job_order else -1
+
+        # Connexions (injecter le nom pour les handlers)
+        worker.signals.progress.connect(lambda v, n=next_name: self._on_unmix_progress(n, v))
+        worker.signals.error.connect(lambda msg, n=next_name: self._on_unmix_error(n, msg))
+        worker.signals.unmix_ready.connect(lambda A, E, maps, n=next_name: self._on_unmix_ready(n, A, E, maps))
+
+        # Lance (pool mono-thread => séquentiel)
         self.threadpool.start(worker)
 
     def _prepare_job_inputs_from_current_E(self, src: str, merge_groups: bool):
@@ -3341,7 +3479,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     def _on_cancel_queue(self):
         self._stop_all = True
         if self._current_worker:
-            self._current_worker.cancel()
+            try:
+                self._current_worker.cancel()  # nécessite un flag côté worker
+            except Exception:
+                pass
+        # la libération se fera dans le callback d’erreur/finish
 
     # -- Job progress UI -------------------------------------------------
     def _on_unmix_progress(self, name: str, value: int):
@@ -3354,116 +3496,48 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
     # -- Job error UI ----------------------------------------------------
     def _on_unmix_error(self, name: str, message: str):
-        """Marque le job en erreur/annulé et met la ligne de tableau à jour."""
         job = self.jobs.get(name)
-        if not job:
-            return
-
-        txt = message or ""
-        if "canceled" in txt.lower() or "cancelled" in txt.lower():
-            job.status = "Canceled"
-            job.progress = 0
-        else:
-            job.status = "Error"
-
-        if getattr(job, "_t0", None) is not None:
+        if job:
+            txt = (message or "").lower()
+            job.status = "Canceled" if ("canceled" in txt or "cancelled" in txt) else "Error"
+            job.progress = 0 if job.status != "Done" else 100
             try:
                 import time
-                job.duration_s = time.time() - job._t0
+                job.duration_s = time.time() - job._t0 if getattr(job, "_t0", None) else None
             except Exception:
                 job.duration_s = None
+            self._update_row_from_job(name)
 
-        self._update_row_from_job(name)
-
-        # Message d’erreur uniquement pour les vraies erreurs
-        if job.status == "Error":
-            from PyQt5.QtWidgets import QMessageBox
-            QMessageBox.critical(self, f"{name} failed", txt)
-
-        # enchaîner éventuellement
-        try:
-            self._run_next_in_queue()
-        except Exception:
-            pass
+        # >>> Libère et enchaîne
+        self._current_worker = None
+        self._run_next_in_queue()
 
     # -- Job success UI --------------------------------------------------
-    def _on_unmix_ready(self, A: np.ndarray, E_used: np.ndarray, maps_by_group: dict):
-        """
-        Reçoit le résultat du worker:
-          - A: (H, W, p) cartes d’abondances par endmember (p)
-          - E_used: (L, p) matrice d’EM effectivement utilisée
-          - maps_by_group: dict {cls_id -> (H, W)} (si le worker te renvoie des cartes par groupe)
-        Stocke dans le job, met à jour l’UI et affiche le résultat.
-        """
-
-        name = self.job_order[self._running_idx]
+    def _on_unmix_ready(self, name: str, A: np.ndarray, E_used: np.ndarray, maps_by_group: dict):
         job = self.jobs.get(name)
         if not job:
-            print('[on_unmix_ready] : job not found')
             return
 
-        # 1) Stocker les outputs dans le job
-        job.A = A  # (H, W, p)
-        job.E_used = E_used  # (L, p)
-        job.maps_by_group = maps_by_group if maps_by_group is not None else {}
+        # Stockage
+        job.A = A
+        job.E_used = E_used
+        job.maps_by_group = maps_by_group or {}
         job.status = "Done"
         job.progress = 100
 
-        # durée
         try:
             import time
-            job.duration_s = (time.time() - job._t0) if getattr(job, "_t0", None) else None
+            job.duration_s = time.time() - job._t0 if getattr(job, "_t0", None) else None
         except Exception:
             job.duration_s = None
 
         self._update_row_from_job(name)
+        self._refresh_abundance_view()
 
-        # 2) Choisir quoi afficher immédiatement
-        #    a) si maps_by_group est fourni: on affiche la “somme” des groupes ou la 1ère carte
-        shown = None
-        if isinstance(job.maps_by_group, dict) and len(job.maps_by_group) > 0:
-            # stack -> (H, W, G) puis max ou somme (au choix); ici: somme
-            try:
-                stack = np.stack(list(job.maps_by_group.values()), axis=-1)
-                shown = np.clip(stack.sum(axis=-1), 0, 1)  # (H, W), normalisé si déjà binaire
-            except Exception:
-                # fallback: premier élément
-                k0 = next(iter(job.maps_by_group.keys()))
-                shown = job.maps_by_group[k0]
-        elif isinstance(job.A, np.ndarray) and job.A.ndim == 3 and job.A.shape[-1] > 0:
-            # b) sinon on affiche la carte d’abondance du 1er EM
-            shown = job.A[..., 0]
-
-        # 3) Pousser dans les viewers (colorisation simple pour commencer)
-        if shown is not None:
-            # mise à l’échelle pour 8 bits, sûre même si déjà 0..1
-            try:
-                vis = np.asarray(shown, dtype=float)
-                if vis.size and (vis.max() > 1.0 or vis.min() < 0.0):
-                    vmin, vmax = vis.min(), vis.max()
-                    if vmax > vmin:
-                        vis = (vis - vmin) / (vmax - vmin)
-                    else:
-                        vis = np.zeros_like(vis)
-                vis_u8 = (255.0 * vis).clip(0, 255).astype(np.uint8)
-                rgb = np.dstack([vis_u8] * 3)
-                self.viewer_right.setImage(self._np2pixmap(rgb))
-            except Exception:
-                pass
-
-        # 4) Optionnel: mémoriser ce résultat comme “modèle courant” pour l’overlay
-        #    (si tu as déjà une logique d’overlay, tu peux déclencher ici)
-        try:
-            self.current_unmix_job_name = name
-            self.update_overlay()  # si l’overlay tient compte d’unmixing
-        except Exception:
-            pass
-
-        # 5) Enchaîner le prochain job de la queue
-        try:
+        # >>> Libère et enchaîne
+        self._current_worker = None
+        if not self._stop_all:
             self._run_next_in_queue()
-        except Exception:
-            pass
 
     # </editor-fold>
 
