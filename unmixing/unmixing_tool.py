@@ -415,7 +415,7 @@ def fused_cube(cube1, cube2, *, copy_common_meta: bool = True):
 class UnmixingSignals(QObject):
     error = pyqtSignal(str)
     info = pyqtSignal(str)
-    progress = pyqtSignal(int)
+    progress = pyqtSignal(int,np.ndarray)
     # Results
     em_ready = pyqtSignal(np.ndarray,np.ndarray, object, dict)  # E, labels, index_map
     unmix_ready = pyqtSignal(np.ndarray, np.ndarray, dict)  # A, E, maps_by_group
@@ -571,12 +571,10 @@ class UnmixWorker(QRunnable):
         try:
             # 0) Validación
             H, W, L = self._validate_inputs()
-            self.signals.progress.emit(5)
             self._check_cancel()
 
             # 1) Normalización
             cube = normalize_cube(self.job.cube, mode=self.job.normalization)
-            self.signals.progress.emit(15)
             self._check_cancel()
 
             # 2) Vectorizado
@@ -585,7 +583,6 @@ class UnmixWorker(QRunnable):
                 order = "C"
             Y = self._vectorize_like_identification(cube, order=order)  # (L, N)
             N = Y.shape[1]
-            self.signals.progress.emit(25)
             self._check_cancel()
 
             # 3) ROI -> índices en el espacio aplanado (alineados con el mismo 'order')
@@ -596,7 +593,7 @@ class UnmixWorker(QRunnable):
                 mask = None
                 idx_work = np.arange(N, dtype=np.int64)
             Nw = int(idx_work.size)
-            self.signals.progress.emit(0)
+
             self._check_cancel()
 
             # 4) Preparar solver + chunking
@@ -619,6 +616,7 @@ class UnmixWorker(QRunnable):
             # Destino global en espacio (p, N)
             # float32 para equilibrio precisión/memoria
             A = np.zeros((p, N), dtype=np.float32)
+            self.signals.progress.emit(0, A)
 
             # Progreso granular 5 -> 95 durante el solver
             base_prog, end_prog = 5.0, 95.0  # 5%..95% pendant le solveur
@@ -658,7 +656,7 @@ class UnmixWorker(QRunnable):
                 processed += (e - s)
                 frac = processed / max(1, Nw)
                 prog = int(base_prog + (end_prog - base_prog) * frac)
-                self.signals.progress.emit(prog)
+                self.signals.progress.emit(prog,A)
 
             # 5) Post-procesado opcional: mapas por grupo
             maps_by_group = {}
@@ -667,7 +665,7 @@ class UnmixWorker(QRunnable):
                 maps_by_group = abundance_maps_by_group(A, self.job.labels, H, W)
 
             # 6) Fin
-            self.signals.progress.emit(100)
+            self.signals.progress.emit(100,A)
             # Entregamos A en espacio (p, N) + E y los mapas por grupo
             self.signals.unmix_ready.emit(A, E, maps_by_group)
             print(f'[UnmixWorker running] : end of job for {self.job.name}')
@@ -2994,11 +2992,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         table.setColumnWidth(4, 90)
         table.setColumnWidth(5, 120)
 
-    def _make_progress_bar(self):
+    def _make_progress_bar(self,val=0):
         from PyQt5.QtWidgets import QProgressBar
         pb = QProgressBar()
         pb.setRange(0, 100)
-        pb.setValue(0)
+        pb.setValue(val)
         pb.setTextVisible(True)
         return pb
 
@@ -3112,12 +3110,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         row = table.rowCount()
         table.insertRow(row)
 
+        job=self.jobs.get(name)
+
         # Col 0: Name
         table.setItem(row, 0, QTableWidgetItem(name))
         # Col 1: Status
-        table.setItem(row, 1, QTableWidgetItem("Queued"))
+        table.setItem(row, 1, QTableWidgetItem(job.status))
         # Col 2: Progress (widget)
-        pb = self._make_progress_bar()
+        pb = self._make_progress_bar(val=job.progress)
         table.setCellWidget(row, 2, pb)
         # Col 3: Params
         table.setItem(row, 3, QTableWidgetItem(self._format_params_summary(P)))
@@ -3291,6 +3291,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         if not self.job_order: return
         self._stop_all = False
         self._run_next_in_queue()
+        self.radioButton_view_abundance.setChecked(True)
+        self._refresh_abundance_view()
 
     def _on_start_selected_or_last(self):
         """
@@ -3457,7 +3459,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._running_idx = self.job_order.index(next_name) if next_name in self.job_order else -1
 
         # Connexions (injecter le nom pour les handlers)
-        worker.signals.progress.connect(lambda v, n=next_name: self._on_unmix_progress(n, v))
+        worker.signals.progress.connect(lambda v,A, n=next_name: self._on_unmix_progress(n, v,A))
         worker.signals.error.connect(lambda msg, n=next_name: self._on_unmix_error(n, msg))
         worker.signals.unmix_ready.connect(lambda A, E, maps, n=next_name: self._on_unmix_ready(n, A, E, maps))
 
@@ -3547,12 +3549,16 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # la libération se fera dans le callback d’erreur/finish
 
     # -- Job progress UI -------------------------------------------------
-    def _on_unmix_progress(self, name: str, value: int):
+    def _on_unmix_progress(self, name: str, value: int,A: np.ndarray):
         """MAJ douce de la barre de progression pour le job `name`."""
         job = self.jobs.get(name)
         if not job:
             return
         job.progress = max(0, min(100, int(value)))
+        job.A = A
+        self._refresh_abundance_view()
+
+
         self._update_row_from_job(name)  # met à jour Status/Progress/Durée dans la table
         if getattr(self, "radioButton_view_abundance", None) and self.radioButton_view_abundance.isChecked():
             self._refresh_abundance_view()
@@ -3560,6 +3566,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     # -- Job error UI ----------------------------------------------------
     def _on_unmix_error(self, name: str, message: str):
         job = self.jobs.get(name)
+        print(f'[UNMIXING ERROR] with {name}')
+        print(message)
+
         if job:
             txt = (message or "").lower()
             job.status = "Canceled" if ("canceled" in txt or "cancelled" in txt) else "Error"

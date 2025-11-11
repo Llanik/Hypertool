@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[unmixing] : implementing unmixing jobs&#10;- fixed lable of library bugg&#10;- fixed bug of EM sources for multiples jobs&#10;- progress bar implemented to dynamic 5%">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[unmixing] : implementing unmixing jobs&#10;- same normalization for cube and EM OK">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_backend.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -136,14 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00070" summary="[Main]+[Hypercube]&#10;Gestion du cache a priori sans nouveau bugg - cubeLoaded.emit(Hyeprcube)&#10;Calibration white OK with graph to vizualize.">
-      <option name="closed" value="true" />
-      <created>1753105422412</created>
-      <option name="number" value="00070" />
-      <option name="presentableId" value="LOCAL-00070" />
-      <option name="project" value="LOCAL" />
-      <updated>1753105422412</updated>
     </task>
     <task id="LOCAL-00071" summary="[Data Viz] : one or three iamges + transorm">
       <option name="closed" value="true" />
@@ -529,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762858556158</updated>
     </task>
-    <option name="localTasksCounter" value="119" />
+    <task id="LOCAL-00119" summary="[unmixing] : implementing unmixing jobs&#10;- same normalization for cube and EM OK">
+      <option name="closed" value="true" />
+      <created>1762867998016</created>
+      <option name="number" value="00119" />
+      <option name="presentableId" value="LOCAL-00119" />
+      <option name="project" value="LOCAL" />
+      <updated>1762867998016</updated>
+    </task>
+    <option name="localTasksCounter" value="120" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -581,7 +580,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[IDENTIFICATION] : Fixed loading parameters, icon, fusion, and defauts rgb parameters" />
     <MESSAGE value="[IDENTIFICATION] : Traning status added, no rectangle roi on right viewer, security and restet on load new cube" />
     <MESSAGE value="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class" />
     <MESSAGE value="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting" />
@@ -606,6 +604,7 @@
     <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- run one and all from queue&#10;- check if already in queue" />
     <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- ask confirm on supress if job done &#10;- only one job at a time&#10;- unmix simple view of abondance map" />
     <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- fixed lable of library bugg&#10;- fixed bug of EM sources for multiples jobs&#10;- progress bar implemented to dynamic 5%" />
-    <option name="LAST_COMMIT_MESSAGE" value="[unmixing] : implementing unmixing jobs&#10;- fixed lable of library bugg&#10;- fixed bug of EM sources for multiples jobs&#10;- progress bar implemented to dynamic 5%" />
+    <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- same normalization for cube and EM OK" />
+    <option name="LAST_COMMIT_MESSAGE" value="[unmixing] : implementing unmixing jobs&#10;- same normalization for cube and EM OK" />
   </component>
 </project>
