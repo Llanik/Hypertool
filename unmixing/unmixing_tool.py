@@ -8,14 +8,16 @@ from PIL import Image
 import h5py
 
 import numpy as np
+
 from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QHeaderView,QProgressBar,QColorDialog,
                             QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton,
                              QDialogButtonBox, QCheckBox, QScrollArea, QWidget, QFileDialog, QMessageBox,
-                             QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QHeaderView,QGraphicsView,
+                             QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QGraphicsView,QAbstractItemView
                              )
 
 from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem,QColor
 from PyQt5.QtCore import Qt,QObject, pyqtSignal, QRunnable, QThreadPool, pyqtSlot, QRectF,QEvent,QRect, QPoint, QSize
+
 
 # Graphs
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -47,6 +49,97 @@ from identification.load_cube_dialog import Ui_Dialog
 #todo : add one pixel fusion
 #todo : select pixels of endmembers also with ctrl+clic left
 # </editor-fold>
+
+
+class SelectEMDialog(QDialog):
+    """
+    Table with 3 columns: Name | Color | Select
+    + a 'Select all/none' checkbox, Cancel, and Add Selected.
+    """
+    def __init__(self, parent, rows, get_name, get_rgb):
+        super().__init__(parent)
+        self.setWindowTitle("Add Endmembers to Library")
+        self.resize(520, 420)
+        self._rows = rows
+        self._get_name = get_name
+        self._get_rgb  = get_rgb
+
+        main = QVBoxLayout(self)
+
+        # Global toggle
+        row_top = QHBoxLayout()
+        row_top.addWidget(QLabel("<b>Choose endmembers to add</b>"))
+        self.chk_all = QCheckBox("All / None")
+        self.chk_all.stateChanged.connect(self._toggle_all)
+        row_top.addStretch(1)
+        row_top.addWidget(self.chk_all)
+        main.addLayout(row_top)
+
+        # Table
+        self.table = QTableWidget(len(rows), 3, self)
+        self.table.setHorizontalHeaderLabels(["Name", "Color", "Select"])
+        self.table.verticalHeader().setVisible(False)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionMode(QAbstractItemView.NoSelection)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        main.addWidget(self.table)
+
+        for r, key in enumerate(rows):
+            # Name
+            name = self._get_name(key)
+            item_name = QTableWidgetItem(name if name else str(key))
+            self.table.setItem(r, 0, item_name)
+
+            # Color swatch
+            swatch = QWidget()
+            swatch.setFixedHeight(22)
+            r_, g_, b_ = self._get_rgb(key) or (180, 180, 180)
+            swatch.setStyleSheet(f"background-color: rgb({int(r_)},{int(g_)},{int(b_)});"
+                                 "border: 1px solid #666; border-radius: 3px;")
+            self.table.setCellWidget(r, 1, swatch)
+
+            # Checkbox
+            chk = QCheckBox()
+            chk.setChecked(True)
+            w = QWidget()
+            lay = QHBoxLayout(w)
+            lay.setContentsMargins(0, 0, 0, 0)
+            lay.addWidget(chk, alignment=Qt.AlignCenter)
+            self.table.setCellWidget(r, 2, w)
+
+        # Buttons
+        row_btns = QHBoxLayout()
+        row_btns.addStretch(1)
+        self.btn_cancel = QPushButton("Cancel")
+        self.btn_add    = QPushButton("Add selected")
+        self.btn_cancel.clicked.connect(self.reject)
+        self.btn_add.clicked.connect(self.accept)
+        row_btns.addWidget(self.btn_cancel)
+        row_btns.addWidget(self.btn_add)
+        main.addLayout(row_btns)
+
+    def _toggle_all(self, state):
+        check = (state == Qt.Checked)
+        for r in range(self.table.rowCount()):
+            w = self.table.cellWidget(r, 2)
+            if not w:
+                continue
+            chk = w.findChild(QCheckBox)
+            if chk:
+                chk.setChecked(check)
+
+    def selected_keys(self):
+        out = []
+        for r, key in enumerate(self._rows):
+            w = self.table.cellWidget(r, 2)
+            if not w:
+                continue
+            chk = w.findChild(QCheckBox)
+            if chk and chk.isChecked():
+                out.append(key)
+        return out
 
 class LoadCubeDialog(QDialog):
     """
@@ -807,6 +900,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.pushButton_erase_selected_pix.toggled.connect(self.on_toggle_erase)
         self.pushButton_save_EM.clicked.connect(self.save_endmembers_spectra)
         self.pushButton_class_name_assign.clicked.connect(self.open_em_editor)
+        self.pushButton_add_EM.clicked.connect(self._add_em_to_lib)
 
         # Spectra window
         self.comboBox_endmembers_spectra.currentIndexChanged.connect(self.on_changes_EM_spectra_viz)
@@ -1159,7 +1253,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     def _draw_current_rect(self, *, use_job=False, surface=False):
         rect_tuple = None
         if use_job:
-            ...
+            if use_job:
+                idx = self.comboBox_viz_show_model.currentIndex()
+                if idx >= 0:
+                    name = self.comboBox_viz_show_model.itemText(idx)
+                    job = self.jobs.get(name)
+                    if job is not None and getattr(job, "roi_mask", None) is not None:
+                        rect_tuple = self._mask_to_rect(job.roi_mask)
+
         if rect_tuple is None and not use_job:
             rect_tuple = self.saved_rec
 
@@ -1219,6 +1320,18 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             return None
         y, x, h, w = rect_tuple
         return QRectF(float(x), float(y), float(w), float(h))
+
+    def _mask_to_rect(self, mask):
+        """mask (H,W) -> (y, x, h, w) ou None si vide."""
+        if mask is None:
+            return None
+        m = np.asarray(mask).astype(bool)
+        ys, xs = np.where(m)
+        if ys.size == 0:
+            return None
+        y0, y1 = int(ys.min()), int(ys.max())
+        x0, x1 = int(xs.min()), int(xs.max())
+        return (y0, x0, (y1 - y0 + 1), (x1 - x0 + 1))
 
     def _make_rgb_from_cube(self) -> np.ndarray:
         if self.data is None:
@@ -1748,6 +1861,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self.comboBox_viz_show_EM.addItem(name)
 
         self._refresh_abundance_view()
+        self._draw_current_rect(use_job=True, surface=False)
 
     def _refresh_abundance_view(self):
         """Affiche la carte d'abondance de l'endmember choisi pour le job sélectionné,
@@ -1821,6 +1935,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
             self.viewer_right.setImage(self._np2pixmap(img))
             self.current_unmix_job_name = job_name
+            self._draw_current_rect(use_job=True, surface=False)
         except Exception as e:
             print("[ABUNDANCE VIEW] error:", e)
 
@@ -2421,6 +2536,305 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             cb.blockSignals(False)
         except Exception:
             pass
+
+    @staticmethod
+    def _almost_equal_arrays(a: np.ndarray, b: np.ndarray, rtol=1e-6, atol=1e-6):
+        if a is None or b is None:
+            return False
+        if a.shape != b.shape:
+            return False
+        return np.allclose(a.astype(float), b.astype(float), rtol=rtol, atol=atol)
+
+    @staticmethod
+    def _interp_to(target_wl: np.ndarray, src_wl: np.ndarray, em: np.ndarray):
+        """
+        Interpolate endmembers em (B x K) from src_wl -> target_wl.
+        Returns (em_interp, wl_used) with shape (len(target_wl) x K).
+        """
+        if em.ndim == 1:
+            em = em[:, None]
+        B, K = em.shape
+        # strictly increasing (robustness)
+        order = np.argsort(src_wl)
+        wl_sorted = src_wl[order]
+        em_sorted = em[order, :]
+        # vectorized interpolation for each column
+        em_i = np.vstack([np.interp(target_wl, wl_sorted, em_sorted[:, j],
+                                    left=em_sorted[0, j], right=em_sorted[-1, j]) for j in range(K)]).T
+        return em_i, target_wl
+
+    @staticmethod
+    def _crop_to_overlap(target_wl: np.ndarray, src_wl: np.ndarray, em: np.ndarray):
+        """
+        Crop both target_wl and src_wl to their overlap, return em cropped & target cropped.
+        """
+        lo = max(float(target_wl.min()), float(src_wl.min()))
+        hi = min(float(target_wl.max()), float(src_wl.max()))
+        if lo >= hi:
+            raise ValueError("No spectral overlap between source and target wavelength axes.")
+        tgt_mask = (target_wl >= lo) & (target_wl <= hi)
+        src_mask = (src_wl >= lo) & (src_wl <= hi)
+        tgt_wl = target_wl[tgt_mask]
+        src_wl2 = src_wl[src_mask]
+        if em.ndim == 1:
+            em = em[:, None]
+        em2 = em[src_mask, :]
+        return em2, src_wl2, tgt_wl, tgt_mask
+
+    @staticmethod
+    def _as_LxK(M, L):
+        import numpy as np
+        M = np.asarray(M)
+        if M.ndim == 1:
+            # single spectrum
+            if M.size == L:
+                return M.reshape(L, 1)
+            raise ValueError(f"1D EM length {M.size} != wl length {L}")
+        # 2D
+        if M.shape[0] == L:
+            return M
+        if M.shape[1] == L:
+            return M.T
+        raise ValueError(f"EM shape {M.shape} cannot match wl length {L}")
+
+    def _get_current_wl(self):
+        # Best-effort to find the wavelength axis used by the MANUAL EMs.
+        # Try dedicated attribute first, else fall back to cube.wl or self.wl.
+        wl_candidates = [
+            getattr(self, "wl_manual", None),
+            getattr(self, "wl", None),
+            getattr(getattr(self, "cube", None), "wl", None),
+        ]
+        for w in wl_candidates:
+            if isinstance(w, np.ndarray) and w.size > 1:
+                return w.astype(float)
+        return None
+
+    def _any_library_present(self):
+        try:
+            return (self.E_lib is not None) and (len(self.E_lib) > 0)
+        except Exception:
+            return False
+
+    def _ensure_lib_structs(self):
+        if getattr(self, "E_lib", None) is None:
+            self.E_lib = {}
+        if getattr(self, "class_info_lib", None) is None:
+            self.class_info_lib = {}
+        if getattr(self, "wl_lib", None) is None:
+            self.wl_lib = None
+
+    def _class_name_from_manual(self, key):
+        """
+        class_info is a dict of lists: {key: [label, name, (R,G,B)]}
+        Try to return the 'name' part; fallback to 'label' or key.
+        """
+        ci = getattr(self, "class_info_manual", {}) or {}
+        row = ci.get(key)
+        if isinstance(row, (list, tuple)) and len(row) >= 2:
+            # [label, name, (R,G,B)]
+            name = row[1] if row[1] not in (None, "", []) else row[0]
+            return str(name) if name is not None else str(key)
+        return str(key)
+
+    def _class_rgb_from_manual(self, key):
+        ci = getattr(self, "class_info_manual", {}) or {}
+        row = ci.get(key)
+        if isinstance(row, (list, tuple)) and len(row) >= 3:
+            col = row[2]
+            try:
+                r, g, b = col
+                return int(r), int(g), int(b)
+            except Exception:
+                pass
+        # fallback
+        return (180, 180, 180)
+
+    def _add_em_to_lib(self):
+        """
+        Open selection dialog for manual endmembers, then add selected to library,
+        with wavelength compatibility checks and optional crop/interp.
+        """
+        # Guards
+        if not hasattr(self, "E_manual") or self.E_manual is None or len(self.E_manual) == 0:
+            QMessageBox.warning(self, "No Endmembers", "No manual endmembers available to add.")
+            return
+
+        self._ensure_lib_structs()
+
+        # Build list of selectable keys (classes) present in E_manual
+        keys = list(self.E_manual.keys()) if isinstance(self.E_manual, dict) else []
+        if not keys:
+            QMessageBox.warning(self, "Empty", "E_manual must be a dict mapping class -> array (Bands x K).")
+            return
+
+        dlg = SelectEMDialog(
+            self,
+            rows=keys,
+            get_name=self._class_name_from_manual,
+            get_rgb=self._class_rgb_from_manual
+        )
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        selected = dlg.selected_keys()
+        if not selected:
+            QMessageBox.information(self, "Nothing selected", "No endmember selected.")
+            return
+
+        # Determine wl for manual set
+        wl_m = self._get_current_wl()
+        if wl_m is None:
+            QMessageBox.critical(self, "Missing wavelengths",
+                                 "Could not determine the wavelength axis for manual endmembers.")
+            return
+        wl_m = wl_m.astype(float)
+
+        # If library is empty, adopt current manual wl as library wl
+        if not self._any_library_present() or self.wl_lib is None:
+            self.wl_lib = wl_m.copy()
+
+        # Prepare optional action if wl mismatch
+        def ask_resolve():
+            m = QMessageBox(self)
+            m.setWindowTitle("Wavelength mismatch")
+            m.setText(
+                "Selected endmembers have wavelengths incompatible with the current library.\n"
+                "What would you like to do?"
+            )
+            crop_btn = m.addButton("Crop to overlap", QMessageBox.AcceptRole)
+            interp_btn = m.addButton("Interpolate to library", QMessageBox.AcceptRole)
+            cancel_btn = m.addButton("Cancel", QMessageBox.RejectRole)
+            m.setIcon(QMessageBox.Question)
+            m.exec_()
+            if m.clickedButton() == crop_btn:
+                return "crop"
+            if m.clickedButton() == interp_btn:
+                return "interp"
+            return "cancel"
+
+        added_any = False
+        L = int(self.wl_lib.size)
+
+        for key in selected:
+            em = self.E_manual.get(key, None)
+            if em is None:
+                continue
+
+            # --- Normalize manual storage to (L, K) ---
+            A = np.asarray(em)
+            if A.ndim == 1:
+                if A.size == wl_m.size:
+                    A = A.reshape(-1, 1)  # (L,1)
+                else:
+                    QMessageBox.warning(self, "Shape mismatch",
+                                        f"Class {key}: 1D spectrum has {A.size} values; expected {wl_m.size}. Skipped.")
+                    continue
+            else:
+                if A.shape[0] == wl_m.size:
+                    pass  # already (L, K)
+                elif A.shape[1] == wl_m.size:
+                    A = A.T  # (L, K)
+                else:
+                    QMessageBox.warning(self, "Shape mismatch",
+                                        f"Class {key}: matrix is {A.shape}; cannot match wl size {wl_m.size}. Skipped.")
+                    continue
+
+            em_to_add = self._as_LxK(A, L)
+            lib_wl = self.wl_lib.astype(float)
+
+            # Check wl compatibility with library
+            if not self._almost_equal_arrays(wl_m, lib_wl):
+                action = ask_resolve()
+                if action == "cancel":
+                    continue
+                elif action == "interp":
+                    try:
+                        em_to_add = self._interp_to(lib_wl, wl_m, A)
+                    except Exception as e:
+                        QMessageBox.critical(self, "Interpolation failed", f"{e}")
+                        continue
+                elif action == "crop":
+                    try:
+                        em_cropped, wl_src_crop, wl_tgt_crop, tgt_mask = self._crop_to_overlap(lib_wl, wl_m, A)
+                    except Exception as e:
+                        QMessageBox.critical(self, "Cropping failed", f"{e}")
+                        continue
+
+                    if wl_tgt_crop.size < 2:
+                        QMessageBox.warning(self, "Too small overlap", "Overlap too small after cropping. Skipped.")
+                        continue
+
+                    # First time we crop: shrink the whole library once
+                    if wl_tgt_crop.size != lib_wl.size:
+                        try:
+                            for k_lib in list(self.E_lib.keys()):
+                                arr = np.asarray(self.E_lib[k_lib])
+                                if arr.ndim == 1:
+                                    arr = arr[:, None]
+                                if arr.shape[0] != lib_wl.size:
+                                    arr = self._interp_to(lib_wl, lib_wl, arr)
+                                self.E_lib[k_lib] = arr[tgt_mask, :]
+                            self.wl_lib = wl_tgt_crop.copy()
+                            lib_wl = self.wl_lib
+                        except Exception as e:
+                            QMessageBox.critical(self, "Crop library failed", f"{e}")
+                            continue
+
+                    # Now push cropped EM
+                    if em_cropped.shape[0] != self.wl_lib.size:
+                        em_to_add = self._interp_to(self.wl_lib, wl_src_crop, em_cropped)
+                    else:
+                        em_to_add = em_cropped
+
+            # --- Merge into library ---
+            new_key=False
+            if key not in self.E_lib or self.E_lib.get(key, None) is None or np.size(self.E_lib.get(key)) == 0:
+                self.E_lib[key] = self._as_LxK(em_to_add, L)
+            else:
+                cur = np.asarray(self.E_lib[key])
+                cur = self._as_LxK(cur, L)
+                em_to_add = self._as_LxK(em_to_add, L)
+                name_manual=self.class_info_manual[key][1]
+                names_lib=[]
+                for key,item in self.class_info_lib.items():
+                    names_lib.append(item[1])
+                if name_manual not in names_lib:
+
+                    used = [k for k in self.class_info_lib.keys() if isinstance(k, int)]
+                    key_temp = (max(used) + 1) if used else 0
+                    while key_temp in self.class_info_lib:
+                        key_temp += 1
+                    self.E_lib[key_temp] = self._as_LxK(em_to_add, L)
+                    new_key=True
+                else:
+                    self.E_lib[key] = np.concatenate([cur, em_to_add], axis=1)
+
+            # Update class_info_lib
+
+            if getattr(self, "class_info_lib", None) is None:
+                self.class_info_lib = {}
+            if key not in self.class_info_lib:
+                row_m = (getattr(self, "class_info_manual", {}) or {}).get(key)
+                if row_m is not None:
+                    self.class_info_lib[key] = list(row_m)
+                else:
+                    nm = self._class_name_from_manual(key)
+                    self.class_info_lib[key] = [str(key), nm, self._class_rgb_from_manual(key)]
+
+            added_any = True
+
+        if added_any:
+            QMessageBox.information(self, "Library updated", "Selected endmembers were added to the library.")
+            self._activate_endmembers('lib')
+            self.fill_form_em('lib')
+            self.update_spectra()
+            print()
+            print('[ADDED SELECTED]')
+            for key,item in self.class_info_lib.items():
+                print(f'{key} -> {item[1]}')
+        else:
+            QMessageBox.information(self, "No changes", "No endmember was added.")
 
     # </editor-fold>
 
