@@ -2652,37 +2652,28 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
     def _add_em_to_lib(self):
         """
-        Open selection dialog for manual endmembers, then add selected to library,
-        with wavelength compatibility checks and optional crop/interp.
+        Add selected MANUAL endmembers to the library, resolving wavelength
+        incompatibilities (Interpolate/Crop/Cancel) before any shape checks.
+        Merge is done by CLASS NAME (not by integer key).
         """
-        # Guards
-        if not hasattr(self, "E_manual") or self.E_manual is None or len(self.E_manual) == 0:
+        # ---- Guards ---------------------------------------------------------
+        if not isinstance(self.E_manual, dict) or len(self.E_manual) == 0:
             QMessageBox.warning(self, "No Endmembers", "No manual endmembers available to add.")
             return
-
         self._ensure_lib_structs()
 
-        # Build list of selectable keys (classes) present in E_manual
-        keys = list(self.E_manual.keys()) if isinstance(self.E_manual, dict) else []
-        if not keys:
-            QMessageBox.warning(self, "Empty", "E_manual must be a dict mapping class -> array (Bands x K).")
-            return
-
-        dlg = SelectEMDialog(
-            self,
-            rows=keys,
-            get_name=self._class_name_from_manual,
-            get_rgb=self._class_rgb_from_manual
-        )
+        keys = list(self.E_manual.keys())
+        dlg = SelectEMDialog(self, rows=keys,
+                             get_name=self._class_name_from_manual,
+                             get_rgb=self._class_rgb_from_manual)
         if dlg.exec_() != QDialog.Accepted:
             return
-
         selected = dlg.selected_keys()
         if not selected:
             QMessageBox.information(self, "Nothing selected", "No endmember selected.")
             return
 
-        # Determine wl for manual set
+        # Manual wavelength axis
         wl_m = self._get_current_wl()
         if wl_m is None:
             QMessageBox.critical(self, "Missing wavelengths",
@@ -2690,90 +2681,85 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             return
         wl_m = wl_m.astype(float)
 
-        # If library is empty, adopt current manual wl as library wl
+        # If library empty, adopt manual wl
         if not self._any_library_present() or self.wl_lib is None:
             self.wl_lib = wl_m.copy()
+        lib_wl = self.wl_lib.astype(float)
 
-        # Prepare optional action if wl mismatch
+        # Simple chooser
         def ask_resolve():
-            m = QMessageBox(self)
-            m.setWindowTitle("Wavelength mismatch")
-            m.setText(
-                "Selected endmembers have wavelengths incompatible with the current library.\n"
-                "What would you like to do?"
+            box = QMessageBox(self)
+            box.setWindowTitle("Wavelength mismatch")
+            box.setText(
+                f"Selected endmembers use {wl_m.size} bands, library uses {lib_wl.size}.\n"
+                "How do you want to resolve this?"
             )
-            crop_btn = m.addButton("Crop to overlap", QMessageBox.AcceptRole)
-            interp_btn = m.addButton("Interpolate to library", QMessageBox.AcceptRole)
-            cancel_btn = m.addButton("Cancel", QMessageBox.RejectRole)
-            m.setIcon(QMessageBox.Question)
-            m.exec_()
-            if m.clickedButton() == crop_btn:
-                return "crop"
-            if m.clickedButton() == interp_btn:
-                return "interp"
+            b_interp = box.addButton("Interpolate to library", QMessageBox.AcceptRole)
+            b_crop = box.addButton("Crop to overlap", QMessageBox.ActionRole)
+            b_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
+            box.setIcon(QMessageBox.Question)
+            box.exec_()
+            if box.clickedButton() is b_interp: return "interp"
+            if box.clickedButton() is b_crop:   return "crop"
             return "cancel"
 
         added_any = False
-        L = int(self.wl_lib.size)
 
         for key in selected:
-            em = self.E_manual.get(key, None)
-            if em is None:
+            # --- Normalize MANUAL spectra for this class to (Lm, K) -------------
+            raw = self.E_manual.get(key, None)
+            if raw is None:
                 continue
-
-            # --- Normalize manual storage to (L, K) ---
-            A = np.asarray(em)
+            A = np.asarray(raw, dtype=float)
             if A.ndim == 1:
-                if A.size == wl_m.size:
-                    A = A.reshape(-1, 1)  # (L,1)
-                else:
+                if A.size != wl_m.size:
                     QMessageBox.warning(self, "Shape mismatch",
-                                        f"Class {key}: 1D spectrum has {A.size} values; expected {wl_m.size}. Skipped.")
+                                        f"Class {key}: spectrum has {A.size} values; expected {wl_m.size}. Skipped.")
                     continue
+                A = A[:, None]  # (Lm,1)
             else:
-                if A.shape[0] == wl_m.size:
-                    pass  # already (L, K)
-                elif A.shape[1] == wl_m.size:
-                    A = A.T  # (L, K)
-                else:
+                # ensure rows = bands
+                if A.shape[0] != wl_m.size and A.shape[1] == wl_m.size:
+                    A = A.T
+                if A.shape[0] != wl_m.size:
                     QMessageBox.warning(self, "Shape mismatch",
                                         f"Class {key}: matrix is {A.shape}; cannot match wl size {wl_m.size}. Skipped.")
                     continue
 
-            em_to_add = self._as_LxK(A, L)
-            lib_wl = self.wl_lib.astype(float)
+            # --- Align to library wavelengths BEFORE any _as_LxK ----------------
+            Aligned = A
+            lib_wl = self.wl_lib.astype(float)  # refresh if modified earlier
 
-            # Check wl compatibility with library
             if not self._almost_equal_arrays(wl_m, lib_wl):
                 action = ask_resolve()
                 if action == "cancel":
                     continue
-                elif action == "interp":
-                    try:
-                        em_to_add = self._interp_to(lib_wl, wl_m, A)
-                    except Exception as e:
-                        QMessageBox.critical(self, "Interpolation failed", f"{e}")
-                        continue
-                elif action == "crop":
+
+                if action == "interp":
+                    Aligned, _ = self._interp_to(lib_wl, wl_m, A)  # unpack!
+                else:  # 'crop'
                     try:
                         em_cropped, wl_src_crop, wl_tgt_crop, tgt_mask = self._crop_to_overlap(lib_wl, wl_m, A)
                     except Exception as e:
                         QMessageBox.critical(self, "Cropping failed", f"{e}")
                         continue
-
                     if wl_tgt_crop.size < 2:
-                        QMessageBox.warning(self, "Too small overlap", "Overlap too small after cropping. Skipped.")
+                        QMessageBox.warning(self, "Too small overlap",
+                                            "Overlap too small after cropping. Skipped.")
                         continue
 
-                    # First time we crop: shrink the whole library once
+                    # If crop changed the library grid length, crop ALL existing lib entries once
                     if wl_tgt_crop.size != lib_wl.size:
                         try:
                             for k_lib in list(self.E_lib.keys()):
                                 arr = np.asarray(self.E_lib[k_lib])
                                 if arr.ndim == 1:
                                     arr = arr[:, None]
+                                # Existing lib arrays are assumed on lib_wl; just apply mask
                                 if arr.shape[0] != lib_wl.size:
-                                    arr = self._interp_to(lib_wl, lib_wl, arr)
+                                    # bring to lib_wl just in case (noop if already aligned)
+                                    arr2, _ = self._interp_to(lib_wl, lib_wl, arr)
+                                    arr = arr2
                                 self.E_lib[k_lib] = arr[tgt_mask, :]
                             self.wl_lib = wl_tgt_crop.copy()
                             lib_wl = self.wl_lib
@@ -2781,55 +2767,56 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                             QMessageBox.critical(self, "Crop library failed", f"{e}")
                             continue
 
-                    # Now push cropped EM
-                    if em_cropped.shape[0] != self.wl_lib.size:
-                        em_to_add = self._interp_to(self.wl_lib, wl_src_crop, em_cropped)
+                    # Now align the cropped manual EM to the (possibly new) lib_wl
+                    if em_cropped.shape[0] != lib_wl.size:
+                        Aligned, _ = self._interp_to(lib_wl, wl_src_crop, em_cropped)
                     else:
-                        em_to_add = em_cropped
+                        Aligned = em_cropped
 
-            # --- Merge into library ---
-            new_key=False
-            name_manual=self.class_info_manual[key][1]
-            color_manual=self.class_info_manual[key][2]
+            # --- Final shape check on the ALIGNED matrix ------------------------
+            L = int(lib_wl.size)
+            em_to_add = self._as_LxK(Aligned, L)
 
-            if key not in self.E_lib or self.E_lib.get(key, None) is None or np.size(self.E_lib.get(key)) == 0:
-                self.E_lib[key] = self._as_LxK(em_to_add, L)
+            # --- Merge by CLASS NAME (not by integer key!) ----------------------
+            name_manual = self.class_info_manual.get(key, [None, f"class{key}", (180, 180, 180)])[1]
+            color_manual = self.class_info_manual.get(key, [None, None, (180, 180, 180)])[2]
+
+            # find existing class id in library by NAME
+            existing_key = None
+            for k_lib, info in (self.class_info_lib or {}).items():
+                if isinstance(info, (list, tuple)) and len(info) >= 2 and info[1] == name_manual:
+                    existing_key = k_lib
+                    break
+
+            if existing_key is None:
+                # create a new numeric key (next free int)
+                used = [k for k in self.class_info_lib.keys() if isinstance(k, int)] if self.class_info_lib else []
+                new_key = (max(used) + 1) if used else 0
+                while self.class_info_lib and new_key in self.class_info_lib:
+                    new_key += 1
+                self.E_lib[new_key] = em_to_add
+                # class_info_lib entry: [label, name, (B,G,R), ...]
+                if self.class_info_lib is None:
+                    self.class_info_lib = {}
+                self.class_info_lib[new_key] = [new_key, name_manual, color_manual, None]
             else:
-                cur = np.asarray(self.E_lib[key])
+                # append to existing class bucket
+                cur = np.asarray(self.E_lib.get(existing_key, np.empty((L, 0), float)))
                 cur = self._as_LxK(cur, L)
-                em_to_add = self._as_LxK(em_to_add, L)
-                names_lib=[]
-                for key,item in self.class_info_lib.items():
-                    names_lib.append(item[1])
-                if name_manual not in names_lib:
-                    used = [k for k in self.class_info_lib.keys() if isinstance(k, int)]
-                    key_temp = (max(used) + 1) if used else 0
-                    while key_temp in self.class_info_lib:
-                        key_temp += 1
-                    self.E_lib[key_temp] = self._as_LxK(em_to_add, L)
-                    new_key=True
-                    key=key_temp
-                else:
-                    self.E_lib[key] = np.concatenate([cur, em_to_add], axis=1)
+                self.E_lib[existing_key] = np.concatenate([cur, em_to_add], axis=1)
+                # keep (or update) color to manual's color
+                try:
+                    self.class_info_lib[existing_key][2] = color_manual
+                except Exception:
+                    pass
 
-            # Update class_info_lib
-            if getattr(self, "class_info_lib", None) is None:
-                self.class_info_lib = {}
-            if new_key :
-                self.class_info_lib[key] = [key,name_manual,color_manual,None]
-            else:
-                self.class_info_lib[key][2] = color_manual
-
-            print(key,' class info ->',self.class_info_lib[key])
             added_any = True
 
         if added_any:
             QMessageBox.information(self, "Library updated", "Selected endmembers were added to the library.")
+            self._activate_endmembers('lib')
+            self.fill_form_em('lib')
             self.update_spectra()
-            print()
-            print('[ADDED SELECTED]')
-            for key,item in self.class_info_lib.items():
-                print(f'{key} -> {item[1]}')
         else:
             QMessageBox.information(self, "No changes", "No endmember was added.")
 
@@ -3652,14 +3639,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._refresh_viz_model_combo()
         self._refresh_table()
 
-    def remove_all_jobs(self):
-        """Clear all jobs, with confirmation if there are completed ones."""
+    def remove_all_jobs(self, *, ask_confirm: bool = True):
+        """Clear all jobs. Optionally ask for confirmation if there are completed ones."""
         done_count = sum(
             1 for n in self.job_order
             if getattr(self.jobs.get(n, None), "status", "") == "Done"
         )
 
-        if done_count > 0:
+        if ask_confirm and done_count > 0:
             from PyQt5.QtWidgets import QMessageBox
             ans = QMessageBox.question(
                 self,
@@ -3678,7 +3665,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._init_classification_table(self.tableWidget_classificationList)
         self._refresh_viz_model_combo()
         self._refresh_table()
-
     def _move_job(self, delta: int):
         row = self.tableWidget_classificationList.currentRow()
         if row < 0: return
