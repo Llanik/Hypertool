@@ -38,18 +38,13 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
-#todo : add substrate to library by manual selection
 #todo : color map of abundance map
 #todo : export results en h5 or multiple png
 #todo : show all classified by : name, total abundace, max abundance, other ?
-#todo : check interaction with transtaprecny between EM and AMap
-#todo : from library -> gerer les wl_lib et wl (cube) pour unmixing
-#todo : unmixing -> select endmembers AND if merge
 #todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
 #todo : add one pixel fusion
 #todo : select pixels of endmembers also with ctrl+clic left
 # </editor-fold>
-
 
 class SelectEMDialog(QDialog):
     """
@@ -912,6 +907,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.comboBox_viz_show_model.currentIndexChanged.connect(self._on_model_viz_change)
         self.comboBox_viz_show_EM.currentIndexChanged.connect(self._refresh_abundance_view)
         self.radioButton_view_abundance.toggled.connect(self._refresh_abundance_view)
+        self.radioButton_norm_show_abundance_global.toggled.connect(self._refresh_abundance_view)
 
         # Unmix window
         self.radioButton_view_em.toggled.connect(self.toggle_em_viz_stacked)
@@ -1912,8 +1908,21 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             em_idx = max(0, min(em_idx, A3.shape[2] - 1))
 
             amap = np.asarray(A3[:, :, em_idx], dtype=float)
-            # Normalisation pour affichage
-            vmin, vmax = float(np.nanmin(amap)), float(np.nanmax(amap))
+
+            if self.radioButton_norm_show_abundance_local.isChecked():
+                # ----- Normalisation locale -----
+                vmin = float(np.nanmin(amap))
+                vmax = float(np.nanmax(amap))
+
+            else:
+                # ----- Normalisation globale -----
+                vmin = 0.0
+                vmax = float(np.nanmax(job.A))
+
+            # Avoid degenerate case
+            if vmax <= vmin:
+                vmax = vmin + 1e-12
+
             if vmax > vmin:
                 amap_norm = (amap - vmin) / (vmax - vmin)
             else:
@@ -1944,8 +1953,35 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     # <editor-fold desc="Cube">
     def open_load_cube_dialog(self):
 
+        auto_man_EM=False
+        if hasattr(self, "E_manual") and isinstance(self.E_manual, dict) and len(self.E_manual) > 0:
+            auto_man_EM = True
+        if hasattr(self, "E_auto") and isinstance(self.E_auto, dict) and len(self.E_auto) > 0:
+            auto_man_EM = True
+
+        if auto_man_EM:
+            box = QMessageBox(self)
+            box.setIcon(QMessageBox.Warning)
+            box.setWindowTitle("Change cube")
+
+            box.setText(
+                "By changing the cube you will lose the Manual and Automatic Endmembers.\n"
+                "If you do not want to lose them, cancel and save first."
+            )
+
+            load_btn = box.addButton("Load new cube", QMessageBox.AcceptRole)
+            cancel_btn = box.addButton("Cancel and save first", QMessageBox.RejectRole)
+
+            box.setDefaultButton(cancel_btn)
+            box.exec_()
+
+            # Proceed only if user explicitly clicked "Load new cube"
+            if box.clickedButton() is cancel_btn:
+                return
+
         if self.no_reset_jobs_on_new_cube():
             return
+
 
         dlg = LoadCubeDialog(self, vnir_cube=self._last_vnir, swir_cube=self._last_swir)
         if dlg.exec_() == QDialog.Accepted:
@@ -1983,6 +2019,18 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self.class_stds = {}
             self.update_rgb_controls()
             self.update_overlay()
+
+            self.regions = {}
+
+            self.E_manual = {}
+            self.class_info_manual = {}
+            self.param_manual = {}
+            self.wl_manual = None
+
+            self.E_auto = {}
+            self.class_info_auto = {}
+            self.param_auto = {}
+            self.wl_auto = None
 
     def load_cube(self, filepath=None, cube=None, cube_info=None, range=None):
 
@@ -2075,6 +2123,18 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.update_rgb_controls()
         self.show_rgb_image()
         self.update_overlay()
+
+        self.regions = {}
+
+        self.E_manual = {}
+        self.class_info_manual = {}
+        self.param_manual = {}
+        self.wl_manual = None
+
+        self.E_auto = {}
+        self.class_info_auto = {}
+        self.param_auto = {}
+        self.wl_auto = None
 
     def no_reset_jobs_on_new_cube(self):
         for job in self.jobs:
@@ -2537,6 +2597,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         except Exception:
             pass
 
+    # </editor-fold>
+
+    # <editor-fold desc="Merging Endmembers">
     @staticmethod
     def _almost_equal_arrays(a: np.ndarray, b: np.ndarray, rtol=1e-6, atol=1e-6):
         if a is None or b is None:
@@ -2563,23 +2626,53 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                                     left=em_sorted[0, j], right=em_sorted[-1, j]) for j in range(K)]).T
         return em_i, target_wl
 
-    @staticmethod
-    def _crop_to_overlap(target_wl: np.ndarray, src_wl: np.ndarray, em: np.ndarray):
+    def _crop_library_to_overlap(self, wl_m: np.ndarray) -> bool:
         """
-        Crop both target_wl and src_wl to their overlap, return em cropped & target cropped.
+        Crop the library wavelength axis (self.wl_lib) and all E_lib spectra
+        to the spectral overlap with wl_m.
+
+        Returns True on success, False if no usable overlap.
         """
-        lo = max(float(target_wl.min()), float(src_wl.min()))
-        hi = min(float(target_wl.max()), float(src_wl.max()))
+        import numpy as np
+
+        if self.wl_lib is None or not self._any_library_present():
+            return True  # nothing to crop
+
+        lib_wl = np.asarray(self.wl_lib, dtype=float)
+        wl_m = np.asarray(wl_m, dtype=float)
+
+        # Overlap interval
+        lo = max(float(lib_wl.min()), float(wl_m.min()))
+        hi = min(float(lib_wl.max()), float(wl_m.max()))
         if lo >= hi:
-            raise ValueError("No spectral overlap between source and target wavelength axes.")
-        tgt_mask = (target_wl >= lo) & (target_wl <= hi)
-        src_mask = (src_wl >= lo) & (src_wl <= hi)
-        tgt_wl = target_wl[tgt_mask]
-        src_wl2 = src_wl[src_mask]
-        if em.ndim == 1:
-            em = em[:, None]
-        em2 = em[src_mask, :]
-        return em2, src_wl2, tgt_wl, tgt_mask
+            QMessageBox.critical(
+                self, "No spectral overlap",
+                "Manual endmembers and library wavelengths have no spectral overlap.\n"
+                "Cannot interpolate."
+            )
+            return False
+
+        mask = (lib_wl >= lo) & (lib_wl <= hi)
+        new_lib_wl = lib_wl[mask]
+
+        if new_lib_wl.size < 2:
+            QMessageBox.warning(
+                self, "Too few bands",
+                "The spectral overlap has fewer than 2 bands. Aborting merge."
+            )
+            return False
+
+        L_old = lib_wl.size
+
+        # Crop each library class to the new wavelength axis
+        if self.E_lib:
+            for k, Em in list(self.E_lib.items()):
+                cur = self._as_LxK(Em, L_old)  # ensure (L_old x K)
+                self.E_lib[k] = cur[mask, :]
+
+        # Update library wavelength axis
+        self.wl_lib = new_lib_wl
+        return True
 
     @staticmethod
     def _as_LxK(M, L):
@@ -2695,12 +2788,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 "How do you want to resolve this?"
             )
             b_interp = box.addButton("Interpolate to library", QMessageBox.AcceptRole)
-            b_crop = box.addButton("Crop to overlap", QMessageBox.ActionRole)
             b_cancel = box.addButton("Cancel", QMessageBox.RejectRole)
             box.setIcon(QMessageBox.Question)
             box.exec_()
             if box.clickedButton() is b_interp: return "interp"
-            if box.clickedButton() is b_crop:   return "crop"
             return "cancel"
 
         added_any = False
@@ -2736,42 +2827,16 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     continue
 
                 if action == "interp":
-                    Aligned, _ = self._interp_to(lib_wl, wl_m, A)  # unpack!
-                else:  # 'crop'
-                    try:
-                        em_cropped, wl_src_crop, wl_tgt_crop, tgt_mask = self._crop_to_overlap(lib_wl, wl_m, A)
-                    except Exception as e:
-                        QMessageBox.critical(self, "Cropping failed", f"{e}")
-                        continue
-                    if wl_tgt_crop.size < 2:
-                        QMessageBox.warning(self, "Too small overlap",
-                                            "Overlap too small after cropping. Skipped.")
+                    # 1) Crop existing library spectra to the true overlap with wl_m
+                    if not self._crop_library_to_overlap(wl_m):
+                        # No overlap or error -> skip this class
                         continue
 
-                    # If crop changed the library grid length, crop ALL existing lib entries once
-                    if wl_tgt_crop.size != lib_wl.size:
-                        try:
-                            for k_lib in list(self.E_lib.keys()):
-                                arr = np.asarray(self.E_lib[k_lib])
-                                if arr.ndim == 1:
-                                    arr = arr[:, None]
-                                # Existing lib arrays are assumed on lib_wl; just apply mask
-                                if arr.shape[0] != lib_wl.size:
-                                    # bring to lib_wl just in case (noop if already aligned)
-                                    arr2, _ = self._interp_to(lib_wl, lib_wl, arr)
-                                    arr = arr2
-                                self.E_lib[k_lib] = arr[tgt_mask, :]
-                            self.wl_lib = wl_tgt_crop.copy()
-                            lib_wl = self.wl_lib
-                        except Exception as e:
-                            QMessageBox.critical(self, "Crop library failed", f"{e}")
-                            continue
+                    # 2) Refresh lib_wl to the cropped axis
+                    lib_wl = self.wl_lib.astype(float)
 
-                    # Now align the cropped manual EM to the (possibly new) lib_wl
-                    if em_cropped.shape[0] != lib_wl.size:
-                        Aligned, _ = self._interp_to(lib_wl, wl_src_crop, em_cropped)
-                    else:
-                        Aligned = em_cropped
+                    # 3) Interpolate manual EM onto this cropped library axis
+                    Aligned, _ = self._interp_to(lib_wl, wl_m, A)  # (L_lib x K)
 
             # --- Final shape check on the ALIGNED matrix ------------------------
             L = int(lib_wl.size)
@@ -3059,10 +3124,17 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             )
             if reply == QMessageBox.Yes:
                 H, W = self.selection_mask_map.shape
-                # Réinitialise à -1 (aucune classe)
                 self.selection_mask_map[:] = -1
                 self.samples.clear()
-                self.param_manual={}
+                self.param_manual = {}
+
+                # Clean manual EM state for this cube
+                self.regions = {}
+                self.E_manual = {}
+                self.class_info_manual = {}
+                self.class_means = {}
+                self.class_stds = {}
+                self.wl_manual = None
 
         self.selecting_pixels = True
         # self.viewer_left.setDragMode(QGraphicsView.NoDrag)
@@ -3853,15 +3925,48 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # (ré)active la source sélectionnée -> remplit self.E standardisée
         self._activate_endmembers(src)
 
-        # construit E_mat, labels (réinterpole si 'lib' nécessaire)
-        E_mat, labels = self._prepare_job_inputs_from_current_E(src=src, merge_groups=merge_groups)
+        # construit E_mat, labels, wl_job et éventuellement un masque de bandes pour le cube
+        try:
+            E_mat, labels, wl_job, band_mask = self._prepare_job_inputs_from_current_E(
+                src=src, merge_groups=merge_groups
+            )
+        except RuntimeError as e:
+            # cas "Cancel job" ou pas de recouvrement
+            print(f"[RUN NEXT JOB] job '{next_name}' cancelled during wavelength alignment:", e)
+            job.status = "Canceled"
+            job.progress = 0
+            job.duration_s = None
+            self._update_row_from_job(next_name)
+            # on enchaîne directement sur le job suivant
+            self._current_worker = None
+            self._run_next_in_queue()
+            return
+        except Exception as e:
+            # erreur inattendue
+            import traceback
+            print(f"[RUN NEXT JOB] error while preparing job '{next_name}':", e)
+            traceback.print_exc()
+            job.status = "Error"
+            job.progress = 0
+            job.duration_s = None
+            self._update_row_from_job(next_name)
+            self._current_worker = None
+            self._run_next_in_queue()
+            return
 
-        # Remplit le job
-        job.cube = np.asarray(self.cube.data, dtype=float)  # H×W×L
-        job.E = E_mat  # L×p
-        job.labels = labels  # (p,)
+        # Remplit le job en tenant compte d'un éventuel recadrage spectral
+        if band_mask is not None:
+            # recadrer le cube à la plage de WL commune
+            data_cube = np.asarray(self.cube.data, dtype=float)
+            job.cube = data_cube[:, :, band_mask]  # H×W×L_job
+        else:
+            job.cube = np.asarray(self.cube.data, dtype=float)  # H×W×L
+
+        job.E = E_mat                  # (L_job, p)
+        job.labels = labels            # (p,)
         job.roi_mask = self._current_roi_mask()
-        job.wl_job = self.wl
+        job.wl_job = wl_job            # grid réellement utilisée pour ce job
+        job.wl_cube = self.wl          # grid originale du cube (métadonnée)
 
         # Marque comme Running
         import time
@@ -3887,29 +3992,100 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
     def _prepare_job_inputs_from_current_E(self, src: str, merge_groups: bool):
         """
-        Usa self.E (dict clase->(L,n_regiones)) ya construida por _activate_endmembers(src)
-        para devolver:
-          - E_mat: (L, p) concatenando columnas por clase
-          - labels: (p,) con el label de grupo por columna (nombre de clase si merge=True,
-                    o 'Class i - #k' si no merge)
-        Si la fuente es 'lib' y las WL no coinciden con el cubo, reinterpola E a self.wl.
+        Usa E_dict (manual/auto/lib) para devolver:
+          - E_mat: (L_job, p) concatenando columnas por clase
+          - labels: (p,) etiquetas de columnas
+          - wl_job: rejilla de longitudes de onda realmente usada en el job
+          - band_mask_cube: máscara bool sobre self.wl (o None si no se recorta)
+
+        Si las WL de los endmembers no coinciden con las del cubo,
+        propone “Crop & interpolate”:
+          - recorta el cubo y los EMs al solapamiento espectral
+          - interpola los EMs sobre la rejilla recortada del cubo
         """
-        # self.E: {cls_id: (L, n_regions)} ya normalizado de la fuente elegida
+        import numpy as np
 
-        # Gestionar wavelentghs por fuente
         wl_cube = np.asarray(self.wl, dtype=float)
-        if src == "manual":
-            wl_em = self.wl_manual
-            E_dict=self.E_manual
 
+        # --- Elegir fuente de EM + su grid de WL ---
+        if src == "manual":
+            wl_em = getattr(self, "wl_manual", None)
+            E_dict = self.E_manual
         elif src == "auto":
-            wl_em = self.wl_auto
+            wl_em = getattr(self, "wl_auto", None)
             E_dict = self.E_auto
         else:  # 'lib'
-            wl_em = np.asarray(self.wl_lib, dtype=float)
+            wl_em = getattr(self, "wl_lib", None)
             E_dict = self.E_lib
 
-        # 1) Reinterpolar a la rejilla del cubo si hace falta (solo lib)
+        if E_dict is None or len(E_dict) == 0:
+            raise ValueError("No endmembers for this source.")
+
+        if wl_em is None or len(wl_em) == 0:
+            # si no tenemos grid propia, asumimos la del cubo
+            wl_em = wl_cube.copy()
+        wl_em = np.asarray(wl_em, dtype=float)
+
+        # --- ¿Misma rejilla? ---
+        same_grid = (
+            wl_em.size == wl_cube.size and
+            self._almost_equal_arrays(wl_em, wl_cube)
+        )
+
+        band_mask_cube = None
+        target_wl = wl_cube
+
+        # --- Si no coinciden: diálogo “Crop & interpolate / Cancel job” ---
+        if not same_grid:
+            box = QMessageBox(self)
+            box.setWindowTitle("Wavelength mismatch for unmixing")
+            box.setIcon(QMessageBox.Warning)
+            box.setText(
+                f"Endmembers (source: {src}) use {wl_em.size} bands, "
+                f"cube uses {wl_cube.size}.\n\n"
+                "To run unmixing, wavelengths must match.\n\n"
+                "If you choose 'Crop & interpolate', the cube and endmembers will be "
+                "restricted to their common spectral range and endmembers will be "
+                "interpolated on that grid (no extrapolation)."
+            )
+            b_crop = box.addButton("Crop & interpolate", QMessageBox.AcceptRole)
+            b_cancel = box.addButton("Cancel job", QMessageBox.RejectRole)
+            box.setDefaultButton(b_crop)
+            box.exec_()
+
+            if box.clickedButton() is not b_crop:
+                # usuario cancela el job
+                raise RuntimeError("User cancelled unmixing job due to wavelength mismatch.")
+
+            # --- Calcular solapamiento espectral ---
+            lo = max(float(wl_em.min()), float(wl_cube.min()))
+            hi = min(float(wl_em.max()), float(wl_cube.max()))
+            if lo >= hi:
+                QMessageBox.critical(
+                    self, "No spectral overlap",
+                    "Cube wavelengths and endmembers have no spectral overlap.\n"
+                    "Cannot run unmixing."
+                )
+                raise RuntimeError("No spectral overlap between cube and endmembers.")
+
+            mask_cube = (wl_cube >= lo) & (wl_cube <= hi)
+            mask_em = (wl_em  >= lo) & (wl_em  <= hi)
+            target_wl = wl_cube[mask_cube]
+
+            if target_wl.size < 2:
+                QMessageBox.warning(
+                    self, "Too few bands",
+                    "The spectral overlap has fewer than 2 bands. Aborting job."
+                )
+                raise RuntimeError("Too few overlapping bands.")
+
+            band_mask_cube = mask_cube
+            wl_em_eff = wl_em[mask_em]
+        else:
+            # misma rejilla → sin recorte ni interpolación especial
+            wl_em_eff = wl_em
+
+        # --- Helper para formas (L x n) ---
         def _to_LxN(arr):
             A = np.asarray(arr, dtype=float)
             if A.ndim == 1:
@@ -3921,30 +4097,40 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         E_resampled = []
         col_labels = []
 
-        # nombre legible de cada clase
-        def _class_name(cid,src=None):
+        def _class_name(cid, src_for_name=None):
             try:
-                return self.get_class_name(cid,src)
+                return self.get_class_name(cid, src_for_name)
             except Exception:
                 return f"Class {cid}"
 
+        # --- Recorremos clases y construimos columnas ---
         for cls_id in sorted(E_dict.keys()):
             A = _to_LxN(E_dict[cls_id])  # (L_em, n_reg)
-            # resample si procede
-            if src == "lib" and wl_em is not None and not np.array_equal(wl_em, wl_cube):
-                # interp columna a columna
-                L_target = wl_cube.size
-                A_rs = np.empty((L_target, A.shape[1]), dtype=float)
-                for j in range(A.shape[1]):
-                    A_rs[:, j] = np.interp(wl_cube, wl_em, A[:, j])
-                A = A_rs
 
-            # labels por columna
+            # Reamostrar si hace falta (cuando no es misma rejilla)
+            if not same_grid:
+                # recortar espectros al mismo rango que wl_em_eff
+                # (wl_em_eff ya es wl_em[mask_em])
+                # A tiene shape (L_em, n_reg) → aplicamos misma máscara que wl_em
+                mask_full = (wl_em >= lo) & (wl_em <= hi)
+                A_cut = A[mask_full, :]  # (L_overlap_in_em, n_reg)
+
+                L_target = target_wl.size
+                A_rs = np.empty((L_target, A_cut.shape[1]), dtype=float)
+                for j in range(A_cut.shape[1]):
+                    A_rs[:, j] = np.interp(target_wl, wl_em_eff, A_cut[:, j])
+                A = A_rs      # (L_target, n_reg)
+            else:
+                # misma rejilla → nada que hacer, pero si por algún motivo
+                # target_wl != wl_cube, se trataría fuera (aquí target_wl == wl_cube)
+                pass
+
+            # Etiquetas de columnas
             if merge_groups:
-                grp = _class_name(cls_id)  # todas las columnas de esta clase comparten grupo
+                grp = _class_name(cls_id, src)
                 col_labels.extend([grp] * A.shape[1])
             else:
-                base = _class_name(cls_id)
+                base = _class_name(cls_id, src)
                 for j in range(A.shape[1]):
                     col_labels.append(f"{base} #{j + 1}")
 
@@ -3953,10 +4139,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         if not E_resampled:
             raise ValueError("No endmembers for this source.")
 
-        # 2) Concatenar columnas
-        E_mat = np.concatenate(E_resampled, axis=1)  # (L, p total)
+        # Concatenar
+        E_mat = np.concatenate(E_resampled, axis=1)  # (L_job, p)
         labels = np.asarray(col_labels, dtype=object)
-        return E_mat, labels
+
+        return E_mat, labels, target_wl, band_mask_cube
 
     def _on_cancel_queue(self):
         self._stop_all = True
