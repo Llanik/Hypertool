@@ -13,7 +13,8 @@ import re
 from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QHeaderView,QProgressBar,QColorDialog,
                             QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton,
                              QDialogButtonBox, QCheckBox, QScrollArea, QWidget, QFileDialog, QMessageBox,
-                             QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QGraphicsView,QAbstractItemView
+                             QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QGraphicsView,QAbstractItemView,
+                             QComboBox
                              )
 
 from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem,QColor
@@ -408,6 +409,330 @@ class EMEditDialog(QDialog):
             bgr = btn.property("bgr")
             out.append((idx, name, bgr))
         return out
+
+class SyncedAbundanceView(ZoomableGraphicsView):
+    """
+    ZoomableGraphicsView qui émet un signal quand le zoom / pan change,
+    pour synchroniser toutes les vues.
+    """
+    syncRequested = pyqtSignal(object)
+
+    def wheelEvent(self, event):
+        super().wheelEvent(event)
+        self.syncRequested.emit(self)
+
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        if event.buttons() & Qt.LeftButton:
+            self.syncRequested.emit(self)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        self.syncRequested.emit(self)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.syncRequested.emit(self)
+
+class AbundanceGalleryWindow(QDialog):
+    """
+    Fenêtre pour visualiser plusieurs cartes d'abondance en même temps,
+    avec zoom/pan synchronisés.
+    """
+
+    def __init__(self, tool, parent=None):
+        super().__init__(parent or tool)
+        self.tool = tool
+        self.setWindowTitle("Abundance maps gallery")
+        self.resize(1000, 800)
+
+        main = QVBoxLayout(self)
+
+        # --- Barre de contrôle en haut ---
+        row = QHBoxLayout()
+        self.combo_mode = QComboBox()
+        self.combo_mode.setObjectName("comboBox_viz_all_mode")
+        self.combo_mode.addItems([
+            "compare same endmember for all models",
+            "see all endmembers for one model",
+        ])
+
+        self.combo_target = QComboBox()
+        self.combo_target.setObjectName("comboBox_viz_all_target")
+
+        self.combo_sort = QComboBox()
+        self.combo_sort.setObjectName("comboBox_viz_all_sort")
+        self.combo_sort.addItems([
+            "sort by name",
+            "sort by local max abundance",
+            "sort by global max abundance",
+        ])
+
+        row.addWidget(QLabel("Mode:"))
+        row.addWidget(self.combo_mode)
+        row.addWidget(QLabel("Target:"))
+        row.addWidget(self.combo_target)
+        row.addWidget(QLabel("Sort:"))
+        row.addWidget(self.combo_sort)
+        row.addStretch(1)
+        main.addLayout(row)
+
+        # --- Zone scrollable avec les cartes ---
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.inner = QWidget()
+        self.inner_layout = QVBoxLayout(self.inner)
+        self.inner_layout.setContentsMargins(4, 4, 4, 4)
+        self.inner_layout.setSpacing(8)
+        self.scroll.setWidget(self.inner)
+        main.addWidget(self.scroll)
+
+        self._views = []
+
+        # Connexions
+        self.combo_mode.currentIndexChanged.connect(self._rebuild_target_combo)
+        self.combo_target.currentIndexChanged.connect(self._rebuild_gallery)
+        self.combo_sort.currentIndexChanged.connect(self._rebuild_gallery)
+
+        # Init
+        self._rebuild_target_combo()
+
+    # ----------------- Helpers internes -----------------
+
+    def _done_jobs(self):
+        out = []
+        for name in self.tool.job_order:
+            job = self.tool.jobs.get(name)
+            if job is None:
+                continue
+            if getattr(job, "status", "") == "Done" and getattr(job, "A", None) is not None:
+                out.append(job)
+        return out
+
+    def _all_em_basenames(self):
+        import numpy as _np
+        names = set()
+        for job in self._done_jobs():
+            labels = getattr(job, "labels", None)
+            if labels is None:
+                continue
+            arr = _np.asarray(labels, dtype=object)
+            for lab in arr:
+                base = str(lab).split('#')[0].strip()
+                if base:
+                    names.add(base)
+        return sorted(names)
+
+    def _rebuild_target_combo(self):
+        self.combo_target.blockSignals(True)
+        self.combo_target.clear()
+
+        mode = self.combo_mode.currentIndex()
+        if mode == 0:
+            # compare same endmember for all models
+            for name in self._all_em_basenames():
+                self.combo_target.addItem(name)
+        else:
+            # see all endmembers for one model
+            for job in self._done_jobs():
+                self.combo_target.addItem(job.name)
+
+        self.combo_target.setEnabled(self.combo_target.count() > 0)
+        self.combo_target.blockSignals(False)
+        self._rebuild_gallery()
+
+    def _clear_gallery(self):
+        self._views = []
+        lay = self.inner_layout
+        while lay.count():
+            item = lay.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.deleteLater()
+
+    def _em_index_for_job(self, job, em_name):
+        """
+        Trouve l'index d'endmember pour un job à partir du nom 'base'
+        (avant le '#1', '#2', etc.). Retourne None si pas trouvé.
+        """
+        import numpy as _np
+        labels = getattr(job, "labels", None)
+        if labels is None:
+            return None
+        arr = _np.asarray(labels, dtype=object)
+        base = em_name.strip()
+        for i, lab in enumerate(arr):
+            name_i = str(lab).split('#')[0].strip()
+            if name_i == base:
+                return i
+        return None
+
+    def _sync_from(self, source):
+        if not self._views or source not in self._views:
+            return
+        try:
+            t = source.transform()
+            center_scene = source.mapToScene(source.viewport().rect().center())
+            for v in self._views:
+                if v is source:
+                    continue
+                v.blockSignals(True)
+                v.setTransform(t)
+                v.centerOn(center_scene)
+                v.blockSignals(False)
+        except Exception as e:
+            print("[GALLERY SYNC] error:", e)
+
+    def _rebuild_gallery(self):
+        self._clear_gallery()
+        if self.combo_target.count() == 0:
+            return
+
+        mode = self.combo_mode.currentIndex()
+        sort_mode = self.combo_sort.currentIndex()
+        items = []  # liste de dicts: {title, amap, img, local_max, global_sum, name_key}
+
+        # --- Mode 0 : même endmember, tous les modèles ---
+        if mode == 0:
+            em_name = self.combo_target.currentText().strip()
+            if not em_name:
+                return
+
+            for job in self._done_jobs():
+                em_idx = self._em_index_for_job(job, em_name)
+                if em_idx is None:
+                    continue
+                amap, img = self.tool._compute_abundance_map(job, em_idx)
+                if img is None or amap is None:
+                    continue
+
+                local_max = float(np.nanmax(amap)) if amap.size else 0.0
+                global_sum = float(np.nansum(amap)) if amap.size else 0.0
+                title = f"{job.name} – {em_name}"
+                items.append(dict(
+                    title=title,
+                    amap=amap,
+                    img=img,
+                    local_max=local_max,
+                    global_sum=global_sum,
+                    name_key=job.name
+                ))
+
+        # --- Mode 1 : tous les endmembers d’un modèle ---
+        else:
+            job_name = self.combo_target.currentText()
+            job = None
+            for j in self._done_jobs():
+                if j.name == job_name:
+                    job = j
+                    break
+            if job is None:
+                return
+
+            A = getattr(job, "A", None)
+            if A is None:
+                return
+            A = np.asarray(A)
+            if A.ndim == 2:
+                p = A.shape[0]
+            elif A.ndim == 3:
+                p = A.shape[2]
+            else:
+                return
+
+            import numpy as _np
+            labels_arr = getattr(job, "labels", None)
+            if labels_arr is not None:
+                labels_arr = _np.asarray(labels_arr, dtype=object)
+
+            for em_idx in range(p):
+                # Nom d’EM à partir de labels si possible
+                if labels_arr is not None and em_idx < labels_arr.shape[0]:
+                    base = str(labels_arr[em_idx]).split('#')[0].strip()
+                    if not base:
+                        base = f"EM_{em_idx:02d}"
+                else:
+                    base = f"EM_{em_idx:02d}"
+
+                amap, img = self.tool._compute_abundance_map(job, em_idx)
+                if img is None or amap is None:
+                    continue
+
+                local_max = float(np.nanmax(amap)) if amap.size else 0.0
+                global_sum = float(np.nansum(amap)) if amap.size else 0.0
+                title = f"{job.name} – {base}"
+                items.append(dict(
+                    title=title,
+                    amap=amap,
+                    img=img,
+                    local_max=local_max,
+                    global_sum=global_sum,
+                    name_key=base
+                ))
+
+        # --- Tri ---
+        if not items:
+            return
+
+        if sort_mode == 0:
+            # sort by name
+            items.sort(key=lambda d: d["name_key"])
+        elif sort_mode == 1:
+            # sort by local max abundance (desc)
+            items.sort(key=lambda d: d["local_max"], reverse=True)
+        else:
+            # sort by global max abundance (sum over map, desc)
+            items.sort(key=lambda d: d["global_sum"], reverse=True)
+
+
+        # --- Calcul des pourcentages pour affichage ---
+        # max local en % (on suppose que les abondances sont ~[0,1])
+        for it in items:
+            it["max_pct"] = 100.0 * it["local_max"]
+
+        # intégrale en % de l'endmember total (somme des intégrales des cartes visibles)
+        total_sum = sum(it["global_sum"] for it in items)
+        for it in items:
+            if total_sum > 0:
+                it["sum_pct"] = 100.0 * it["global_sum"] / total_sum
+            else:
+                it["sum_pct"] = 0.0
+
+
+        # --- Construction des cartes dans le scroll ---
+        for it in items:
+            card = QWidget()
+            vlay = QVBoxLayout(card)
+            vlay.setContentsMargins(2, 2, 2, 2)
+            vlay.setSpacing(2)
+
+            # Titre enrichi avec max local et intégrale en %
+            title_txt = (
+                f"{it['title']}  | "
+                f"max: {it['max_pct']:.1f}%  | "
+                f"∑: {it['sum_pct']:.1f}%"
+            )
+            lbl = QLabel(title_txt)
+            lbl.setAlignment(Qt.AlignCenter)
+            lbl.setStyleSheet("font-weight: bold;")
+            vlay.addWidget(lbl)
+
+
+            view = SyncedAbundanceView()
+            view.setDragMode(QGraphicsView.ScrollHandDrag)
+            view.setCursor(Qt.CrossCursor)
+            view.setMinimumHeight(200)
+
+            pix = self.tool._np2pixmap(it["img"])
+            view.setImage(pix)
+
+            view.syncRequested.connect(self._sync_from)
+            self._views.append(view)
+            vlay.addWidget(view)
+
+            self.inner_layout.addWidget(card)
+
+        self.inner_layout.addStretch(1)
 
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
@@ -943,6 +1268,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.comboBox_viz_show_EM.currentIndexChanged.connect(self._refresh_abundance_view)
         self.radioButton_view_abundance.toggled.connect(self._refresh_abundance_view)
         self.radioButton_norm_show_abundance_global.toggled.connect(self._refresh_abundance_view)
+        self.pushButton_show_all.clicked.connect(self._open_abundance_gallery)
 
         # Unmix window
         self.radioButton_view_em.toggled.connect(self.toggle_em_viz_stacked)
@@ -1900,18 +2226,92 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         for name in job.labels:
             name=name.split('#')[0]
             self.comboBox_viz_show_EM.addItem(name)
-        
+
         try:
             self.comboBox_viz_show_EM.setCurrentIndex(idx_em)
         except:
-            pass
+            self.comboBox_viz_show_EM.setCurrentIndex(0)
 
         self._refresh_abundance_view()
         self._draw_current_rect(use_job=True, surface=False)
 
+    def _compute_abundance_map(self, job, em_idx):
+        """
+        Calcule la carte d'abondance et l'image RGB teintée pour un job et un index d'EM.
+        Retourne (amap, img_rgb) ou (None, None) si problème.
+        """
+        try:
+            if self.data is None:
+                return None, None
+
+            H, W = self.data.shape[:2]
+            A = getattr(job, "A", None)
+            if A is None:
+                return None, None
+
+            A = np.asarray(A)
+
+            # Remodeler en (H, W, p)
+            if A.ndim == 2:
+                p, N = A.shape
+                if N != H * W:
+                    return None, None
+                A3 = A.reshape(p, H, W).transpose(1, 2, 0)  # -> (H,W,p)
+            elif A.ndim == 3:
+                A3 = A
+                # on s’assure d’être bien en (H,W,p)
+                if A3.shape[0] == H and A3.shape[1] == W:
+                    pass
+                elif A3.shape[2] == H and A3.shape[1] == W:
+                    A3 = np.transpose(A3, (2, 1, 0))
+                else:
+                    return None, None
+            else:
+                return None, None
+
+            if A3.shape[2] == 0:
+                return None, None
+
+            em_idx = max(0, min(int(em_idx), A3.shape[2] - 1))
+            amap = np.asarray(A3[:, :, em_idx], dtype=float)
+
+            # Normalisation identique à _refresh_abundance_view
+            if self.radioButton_norm_show_abundance_local.isChecked():
+                vmin = float(np.nanmin(amap))
+                vmax = float(np.nanmax(amap))
+            else:
+                vmin = 0.0
+                vmax = float(np.nanmax(job.A))
+
+            if not np.isfinite(vmin) or not np.isfinite(vmax):
+                return None, None
+
+            if vmax <= vmin:
+                vmax = vmin + 1e-12
+
+            if vmax > vmin:
+                amap_norm = (amap - vmin) / (vmax - vmin)
+            else:
+                amap_norm = np.zeros_like(amap, dtype=float)
+
+            # Couleur d’endmember (BGR) selon la source active (comme dans _refresh_abundance_view)
+            bgr = (0, 255, 255)  # fallback
+            if hasattr(self, "class_info") and isinstance(self.class_info, dict):
+                if em_idx in self.class_info and len(self.class_info[em_idx]) >= 3 and self.class_info[em_idx][2] is not None:
+                    bgr = self.class_info[em_idx][2]
+
+            b, g, r = [int(x) for x in bgr]
+            color_vec = np.array([b, g, r], dtype=float).reshape(1, 1, 3)
+            img = (amap_norm[..., None] * color_vec).clip(0, 255).astype(np.uint8)
+
+            return amap, img
+
+        except Exception as e:
+            print("[ABUNDANCE MAP] error:", e)
+            return None, None
+
     def _refresh_abundance_view(self):
-        """Affiche la carte d'abondance de l'endmember choisi pour le job sélectionné,
-        en utilisant la couleur d'endmember définie."""
+        """Affiche la carte d'abondance de l'endmember choisi pour le job sélectionné."""
 
         try:
             # On ne fait rien si le mode n’est pas activé
@@ -1930,71 +2330,15 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             if job is None or getattr(job, "A", None) is None:
                 return
 
-            H, W = self.data.shape[:2]
-            A = job.A  # (p, N) ou (H,W,p)
-
-            # Remodeler en (H, W, p)
-            if A.ndim == 2:
-                p, N = A.shape
-                if N != H * W:
-                    # Taille incohérente : on stoppe proprement
-                    return
-                A3 = A.reshape(p, H, W).transpose(1, 2, 0)  # -> (H,W,p)
-            elif A.ndim == 3:
-                A3 = A
-                # on s’assure d’être bien en (H,W,p)
-                if A3.shape[0] == H and A3.shape[1] == W:
-                    pass
-                elif A3.shape[2] == H and A3.shape[1] == W:
-                    A3 = np.transpose(A3, (2, 1, 0))
-                else:
-                    # si ça ne colle pas, on abandonne l’affichage
-                    return
-            else:
-                return
-
-            # Endmember sélectionné
             em_idx = self.comboBox_viz_show_EM.currentIndex()
-            em_idx = max(0, min(em_idx, A3.shape[2] - 1))
-
-            amap = np.asarray(A3[:, :, em_idx], dtype=float)
-
-            if self.radioButton_norm_show_abundance_local.isChecked():
-                # ----- Normalisation locale -----
-                vmin = float(np.nanmin(amap))
-                vmax = float(np.nanmax(amap))
-
-            else:
-                # ----- Normalisation globale -----
-                vmin = 0.0
-                vmax = float(np.nanmax(job.A))
-
-            # Avoid degenerate case
-            if vmax <= vmin:
-                vmax = vmin + 1e-12
-
-            if vmax > vmin:
-                amap_norm = (amap - vmin) / (vmax - vmin)
-            else:
-                amap_norm = np.zeros_like(amap, dtype=float)
-
-            # Couleur d’endmember (BGR) selon la source active
-            # class_info: {cls: [id, name, (b,g,r)]}
-            bgr = (0, 255, 255)  # fallback
-            if hasattr(self, "class_info") and isinstance(self.class_info, dict):
-                if em_idx in self.class_info and len(self.class_info[em_idx]) >= 3 and self.class_info[em_idx][
-                    2] is not None:
-                    bgr = self.class_info[em_idx][2]
-
-            b, g, r = [int(x) for x in bgr]
-            # Teinte: on applique la valeur d’abondance comme intensité sur la couleur
-            # (on reste en BGR pour coller au pipeline _np2pixmap)
-            color_vec = np.array([b, g, r], dtype=float).reshape(1, 1, 3)
-            img = (amap_norm[..., None] * color_vec).clip(0, 255).astype(np.uint8)
+            amap, img = self._compute_abundance_map(job, em_idx)
+            if img is None:
+                return
 
             self.viewer_right.setImage(self._np2pixmap(img))
             self.current_unmix_job_name = job_name
             self._draw_current_rect(use_job=True, surface=False)
+
         except Exception as e:
             print("[ABUNDANCE VIEW] error:", e)
 
@@ -2115,6 +2459,25 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         except Exception as e:
             print("[ABUNDANCE LEGEND] error:", e)
+
+    def _open_abundance_gallery(self):
+        """Ouvre la fenêtre de galerie des cartes d'abondance."""
+        # Vérifie qu'il y a au moins un job fini
+        has_done = any(
+            getattr(self.jobs.get(name, None), "status", "") == "Done"
+            for name in self.job_order
+        )
+        if not has_done:
+            QMessageBox.information(
+                self,
+                "Abundance gallery",
+                "No unmixing job is marked as Done yet.\nRun at least one job first."
+            )
+            return
+
+        dlg = AbundanceGalleryWindow(self, parent=self)
+        dlg.exec_()
+
 
     # </editor-fold>
 
