@@ -556,7 +556,7 @@ class EndmemberWorker(QRunnable):
 @dataclass
 class UnmixJob:
     name : str # unique key shown in table
-    model: str  # 'UCLS'|'NNLS'|'FCLS'|'SUnSAL'
+    model: str  # 'UCLS'|'NNLS'|'FCLS'|'SUnSAL'|'Metric cGFC'
     normalization: str  # 'None'|'L2'|'L1'
 
     max_iter: int
@@ -751,6 +751,16 @@ class UnmixWorker(QRunnable):
                         sum_to_one=self.job.asc,
                         rho=self.job.rho,
                         max_iter=self.job.max_iter,
+                        tol=self.job.tol,
+                    )
+                elif self.job.model in {"Metric (cGFC)","METRIC (CGFC)"}:
+                    A_sub = unmix_metric(
+                        E, Y_sub,
+                        metric="cGFC",
+                        anc=self.job.anc,
+                        asc=self.job.asc,
+                        max_iter=self.job.max_iter,
+                        step=1e-2,
                         tol=self.job.tol,
                     )
                 else:
@@ -1204,6 +1214,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
                 for w in (lam3, lam2, lam4, maxit):
                     w.setEnabled(True)
+
+            elif algo == 'METRIC (CGFC)':
+                anc.setEnabled(True)
+                asc.setEnabled(True)
+                mrg.setEnabled(True)
+
+                for w in (lam3, lam2, lam4, maxit):
+                    w.setEnabled(False)
 
             else:
                 # Cas inattendu
@@ -1877,10 +1895,16 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         job_name = self.comboBox_viz_show_model.itemText(idx_job)
         job = self.jobs.get(job_name)
+        idx_em = self.comboBox_viz_show_EM.currentIndex()
         self.comboBox_viz_show_EM.clear()
         for name in job.labels:
             name=name.split('#')[0]
             self.comboBox_viz_show_EM.addItem(name)
+        
+        try:
+            self.comboBox_viz_show_EM.setCurrentIndex(idx_em)
+        except:
+            pass
 
         self._refresh_abundance_view()
         self._draw_current_rect(use_job=True, surface=False)

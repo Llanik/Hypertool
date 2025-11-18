@@ -204,8 +204,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>589</width>
-                   <height>113</height>
+                   <width>499</width>
+                   <height>103</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -281,8 +281,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>63</width>
-                   <height>20</height>
+                   <width>98</width>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -432,8 +432,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>181</width>
-                   <height>20</height>
+                   <width>198</width>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -591,6 +591,11 @@
               <item>
                <property name="text">
                 <string>FCLS</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Metric (cGFC)</string>
                </property>
               </item>
               <item>

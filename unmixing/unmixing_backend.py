@@ -427,6 +427,185 @@ def unmix_sunsal(
         A[:, i] = _sunsal_admm_single(E, Y[:, i], prm)
     return A
 
+# ---------- Similarity metrics (cGFC, MSE) ------------------------------------
+
+def metric_cgfc(y: np.ndarray, y_hat: np.ndarray, eps: float = 1e-12) -> float:
+    """
+    1 - GFC(y, y_hat) où GFC = (y·y_hat) / (||y|| ||y_hat||).
+    """
+    y = np.asarray(y, dtype=float).ravel()
+    yh = np.asarray(y_hat, dtype=float).ravel()
+    num = float(np.dot(y, yh))
+    ny = float(np.linalg.norm(y)) + eps
+    nyh = float(np.linalg.norm(yh)) + eps
+    gfc = num / (ny * nyh)
+    return 1.0 - gfc
+
+
+def metric_mse(y: np.ndarray, y_hat: np.ndarray) -> float:
+    """
+    MSE(y, y_hat) = mean((y - y_hat)^2).
+    """
+    y = np.asarray(y, dtype=float).ravel()
+    yh = np.asarray(y_hat, dtype=float).ravel()
+    diff = yh - y
+    return float(np.mean(diff * diff))
+
+def _metric_cost_grad(E: np.ndarray,
+                      y: np.ndarray,
+                      a: np.ndarray,
+                      metric: str = "cGFC",
+                      eps: float = 1e-12) -> tuple[float, np.ndarray]:
+    """
+    Calcule (cost, grad) pour une métrique donnée.
+    - E: (L, p)
+    - y: (L,)
+    - a: (p,)
+    Retourne:
+      cost: scalaire
+      grad: (p,) gradient dJ/da
+    """
+    E = np.asarray(E, dtype=float)
+    y = np.asarray(y, dtype=float).ravel()
+    a = np.asarray(a, dtype=float).ravel()
+
+    L, p = E.shape
+    if y.shape[0] != L:
+        raise ValueError("E and y must have consistent number of bands")
+
+    z = E @ a  # (L,)
+
+    m = (metric or "cGFC").lower()
+
+    if m in ("mse", "ls", "l2"):
+        # J(a) = mean((Ea - y)^2)
+        diff = z - y                 # (L,)
+        cost = float(np.mean(diff * diff))
+        grad = (2.0 / L) * (E.T @ diff)   # (p,)
+        return cost, grad
+
+    if m == "cgfc":
+        # J(a) = 1 - (y·z)/(||y|| ||z||)
+        ny = float(np.linalg.norm(y)) + eps
+        nz = float(np.linalg.norm(z)) + eps
+        num = float(np.dot(y, z))        # y·z
+        gfc = num / (ny * nz)
+        cost = 1.0 - gfc
+
+        # gradient de J par rapport à a
+        # dJ/dz = - d(GFC)/dz
+        # GFC = (y·z)/(ny * nz)
+        # => dGFC/dz = ( y * nz - (y·z)/nz * (z/nz) ) / (ny * nz)
+        # (attention aux eps)
+        y_vec = y
+        z_vec = z
+        # terme intermédiaire
+        # d(GFC)/dz
+        dG_dz = (y_vec * nz - (num / nz) * (z_vec / nz)) / (ny * nz)
+        dJ_dz = -dG_dz
+        grad = E.T @ dJ_dz   # (p,)
+        return cost, grad
+
+    raise ValueError(f"Unknown metric: {metric}")
+
+def _unmix_metric_pg_single(E: np.ndarray,
+                            y: np.ndarray,
+                            metric: str = "cGFC",
+                            anc: bool = True,
+                            asc: bool = True,
+                            max_iter: int = 200,
+                            step: float = 1e-2,
+                            tol: float = 1e-5) -> np.ndarray:
+    """
+    Unmixing pour un pixel unique par descente de gradient projetée sur ANC/ASC.
+
+    min_a  J(a) = metric(Ea, y)
+    s.t.   a >= 0 (si anc)
+           sum(a) = 1 (si asc)
+
+    Retourne a de shape (p,).
+    """
+    E = np.asarray(E, dtype=float)
+    y = np.asarray(y, dtype=float).ravel()
+    L, p = E.shape
+    if y.shape[0] != L:
+        raise ValueError("E and y must have consistent number of bands")
+
+    # ---- init ----
+    if asc:
+        # uniforme sur le simplexe
+        a = np.full(p, 1.0 / p, dtype=float)
+    elif anc:
+        # non-negatif mais pas forcément normalisé
+        a = np.zeros(p, dtype=float)
+        a[0] = 1.0
+    else:
+        a = np.zeros(p, dtype=float)
+
+    last_cost = None
+
+    for it in range(max_iter):
+        cost, grad = _metric_cost_grad(E, y, a, metric=metric)
+
+        # étape de descente
+        a_new = a - step * grad
+
+        # projection sur le domaine admissible
+        if asc and anc:
+            a_new = _proj_simplex(a_new)  # déjà défini pour SUnSAL
+        elif anc:
+            a_new = np.maximum(a_new, 0.0)
+
+        # critère d'arrêt
+        if last_cost is not None:
+            rel = abs(cost - last_cost) / (abs(last_cost) + 1e-12)
+            if rel < tol:
+                a = a_new
+                break
+
+        a = a_new
+        last_cost = cost
+
+    return a
+
+def unmix_metric(E: np.ndarray,
+                 Y: np.ndarray,
+                 metric: str = "cGFC",
+                 anc: bool = True,
+                 asc: bool = True,
+                 max_iter: int = 200,
+                 step: float = 1e-2,
+                 tol: float = 1e-5) -> np.ndarray:
+    """
+    Unmixing par métrique générale (cGFC, MSE, ...) pour tous les pixels.
+    E : (L, p)
+    Y : (L, N)
+    Retourne A : (p, N)
+    """
+    E = np.asarray(E, dtype=float)
+    Y = np.asarray(Y, dtype=float)
+    L, p = E.shape
+    if Y.shape[0] != L:
+        raise ValueError("E and Y must share the same number of bands (rows)")
+
+    N = Y.shape[1]
+    A = np.zeros((p, N), dtype=float)
+
+    for j in range(N):
+        y = Y[:, j]
+        a_j = _unmix_metric_pg_single(
+            E, y,
+            metric=metric,
+            anc=anc,
+            asc=asc,
+            max_iter=max_iter,
+            step=step,
+            tol=tol,
+        )
+        A[:, j] = a_j
+
+    return A
+
 # ---------- Helpers: sanity checks, preprocessing -----------------------------
 
 # --- Endmember groups utilities (UI ↔ backend) ---
