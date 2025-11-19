@@ -22,7 +22,6 @@
 [Authors & Credits](#-authors--credits)  
 [License](#-license)
 
-
 ## 🧭 Overview
 
 Hypertool integrates multiple processing modules ("tools") into a single workspace. Each tool is accessible through dockable panels and shares a common cube and metadata manager.
