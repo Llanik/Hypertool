@@ -139,7 +139,7 @@ class Ui_dialog_white_calibration(object):
         self.comboBox_white_Reference_choice.setItemText(3, _translate("dialog_white_calibration", "Sphere Optics Multi 50 (CIL)"))
         self.comboBox_white_Reference_choice.setItemText(4, _translate("dialog_white_calibration", "Sphere Optics Multi 20 (CIL)"))
         self.comboBox_white_Reference_choice.setItemText(5, _translate("dialog_white_calibration", "Sphere Optics Multi 5 (CIL)"))
-        self.comboBox_white_Reference_choice.setItemText(6, _translate("dialog_white_calibration", "White Hyspex (Finland)"))
+        self.comboBox_white_Reference_choice.setItemText(6, _translate("dialog_white_calibration", "White Hyspex (Norway)"))
         self.comboBox_white_Reference_choice.setItemText(7, _translate("dialog_white_calibration", "Teflon"))
         self.comboBox_white_Reference_choice.setItemText(8, _translate("dialog_white_calibration", "Personal (load file)"))
         self.label_R_manual.setText(_translate("dialog_white_calibration", "R ="))

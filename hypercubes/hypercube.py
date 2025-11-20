@@ -983,13 +983,64 @@ class Hypercube:
 
                 self.viewer.add_selection_overlay(rect)
 
-            def set_cube(self,cube):
-                self.cube_calib=cube
-                # RGB image from data
-                channels = [0, len(self.cube_calib.wl) // 2, len(self.cube_calib.wl) - 1]
+            def set_cube(self, cube):
+                from PyQt5.QtWidgets import QMessageBox
+                import numpy as np
+
+                self.cube_calib = cube
+
+                # 1) S'assurer que les données sont chargées
+                if getattr(self.cube_calib, "data", None) is None:
+                    ci = getattr(self.cube_calib, "cube_info", None)
+                    fp = getattr(ci, "filepath", None) if ci else None
+
+                    if not fp:
+                        QMessageBox.warning(
+                            self,
+                            "No data",
+                            "Cube has no data loaded and no filepath. "
+                            "Cannot perform white calibration."
+                        )
+                        return
+
+                    try:
+                        # recharge le cube sans redemander de fichier
+                        self.cube_calib.open_hyp(
+                            default_path=fp,
+                            open_dialog=False,
+                            cube_info=ci
+                        )
+                    except Exception as e:
+                        QMessageBox.critical(
+                            self,
+                            "Error loading cube",
+                            f"Could not load cube data for calibration:\n{e}"
+                        )
+                        return
+
+                # 2) Déterminer un axe spectral robuste
+                wl = getattr(self.cube_calib, "wl", None)
+                if wl is None:
+                    # pas de wl -> axe artificiel 0..B-1
+                    n_bands = self.cube_calib.data.shape[2]
+                    wl = np.arange(n_bands, dtype=float)
+                    self.cube_calib.wl = wl
+                else:
+                    wl = np.asarray(wl).ravel()
+                    n_bands = wl.size
+
+                # 3) Construire l’image RGB à partir des indices de bande
+                channels = [0, n_bands // 2, n_bands - 1]
                 img_rgb = self.cube_calib.data[:, :, channels]
-                img_rgb = (img_rgb * 255 / img_rgb.max()).clip(0, 255).astype(np.uint8)
+
+                if img_rgb.max() > 0:
+                    img_rgb = (img_rgb * 255.0 / img_rgb.max()).clip(0, 255).astype(np.uint8)
+                else:
+                    img_rgb = np.zeros_like(img_rgb, dtype=np.uint8)
+
                 self.viewer.setImage(np_to_qpixmap(img_rgb))
+
+                # 4) Mettre à jour l’état de l’UI
                 self.toggle_manual_value_fields()
 
             def load_white_corection_file(self):
@@ -1011,12 +1062,14 @@ class Hypercube:
 
                 # ---- 2) Read file and detect delimiter ----
                 def _detect_delimiter(sample_line: str):
-                    if ',' in sample_line:
-                        return ','
+
                     if ';' in sample_line:
                         return ';'
-                    if '\t' in sample_line:
+                    elif '\t' in sample_line:
                         return '\t'
+                    elif ',' in sample_line:
+                        return ','
+
                     return None  # means split on any whitespace
 
                 # Read lines (ignore empties)
@@ -1047,7 +1100,7 @@ class Hypercube:
                 # Heuristic: if first row has any non-float token, default skip_first_row = True
                 def _is_float(s):
                     try:
-                        float(s)
+                        float(s.replace(',', '.'))
                         return True
                     except Exception:
                         return False
@@ -1132,8 +1185,19 @@ class Hypercube:
                 r_vals = []
                 for row in usable:
                     try:
-                        a = float(row[0])
-                        b = float(row[1])
+                        # Accept decimal commas like "0,411" or "0," -> "0.411" / "0."
+                        c0 = row[0].strip().replace(',', '.')
+                        c1 = row[1].strip().replace(',', '.')
+
+                        # Handle weird trailing dots (e.g. "0.")
+                        if c0.endswith('.'):
+                            c0 = c0[:-1] or '0'
+                        if c1.endswith('.'):
+                            c1 = c1[:-1] or '0'
+
+                        a = float(c0)
+                        b = float(c1)
+
                         if swap_cols:
                             wl_vals.append(b)
                             r_vals.append(a)
@@ -1176,6 +1240,8 @@ class Hypercube:
                                         f"Column order: {'(reflectance, wavelength)' if swap_cols else '(wavelength, reflectance)'}\n"
                                         f"{'Skipped first row' if skip_first else 'Used first row'}.")
 
+                self.ui.label.setText(fname.split('/')[-1])
+                self.ui.comboBox_white_Reference_choice.setCurrentText("Personal (load file)")
                 self.update_white_spectrum()
 
             def plot_white_reflectance(self, wavelengths, reflectance,name='white_ref'):
@@ -1189,36 +1255,51 @@ class Hypercube:
                 self.canvas_white.draw()
 
             def update_white_spectrum(self):
-                try :
-                    self.cube_calib.wl
-                except:
+                # pas de cube -> rien à faire
+                if self.cube_calib is None or self.cube_calib.data is None:
                     return
+
+                # Axe spectral robuste
+                wl = getattr(self.cube_calib, "wl", None)
+                if wl is None:
+                    n_bands = self.cube_calib.data.shape[2]
+                    wl = np.arange(n_bands, dtype=float)
+                    self.cube_calib.wl = wl  # on l’enregistre pour les autres fonctions
+                else:
+                    wl = np.asarray(wl).ravel()
+                    n_bands = wl.size
 
                 name = self.get_white_ref_name()
+
+                # --- Cas "valeur constante" ---
                 if name == "Constant value (from field)":
-                    R_val=int(self.ui.doubleSpinBox_R_manual.value()*100)/100
-                    reflectance=R_val*np.ones(len(self.cube_calib.wl))
-                    label=f'Constant R = {R_val}'
-                    name=label
-                    self.plot_white_reflectance(self.cube_calib.wl, reflectance, name)
+                    R_val = int(self.ui.doubleSpinBox_R_manual.value() * 100) / 100
+                    reflectance = R_val * np.ones(n_bands)
+                    label = f'Constant R = {R_val}'
+                    self.plot_white_reflectance(wl, reflectance, label)
                     return
 
+                # --- Cas "fichier perso" ---
                 if name == "Personal (load file)":
                     try:
                         if self.wl_white is None:
-                            QMessageBox.warning(self,"Load white correction file first")
+                            QMessageBox.warning(self, "Load white correction file first",
+                                                "Please load a white correction file first.")
                             return
                         else:
-                            reflectance = self.cube_calib.get_ref_white(name,self.wl_white,self.reflectance_white)
-                    except:
+                            reflectance = self.cube_calib.get_ref_white(
+                                name, self.wl_white, self.reflectance_white
+                            )
+                    except Exception:
                         return
                 else:
+                    # Sphere Optics, Teflon, etc.
                     reflectance = self.cube_calib.get_ref_white(name)
 
                 if 'Sphere Optics' in name:
-                    name=name.replace('Sphere Optics','SphOpt')
+                    name = name.replace('Sphere Optics', 'SphOpt')
 
-                self.plot_white_reflectance(self.cube_calib.wl, reflectance,name)
+                self.plot_white_reflectance(wl, reflectance, name)
 
             def accept(self):
                 coords = self.get_selected_rect()
@@ -1244,6 +1325,10 @@ class Hypercube:
             white_ref_name = dialog.get_white_ref_name()
             if white_ref_name == "Constant value (from field)":
                 white_ref_values = dialog.ui.doubleSpinBox_R_manual.value()
+            elif 'Personal' in white_ref_name:
+                white_ref_values = self.get_ref_white(
+                    white_ref_name, dialog.wl_white, dialog.reflectance_white
+                )
             else:
                 white_ref_values = self.get_ref_white(white_ref_name)
 
@@ -1328,7 +1413,7 @@ class Hypercube:
             wl_white = data['wl'].squeeze()
             reflectance_white = data['spectrum'].squeeze()
 
-        elif white_name == 'White Hyspex (Finland)':
+        elif white_name == 'White Hyspex (Norway)':
             white_path = os.path.join(white_folder, 'multi90_finland.mat')
             data = loadmat(white_path)
             wl_white = data['wl_multi_90white'].squeeze()
@@ -1500,7 +1585,6 @@ class Hypercube:
             return self.binarize_bradley(image,param)
         else:
             raise ValueError(f"Unknown binarization algorithm: {algorithm}")
-
 
 class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
     """

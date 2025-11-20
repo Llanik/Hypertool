@@ -42,7 +42,7 @@ from identification.load_cube_dialog import Ui_Dialog
 # <editor-fold desc="To do">
 #todo : color map of abundance map
 #todo : export results en h5 or multiple png
-#todo : show all classified by : name, total abundace, max abundance, other ?
+#todo : open and vizualize previous unmix analysis saved
 #todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
 #todo : add one pixel fusion
 #todo : select pixels of endmembers also with ctrl+clic left
