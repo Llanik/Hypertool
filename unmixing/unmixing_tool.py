@@ -45,8 +45,6 @@ from identification.load_cube_dialog import Ui_Dialog
 #todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
 #todo : add one pixel fusion
 #todo : select pixels of endmembers also with ctrl+clic left
-# todo : con Fran -> look pinta salidas en matlab
-# todo : ask him how is the specim_IQ reflectances files.
 # </editor-fold>
 
 class SelectEMDialog(QDialog):

@@ -35,6 +35,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="checkBox_crop_ref_1">
+           <property name="text">
+            <string>Crop Reflectance values to 1</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="pushButton_load_white_capture">
            <property name="text">
             <string>Load white reference capture</string>
