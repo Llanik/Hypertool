@@ -272,3 +272,36 @@ Traceback (most recent call last):
                  ~~~~~~~~~~~~~~~~~^^^
 KeyError: 2
 
+2025-11-24 09:40:21,863 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\minicube\minicube_tool.py", line 119, in load_cube
+    if self.wl[-1] < 1100 and self.wl[0] > 350:
+       ~~~~~~~^^^^
+TypeError: 'NoneType' object is not subscriptable
+
+2025-11-24 09:40:42,472 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\minicube\minicube_tool.py", line 130, in load_cube
+    self.modif_sliders(force_defaults=True)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\minicube\minicube_tool.py", line 189, in modif_sliders
+    sliders[i].setValue(value)
+TypeError: setValue(self, a0: int): argument 1 has unexpected type 'numpy.float32'
+
+2025-11-24 09:40:48,174 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\minicube\minicube_tool.py", line 189, in modif_sliders
+    sliders[i].setValue(value)
+TypeError: setValue(self, a0: int): argument 1 has unexpected type 'numpy.float32'
+
+2025-11-24 09:40:51,418 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\minicube\minicube_tool.py", line 189, in modif_sliders
+    sliders[i].setValue(value)
+TypeError: setValue(self, a0: int): argument 1 has unexpected type 'numpy.float32'
+
+2025-11-24 09:40:55,934 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\minicube\minicube_tool.py", line 189, in modif_sliders
+    sliders[i].setValue(value)
+TypeError: setValue(self, a0: int): argument 1 has unexpected type 'numpy.float32'
+

@@ -15,6 +15,12 @@ from PyQt5.QtWidgets import (QStyleFactory, QAction, QSizePolicy,QPushButton,
 import traceback
 import logging
 
+
+## bloc non important warning
+import warnings
+warnings.filterwarnings("ignore", message="Parameters with non-lowercase names")
+
+
 # projects import
 from hypercubes.hypercube import *
 from data_vizualisation.data_vizualisation_tool import Data_Viz_Window
@@ -896,10 +902,10 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
-    fname = '00189-VNIR-mock-up.h5'
-    filepath = os.path.join(folder, fname)
-    main._on_add_cube([filepath,filepath.replace('189','191')])
+    # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
+    # fname = '00189-VNIR-mock-up.h5'
+    # filepath = os.path.join(folder, fname)
+    # main._on_add_cube([filepath,filepath.replace('189','191')])
 
     try:
         import matlab.engine
