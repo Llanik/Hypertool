@@ -931,7 +931,6 @@ class Hypercube:
                 self.ui.pushButton_valid_calibration.clicked.connect(self.accept)
                 self.ui.pushButton_load_personal_white_ref.clicked.connect(self.load_white_corection_file)
                 self.ui.doubleSpinBox_R_manual.valueChanged.connect(self.update_white_spectrum)
-                self.ui.checkBox_crop_ref_1.clicked.connect(self.crop_ref_to_one)
                 self.ui.checkBox_use_white_capture.toggled.connect(self.on_use_white_capture_toggled)
 
                 self.ui.radioButton_horizontal_flat_field.toggled.connect(self.update_selection_overlay)
@@ -940,13 +939,6 @@ class Hypercube:
                 self.ui.radioButton_no_flat_field.toggled.connect(self.update_selection_overlay)
 
                 QTimer.singleShot(0, self.update_white_spectrum) # to force spectra draw after layout processed
-
-            def crop_ref_to_one(self):
-
-                if self.ui.checkBox_crop_ref_1.isChecked():
-                    self.set_cube(self.cube_calib_init,renorm=True)
-                else:
-                    self.set_cube(self.cube_calib_init, renorm=False)
 
             def get_selected_rect(self):
                 return self.viewer.get_rect_coords()
@@ -1030,33 +1022,8 @@ class Hypercube:
                     metadata=cube.metadata,
                     cube_info=cube.cube_info,
                 )
-                print('[CALIBRATION] : cube filepath : ',self.cube_main.cube_info.filepath)
-                print('[CALIBRATION] : cube size : ',self.cube_main.data.shape)
-
-                print('[CALIBRATION] : white filepath : ',self.cube_white.cube_info.filepath)
-                print('[CALIBRATION] : white size : ',self.cube_white.data.shape)
-
-                print('[CALIBRATION] : calib filepath : ',self.cube_calib.cube_info.filepath)
-                print('[CALIBRATION] : calib size : ',self.cube_calib.data.shape)
-
-                print('[CALIBRATION] : init filepath : ', self.cube_calib_init.cube_info.filepath)
-                print('[CALIBRATION] : init size : ', self.cube_calib_init.data.shape)
 
                 self.set_cube(self.cube_white, renorm=False)
-
-                print('--------------SET CUBE-----------------')
-
-                print('[CALIBRATION] : cube filepath : ',self.cube_main.cube_info.filepath)
-                print('[CALIBRATION] : cube size : ',self.cube_main.data.shape)
-
-                print('[CALIBRATION] : white filepath : ',self.cube_white.cube_info.filepath)
-                print('[CALIBRATION] : white size : ',self.cube_white.data.shape)
-
-                print('[CALIBRATION] : calib filepath : ',self.cube_calib.cube_info.filepath)
-                print('[CALIBRATION] : calib size : ',self.cube_calib.data.shape)
-
-                print('[CALIBRATION] : init filepath : ', self.cube_calib_init.cube_info.filepath)
-                print('[CALIBRATION] : init size : ', self.cube_calib_init.data.shape)
 
                 n_bands = self.cube_calib.wl.size
                 channels = [0, n_bands // 2, n_bands - 1]
@@ -1102,7 +1069,7 @@ class Hypercube:
 
                 self.viewer.add_selection_overlay(rect)
 
-            def set_cube(self, cube,renorm=False,init=False):
+            def set_cube(self, cube,clip=False,init=False):
                 from PyQt5.QtWidgets import QMessageBox
                 import numpy as np
 
@@ -1162,7 +1129,7 @@ class Hypercube:
                     wl=self.cube_calib.wl
                     n_bands = wl.size
 
-                    if renorm :
+                    if clip :
                         self.cube_calib.data = np.clip(self.cube_calib_init.data, 0, 1)
                     else:
                         self.cube_calib.data=self.cube_calib_init.data
@@ -1594,6 +1561,10 @@ class Hypercube:
                 mean_white=selected
                 self.data /= (self / white_ref_values)
                 self.metadata['calibration_type'] = 'full_flat'
+
+            if dialog.ui.checkBox_crop_ref_1.isChecked():
+                self.data=np.clip(self.data,0,1.0)
+                self.metadata["R_clipped_0_1"] = True
 
             self.metadata['calibration_reflectance_values'] = white_ref_values
             self.metadata['white_reference'] = white_ref_name
