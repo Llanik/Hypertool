@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[HYPERCUBE] : &#10;- Added crop refletance to calibration&#10;- Added possibility of calibration without white in image&#10;- Checked for IQ camera (results, REFLECTANCE.hdr)">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/white_calibration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/white_calibration_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/white_calibration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/white_calibration_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -140,14 +135,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00087" summary="[IDENTIFICATION] : learning process with croped features and save_load model OK">
-      <option name="closed" value="true" />
-      <created>1758039279445</created>
-      <option name="number" value="00087" />
-      <option name="presentableId" value="LOCAL-00087" />
-      <option name="project" value="LOCAL" />
-      <updated>1758039279445</updated>
     </task>
     <task id="LOCAL-00088" summary="[IDENTIFICATION] : Substrate double implementation (fast and slow) added and propagated to save file.">
       <option name="closed" value="true" />
@@ -533,7 +520,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763721773797</updated>
     </task>
-    <option name="localTasksCounter" value="136" />
+    <task id="LOCAL-00136" summary="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark">
+      <option name="closed" value="true" />
+      <created>1763886734612</created>
+      <option name="number" value="00136" />
+      <option name="presentableId" value="LOCAL-00136" />
+      <option name="project" value="LOCAL" />
+      <updated>1763886734612</updated>
+    </task>
+    <option name="localTasksCounter" value="137" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -585,7 +580,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[unmixing] : &#10;- unifier parametres dans class_info. gestion des couleurs OK" />
     <MESSAGE value="[unmixing] : &#10;- implementando forms to show endmembers params" />
     <MESSAGE value="[unmixing] : &#10;- scrolable labels for endmembers&#10;- dynamic cross to visualize automatic endmembers&#10;- get Raw endmembers spectrum and normalisation to save of before unmixing&#10;- transforms extended to selection_mask&#10;- radiobuttons and stecked tabs for result_viz" />
     <MESSAGE value="[unmixing] : &#10;- endmmembers editing name for saving abd color for temporal visualization.&#10;- saving automatic abd manual endmmbers to csv. &#10;- Loading dispersive endmmbers like with multiple spectrum" />
@@ -610,6 +604,7 @@
     <MESSAGE value="[IDENTIFICATION] : &#10;- load_map added" />
     <MESSAGE value="[UNMIXING] : &#10;- One spectrum IR.&#10;- check if cm-1 o nm" />
     <MESSAGE value="[HYPERCUBE] : &#10;- Added crop refletance to calibration&#10;- Added possibility of calibration without white in image&#10;- Checked for IQ camera (results, REFLECTANCE.hdr)" />
-    <option name="LAST_COMMIT_MESSAGE" value="[HYPERCUBE] : &#10;- Added crop refletance to calibration&#10;- Added possibility of calibration without white in image&#10;- Checked for IQ camera (results, REFLECTANCE.hdr)" />
+    <MESSAGE value="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark" />
+    <option name="LAST_COMMIT_MESSAGE" value="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark" />
   </component>
 </project>

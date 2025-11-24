@@ -1629,20 +1629,24 @@ class Hypercube:
 
         # Cas 1 : dimensions identiques -> carte complète
         if Hd == H and Wd == W:
+            print('[DARK] : full dark image')
             return dark_data.astype(np.float32)
 
         # Cas 2 : même hauteur, largeur=1 -> horizontal flat field
-        if Hd == H and Wd == 1:
-            line = dark_data[:, 0, :]  # (H, B)
+        if Hd == H and Wd != W:
+            line = np.mean(dark_data,axis=1)  # (H, B)
+            print('[DARK] : one line mean')
             return np.repeat(line[:, None, :], W, axis=1)  # (H, W, B)
 
         # Cas 2 bis : même largeur, hauteur=1 -> vertical flat field
-        if Wd == W and Hd == 1:
-            col = dark_data[0, :, :]  # (W, B)
+        if Wd == W and Hd != H:
+            col = np.mean(dark_data,axis=0)  # (W, B)
+            print('[DARK] : one line mean')
             return np.repeat(col[None, :, :], H, axis=0)  # (H, W, B)
 
         # Cas 3 : ni largeur ni hauteur -> spectre moyen global
         spec = dark_data.mean(axis=(0, 1))  # (B,)
+        print('[DARK] : one mean spectra')
         return np.broadcast_to(spec[None, None, :], (H, W, B)).astype(np.float32)
 
     def get_ref_white(self,white_name,_wl_white=None,_reflectance_white=None):
