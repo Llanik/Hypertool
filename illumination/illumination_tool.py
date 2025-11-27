@@ -36,7 +36,9 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
             BASE_DIR = sys._MEIPASS
         else :
             BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
         csv_path = os.path.join(BASE_DIR,"illumination/Illuminants.csv")
+
         self.load_illuminants(csv_path)
 
         self.CMFs = np.array([
@@ -172,6 +174,7 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
                     else:
                         value = None
                     self.illuminants_dict[name] = value
+
         except FileNotFoundError:
             print(f"Archivo {filename} no encontrado. Diccionario vacío.")
             self.illuminants_dict = {}

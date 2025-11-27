@@ -1,7 +1,7 @@
 # cd C:\Users\Usuario\Documents\GitHub\Hypertool
 # python MainWindow.py
 # sys.excepthook = excepthook #set the exception handler
-# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation"  MainWindow.py
+# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination"  MainWindow.py
 # C:\Envs\py37test\Scripts\activate
 
 # GUI Qt
@@ -19,7 +19,6 @@ import logging
 ## bloc non important warning
 import warnings
 warnings.filterwarnings("ignore", message="Parameters with non-lowercase names")
-
 
 # projects import
 from hypercubes.hypercube import *
@@ -193,6 +192,67 @@ class CustomDockTitleBar(QtWidgets.QWidget):
                 background-color: {border};
             }}
         """)
+
+class CubeDestinationDialog(QtWidgets.QDialog):
+    """
+    Petite boîte de dialogue qui propose d'envoyer le cube
+    vers un outil particulier, ou juste l'ajouter à la liste.
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Send cube to tool")
+        self.choice = None  # stockera un petit mot-clé décrivant le choix
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        label = QtWidgets.QLabel("Cube added to list.\nWhere do you want to send it?")
+        layout.addWidget(label)
+
+        # Layout de boutons
+        btn_layout = QtWidgets.QGridLayout()
+        row = 0
+
+        def add_button(text, choice_key, row, col):
+            btn = QtWidgets.QPushButton(text)
+            btn.clicked.connect(lambda: self._set_choice_and_accept(choice_key))
+            btn_layout.addWidget(btn, row, col)
+            return btn
+
+        # Ligne 1
+        add_button("Data Visualization", "data_viz", row, 0)
+        add_button("Ground Truth", "gt", row, 1)
+        row += 1
+
+        # Ligne 2
+        add_button("Metadata", "meta", row, 0)
+        add_button("File Browser", "browser", row, 1)
+        row += 1
+
+        # Ligne 3
+        add_button("Minicube tool", "minicube", row, 0)
+        add_button("Illumination", "illumination", row, 1)
+        row += 1
+
+        # Ligne 4 : Registration
+        add_button("Registration (Fixed)", "reg_fix", row, 0)
+        add_button("Registration (Moving)", "reg_mov", row, 1)
+        row += 1
+
+        # Ligne 5 : Identification
+        add_button("Identification VNIR", "ident_vnir", row, 0)
+        add_button("Identification SWIR", "ident_swir", row, 1)
+
+        layout.addLayout(btn_layout)
+
+        # Boutons Cancel / Close en bas (optionnel)
+        btn_close = QtWidgets.QPushButton("Just add to list")
+        btn_close.clicked.connect(self.reject)
+        layout.addWidget(btn_close)
+
+    def _set_choice_and_accept(self, choice_key):
+        # choice_key peut être None (Just add), ou une string comme "data_viz"
+        self.choice = choice_key
+        self.accept()
 
 class MainApp(QtWidgets.QMainWindow):
     def __init__(self):
@@ -484,24 +544,55 @@ class MainApp(QtWidgets.QMainWindow):
 
         self._update_cube_menu(self.hypercube_manager.paths)
 
-        if len(paths)==1:
-            filepath=paths[0]
+        if len(paths) == 1:
+            filepath = paths[0]
             ci = self.hypercube_manager.add_or_sync_cube(filepath)
             hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
 
             print(f"Cube '{paths[0]}' loaded in cache for use.")
 
-            qm = QMessageBox()
-            ans = qm.question(self, 'Cube loaded',
-                              "Do you want to send the loaded cube to the tools ?",
-                              qm.Yes | qm.No)
-            if ans==qm.Yes:
-                try:
-                    self._send_to_all(filepath)
-                except:
-                    QMessageBox.warning(self,'Cube not loaded',
-                              "Cube not loaded to all tools. Check format.")
+            dlg = CubeDestinationDialog(self)
+            result = dlg.exec_()
 
+            # Si Cancel / fermeture → on ne fait rien de plus (cube déjà dans la liste)
+            if result != QtWidgets.QDialog.Accepted:
+                return
+
+            choice = dlg.choice
+
+            # None ou chaîne vide → Just add to cube list
+            if not choice:
+                return
+
+            try:
+                if choice == "all":
+                    self._send_to_all(filepath)
+                elif choice == "data_viz":
+                    self._send_to_data_viz(filepath)
+                elif choice == "gt":
+                    self._send_to_gt(filepath)
+                elif choice == "meta":
+                    self._send_to_metadata(filepath)
+                elif choice == "browser":
+                    self._send_to_browser(filepath)
+                elif choice == "minicube":
+                    self._send_to_minicube(filepath)
+                elif choice == "illumination":
+                    self._send_to_illumination(filepath)
+                elif choice == "reg_fix":
+                    self._send_to_registration(filepath, 0)
+                elif choice == "reg_mov":
+                    self._send_to_registration(filepath, 1)
+                elif choice == "ident_vnir":
+                    self._send_to_identification(filepath, 0)
+                elif choice == "ident_swir":
+                    self._send_to_identification(filepath, 1)
+            except Exception:
+                QMessageBox.warning(
+                    self,
+                    'Cube not loaded',
+                    "Cube not loaded to selected tool. Check format."
+                )
     def calib_cube(self,filepath):
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
         hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)

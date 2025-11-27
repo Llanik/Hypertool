@@ -152,7 +152,7 @@ def normalize_spectra(Y: np.ndarray, mode: str = 'L2', eps: float = 1e-12) -> np
     return np.ascontiguousarray(X / norms, dtype=np.float64)
 
 def _auto_sg_window(n_bands: int,
-                    max_win: int = 15,
+                    max_win: int = 25,
                     min_win: int = 5) -> int:
     """
     Choisit une taille de fenêtre impaire raisonnable pour Savitzky–Golay.
@@ -172,20 +172,29 @@ def _apply_savgol(data: np.ndarray,
                   wl: Optional[np.ndarray],
                   order: int,
                   axis: int,
-                  polyorder: int = 2) -> np.ndarray:
+                  polyorder: int = 4) -> np.ndarray:
     """
     Applique Savitzky–Golay (dérivée d'ordre 0,1,2) le long de l'axe spectral.
     """
     arr = np.asarray(data, dtype=float)
     n_bands = arr.shape[axis]
 
-    window_length = _auto_sg_window(n_bands, max_win=15, min_win=5)
+
 
     if wl is not None and len(wl) >= 2:
         wl = np.asarray(wl, dtype=float)
         delta = float(np.mean(np.diff(wl)))
+
+        if len(wl) > 100:
+            window_length=43
+        else:
+            window_length = _auto_sg_window(n_bands, max_win=25, min_win=5)
+
     else:
         delta = 1.0
+        window_length = _auto_sg_window(n_bands, max_win=25, min_win=5)
+
+    print('[SAVGOL] window_length : ',window_length)
 
     out = savgol_filter(
         arr,

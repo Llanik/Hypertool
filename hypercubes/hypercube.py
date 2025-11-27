@@ -1023,7 +1023,7 @@ class Hypercube:
                     cube_info=cube.cube_info,
                 )
 
-                self.set_cube(self.cube_white, renorm=False)
+                self.set_cube(self.cube_white)
 
                 n_bands = self.cube_calib.wl.size
                 channels = [0, n_bands // 2, n_bands - 1]
@@ -1365,13 +1365,12 @@ class Hypercube:
 
                     # 👉 utiliser le cube de white capture
                     cube = self.cube_white
-                    renorm = False
+
 
 
                 else:
                     # 👉 revenir au cube principal
                     cube = self.cube_main
-                    renorm = self.ui.checkBox_crop_ref_1.isChecked()
 
                 self.cube_calib = cube
                 self.cube_calib_init = Hypercube(
@@ -1381,7 +1380,7 @@ class Hypercube:
                     cube_info=cube.cube_info,
                 )
 
-                self.set_cube(self.cube_calib, renorm=renorm)
+                self.set_cube(self.cube_calib)
 
             def plot_white_reflectance(self, wavelengths, reflectance,name='white_ref'):
                 self.canvas_white.ax.clear()
@@ -2056,8 +2055,8 @@ if __name__ == '__main__':
     # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
     # fname = '00279-VNIR-mock-up.h5'
     folder=(r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\From_Cameras\Javierille 19_11_2025\Javierille 19_11_2025\white light 0, only UV')
-    fname='unmix_scan_0338_calib_app.hdr'
-    # fname='unmix_scan_0338.hdr'
+    # fname='unmix_scan_0338_calib_app.hdr'
+    fname='unmix_scan_0338.hdr'
 
 
     import os

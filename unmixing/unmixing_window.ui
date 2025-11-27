@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1304</width>
+    <width>1326</width>
     <height>814</height>
    </rect>
   </property>
@@ -253,7 +253,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>499</width>
+                   <width>521</width>
                    <height>103</height>
                   </rect>
                  </property>
@@ -330,8 +330,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>98</width>
-                   <height>28</height>
+                   <width>80</width>
+                   <height>20</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -482,7 +482,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>198</width>
-                   <height>28</height>
+                   <height>20</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -509,93 +509,6 @@
              </layout>
             </widget>
            </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_3">
-         <attribute name="title">
-          <string>Unmixing queue</string>
-         </attribute>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QTableWidget" name="tableWidget_classificationList"/>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_12">
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_remove">
-              <property name="text">
-               <string>Remove selected</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_remove_all">
-              <property name="text">
-               <string>Remove all</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_up">
-              <property name="text">
-               <string>↑</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_down">
-              <property name="text">
-               <string>↓</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_13">
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_reinit">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>Reinit selected</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_start_selected">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>Launch selected</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_start">
-              <property name="styleSheet">
-               <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
-              </property>
-              <property name="text">
-               <string>Start all</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton_clas_stop">
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(170,50, 50);
-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="text">
-               <string>Cancel queue</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
           </item>
          </layout>
         </widget>
@@ -929,6 +842,93 @@ color: rgb(255, 255, 255);</string>
               </property>
               <property name="text">
                <string>Add to queue</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_3">
+         <attribute name="title">
+          <string>Unmixing queue</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QTableWidget" name="tableWidget_classificationList"/>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_12">
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_remove">
+              <property name="text">
+               <string>Remove selected</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_remove_all">
+              <property name="text">
+               <string>Remove all</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_up">
+              <property name="text">
+               <string>↑</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_down">
+              <property name="text">
+               <string>↓</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_13">
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_reinit">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Reinit selected</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_start_selected">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Launch selected</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_start">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
+              </property>
+              <property name="text">
+               <string>Start all</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_clas_stop">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(170,50, 50);
+color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="text">
+               <string>Cancel queue</string>
               </property>
              </widget>
             </item>
