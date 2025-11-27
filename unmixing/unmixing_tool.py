@@ -1390,6 +1390,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.pushButton_class_name_assign.clicked.connect(self.open_em_editor)
         self.pushButton_add_EM.clicked.connect(self._add_em_to_lib)
         self.pushButton_remove_EM.clicked.connect(self._remove_em_from_lib)
+        self.pushButton_wavenumber_to_wavelength.clicked.connect(self.wavenumber_to_wavelength)
 
         # Spectra window
         self.comboBox_endmembers_spectra.currentIndexChanged.connect(self.on_changes_EM_spectra_viz)
@@ -2611,8 +2612,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         dlg = AbundanceGalleryWindow(self, parent=self)
         dlg.exec_()
-
-
     # </editor-fold>
 
     # <editor-fold desc="Cube">
@@ -2801,6 +2800,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.param_auto = {}
         self.wl_auto = None
 
+        path=self.cube.cube_info.filepath
+        self.label_cube_file.setText(os.path.basename(path).split('.')[0])
+
     def no_reset_jobs_on_new_cube(self):
         for job in self.jobs:
             if self.jobs[job].status in ['Done', 'Running']:
@@ -2816,6 +2818,228 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 return False
 
         return False
+
+    def wavenumber_to_wavelength(self):
+        """
+        Ouvre un fichier CSV contenant un spectre FTIR avec :
+            - première colonne : nombre d'onde (cm-1)
+            - colonnes suivantes : une ou plusieurs colonnes de valeurs
+
+        Convertit l'axe en longueur d'onde (nm), remet les lignes dans
+        l'ordre croissant de λ et applique cette réorganisation à toutes
+        les colonnes de valeurs.
+
+        Affiche une table éditable puis sauvegarde le résultat dans un
+        nouveau CSV : 1ère colonne = Wavelength_nm, colonnes suivantes =
+        mêmes noms que dans le fichier d'origine.
+        """
+        import pandas as pd
+        import numpy as np
+
+        # --- 1) Choix du fichier CSV d'entrée ---
+        if getattr(sys, 'frozen', False):
+            base_dir = sys._MEIPASS
+        else:
+            base_dir = os.path.dirname(os.path.dirname(__file__))
+
+        default_dir = os.path.join(base_dir, "unmixing", "data")
+        in_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open FTIR spectrum (wavenumber + values)",
+            default_dir,
+            "CSV files (*.csv);;All files (*)"
+        )
+        if not in_path:
+            return
+
+        # --- 2) Lecture du CSV ---
+        try:
+            df = pd.read_csv(in_path)
+        except Exception as e:
+            QMessageBox.critical(self, "FTIR conversion",
+                                 f"Could not read CSV file:\n{e}")
+            return
+
+        if df.shape[1] < 2:
+            QMessageBox.warning(
+                self, "FTIR conversion",
+                "Invalid format: need at least two columns "
+                "(wavenumber + one or more value columns)."
+            )
+            return
+
+        col_wn = df.columns[0]
+        value_cols = df.columns[1:]  # toutes les colonnes de valeurs
+
+        try:
+            wn = df.iloc[:, 0].to_numpy(dtype=float)       # (N,)
+            vals = df.iloc[:, 1:].to_numpy(dtype=float)    # (N, M)
+        except Exception as e:
+            QMessageBox.critical(self, "FTIR conversion",
+                                 f"Could not parse numeric data:\n{e}")
+            return
+
+        if wn.ndim != 1 or vals.ndim != 2:
+            QMessageBox.warning(
+                self, "FTIR conversion",
+                "Unexpected data shape. Check your CSV format."
+            )
+            return
+
+        # Nettoyage des lignes non valides (NaN / inf)
+        finite_rows = np.isfinite(wn) & np.all(np.isfinite(vals), axis=1)
+        wn = wn[finite_rows]
+        vals = vals[finite_rows, :]
+
+        if wn.size < 2:
+            QMessageBox.warning(
+                self, "FTIR conversion",
+                "Not enough valid rows after cleaning."
+            )
+            return
+
+        # --- 3) Conversion cm-1 -> nm ---
+        # λ (nm) = 1e7 / ν̃(cm-1)
+        wl_nm = 1e7 / wn
+
+        # Mise en ordre croissant de λ, et réordonnancement des valeurs
+        order = np.argsort(wl_nm)
+        wl_nm = wl_nm[order]
+        vals = vals[order, :]
+
+        # --- 4) Dialogue avec table éditable ---
+        dlg = QDialog(self)
+        dlg.setWindowTitle("FTIR: wavenumber → wavelength (nm)")
+        layout = QVBoxLayout(dlg)
+
+        info_label = QLabel(
+            "First column = wavelength (nm)\n"
+            "Other columns = spectra values (editable)."
+        )
+        layout.addWidget(info_label)
+
+        table = QTableWidget(dlg)
+        n_rows = len(wl_nm)
+        n_val_cols = vals.shape[1]
+
+        table.setColumnCount(1 + n_val_cols)
+        headers = ["Wavelength (nm)"] + list(value_cols)
+        table.setHorizontalHeaderLabels(headers)
+        table.setRowCount(n_rows)
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        table.horizontalHeader().setStretchLastSection(True)
+
+        # Remplissage de la table
+        for i in range(n_rows):
+            # λ nm
+            it_w = QTableWidgetItem(f"{wl_nm[i]:.6f}")
+            table.setItem(i, 0, it_w)
+
+            # toutes les colonnes de valeurs
+            for j in range(n_val_cols):
+                it_v = QTableWidgetItem(f"{vals[i, j]:.6g}")
+                table.setItem(i, j + 1, it_v)
+
+        layout.addWidget(table)
+
+        btn_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        layout.addWidget(btn_box)
+
+        # --- 5) Callback de sauvegarde ---
+        def on_save():
+            rows = table.rowCount()
+            cols = table.columnCount()
+            n_val_cols_local = cols - 1
+
+            wl_list = []
+            vals_lists = [[] for _ in range(n_val_cols_local)]
+
+            for r in range(rows):
+                item_w = table.item(r, 0)
+                if item_w is None:
+                    continue
+                txt_w = item_w.text().strip().replace(",", ".")
+                if txt_w == "":
+                    continue
+                try:
+                    w = float(txt_w)
+                except ValueError:
+                    # ligne ignorée si λ non numérique
+                    continue
+
+                wl_list.append(w)
+
+                # lire toutes les colonnes de valeurs (peut contenir NaN)
+                for c in range(n_val_cols_local):
+                    item_v = table.item(r, c + 1)
+                    if item_v is None:
+                        vals_lists[c].append(np.nan)
+                    else:
+                        txt_v = item_v.text().strip().replace(",", ".")
+                        if txt_v == "":
+                            vals_lists[c].append(np.nan)
+                        else:
+                            try:
+                                v = float(txt_v)
+                            except ValueError:
+                                v = np.nan
+                            vals_lists[c].append(v)
+
+            if len(wl_list) < 2:
+                QMessageBox.warning(
+                    dlg, "FTIR conversion",
+                    "At least two valid rows are required."
+                )
+                return
+
+            wl_arr = np.array(wl_list, dtype=float)
+            vals_arr = [np.array(v, dtype=float) for v in vals_lists]
+
+            # tri final par λ nm (au cas où l'utilisateur ait mélangé)
+            idx = np.argsort(wl_arr)
+            wl_arr = wl_arr[idx]
+            vals_arr = [v[idx] for v in vals_arr]
+
+            # Construction du DataFrame de sortie
+            data = {"Wavelength_nm": wl_arr}
+            for j, col_name in enumerate(value_cols):
+                data[col_name] = vals_arr[j]
+
+            out_df = pd.DataFrame(data)
+
+            save_dir = os.path.dirname(in_path)
+            base_name = os.path.splitext(os.path.basename(in_path))[0]
+            default_name = base_name + "_nm.csv"
+
+            out_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save converted FTIR spectra",
+                os.path.join(save_dir, default_name),
+                "CSV files (*.csv)"
+            )
+            if not out_path:
+                return
+
+            try:
+                out_df.to_csv(out_path, index=False)
+            except Exception as e:
+                QMessageBox.critical(
+                    dlg, "FTIR conversion",
+                    f"Could not save CSV:\n{e}"
+                )
+                return
+
+            QMessageBox.information(
+                self, "FTIR conversion",
+                f"File saved as:\n{out_path}"
+            )
+            dlg.accept()
+
+        btn_box.accepted.connect(on_save)
+        btn_box.rejected.connect(dlg.reject)
+
+        dlg.resize(900, 600)
+        dlg.exec_()
 
     def load_ftir_spectrum(self):
         """
@@ -2894,10 +3118,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
                     # On récupère la colonne choisie
                     val_raw = num[chosen_col].to_numpy(dtype=float)
+                    sample=chosen_col
 
             except Exception:
                 wl_raw = None
                 val_raw = None
+                sample=None
 
             # 2) fallback avec loadtxt si pandas n’a pas réussi
             if wl_raw is None or val_raw is None:
@@ -3021,7 +3247,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             f"({Lf} new bands, total = {self.wl.size})."
         )
 
-        self.label_ftir_spectrum.setText(os.path.basename(path))
+        self.label_ftir_file.setText(os.path.basename(path).split('.')[0])
+        self.label_ftir_sample.setText(sample)
 
     # </editor-fold>
 
