@@ -64,6 +64,29 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButton_load_one_spectrum">
+          <property name="text">
+           <string>Load One Spectrum</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_one_spectrum">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>No Cube File</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="pushButton_load_FTIR">
           <property name="text">
            <string>FTIR spectrum</string>
@@ -127,19 +150,6 @@
            <string>Reset all</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
@@ -292,8 +302,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>612</width>
-                   <height>113</height>
+                   <width>520</width>
+                   <height>120</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -980,7 +990,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>1</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">

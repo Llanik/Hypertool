@@ -35,7 +35,7 @@ import traceback
 
 from unmixing.unmixing_backend import*
 from unmixing.unmixing_window import Ui_GroundTruthWidget
-from hypercubes.hypercube import Hypercube
+from hypercubes.hypercube import Hypercube,CubeInfoTemp
 from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
@@ -1318,6 +1318,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.horizontalSlider_overlay_transparency.setValue(70)
         self.alpha = self.horizontalSlider_overlay_transparency.value() / 100.0
 
+        # Pour gérer l'historique FTIR / one-spectrum
+        self._last_ftir_wl = None  # np.ndarray des wl FTIR (nm)
+        self._last_ftir_spec = None  # np.ndarray du spectre FTIR
+        self._last_ftir_sample = None  # nom de l'échantillon FTIR
+
         #endmembers
         self.regions = {}  # dict: classe -> [ {'coords': set[(x,y)], 'mean': np.ndarray}, ... ]
 
@@ -1352,6 +1357,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # connection
         self.load_btn.clicked.connect(self.open_load_cube_dialog)
         self.pushButton_load_FTIR.clicked.connect(self.load_ftir_spectrum)
+        self.pushButton_load_one_spectrum.clicked.connect(self.load_one_spectrum)
         self.sliders_rgb = [
             self.horizontalSlider_red_channel,
             self.horizontalSlider_green_channel,
@@ -3312,8 +3318,202 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             f"({Lf} new bands, total = {self.wl.size})."
         )
 
+        # --- mémoriser le FTIR pour le mode "one spectrum" ---
+        self._last_ftir_wl = wl_nm.copy()
+        self._last_ftir_spec = val_raw.copy()
+        self._last_ftir_sample = str(sample)
+        self._last_ftir_file = path
+
         self.label_ftir_file.setText(os.path.basename(path).split('.')[0])
         self.label_ftir_sample.setText(sample)
+
+    def load_one_spectrum(self):
+        """
+        Charge un spectre 1D (csv/txt/dat) et construit un 'cube' 1x1xL
+        pour faire de l'unmixing sur un seul pixel.
+
+        Si un spectre FTIR a déjà été chargé (via load_ftir_spectrum),
+        propose de concaténer les deux spectres (sans crop, tri par λ).
+        """
+        import pandas as pd
+        from PyQt5.QtWidgets import QInputDialog
+
+        # Vérifier les jobs existants comme pour un nouveau cube
+        if self.no_reset_jobs_on_new_cube():
+            return
+
+        # --- Choix du fichier ---
+        if getattr(sys, 'frozen', False):
+            BASE_DIR = sys._MEIPASS
+        else:
+            BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+        open_dir = os.path.join(BASE_DIR, "unmixing", "data")
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load one spectrum",
+            open_dir,
+            "Spectral files (*.csv *.txt *.dat);;All files (*)"
+        )
+        if not path:
+            return
+
+        # --- Lecture (très proche de load_ftir_spectrum) ---
+        try:
+            wl_raw = None
+            val_raw = None
+            sample = os.path.basename(path).split('.')[0]
+
+            # 1) tentative avec pandas
+            try:
+                df = pd.read_csv(path)
+
+                num = df.select_dtypes(include=[np.number])
+                if num.shape[1] >= 2:
+                    # 1ère colonne numérique = axe spectral
+                    wl_raw = num.iloc[:, 0].to_numpy(dtype=float)
+
+                    # Colonnes restantes = spectres possibles
+                    spec_cols = list(num.columns[1:])
+
+                    chosen_col = None
+                    if len(spec_cols) == 1:
+                        chosen_col = spec_cols[0]
+                    else:
+                        chosen_col, ok = QInputDialog.getItem(
+                            self,
+                            "Choose spectrum",
+                            "Column to be used :",
+                            spec_cols,
+                            0,
+                            False
+                        )
+                        if not ok:
+                            return
+
+                    val_raw = num[chosen_col].to_numpy(dtype=float)
+                    sample = str(chosen_col)
+
+                else:
+                    # Pas assez de colonnes numériques -> on tente np.loadtxt
+                    raise ValueError("Not enough numeric columns")
+
+            except Exception:
+                # 2) fallback : np.loadtxt
+                arr = np.loadtxt(path)
+                if arr.ndim != 2 or arr.shape[1] < 2:
+                    raise ValueError("File must contain at least 2 numeric columns (wavelength + values).")
+
+                wl_raw = arr[:, 0].astype(float)
+
+                if arr.shape[1] == 2:
+                    val_raw = arr[:, 1].astype(float)
+                else:
+                    # plusieurs colonnes de valeurs
+                    col_indices = [str(i) for i in range(1, arr.shape[1])]
+                    chosen_index, ok = QInputDialog.getItem(
+                        self,
+                        "Choose spectrum",
+                        "Column index (1..N) :",
+                        col_indices,
+                        0,
+                        False
+                    )
+                    if not ok:
+                        return
+                    j = int(chosen_index)
+                    val_raw = arr[:, j].astype(float)
+                    sample = f"col{j}"
+
+            if wl_raw is None or val_raw is None:
+                raise ValueError("Could not read spectrum data.")
+
+            # Nettoyage basique
+            m = np.isfinite(wl_raw) & np.isfinite(val_raw)
+            wl_raw = wl_raw[m]
+            val_raw = val_raw[m]
+
+            if wl_raw.size < 2:
+                raise ValueError("Not enough valid points in spectrum.")
+        except Exception as e:
+            QMessageBox.warning(
+                self, "Spectrum load error",
+                f"Could not read spectrum from:\n{os.path.basename(path)}\n\n{e}"
+            )
+            return
+
+        # --- Demander l'unité : nm ou cm-1 ? (comme FTIR) ---
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle("Units")
+        msg.setText(
+            "A spectrum has been loaded.\n\n"
+            "What is the unit of the x-axis ?"
+        )
+        btn_nm = msg.addButton("Nanometer (nm)", QMessageBox.AcceptRole)
+        btn_cm = msg.addButton("Inverse centimeter (cm⁻¹)", QMessageBox.ActionRole)
+        btn_cancel = msg.addButton(QMessageBox.Cancel)
+        msg.setDefaultButton(btn_nm)
+        msg.exec_()
+        clicked = msg.clickedButton()
+
+        if clicked is btn_cancel:
+            return
+
+        if clicked is btn_cm:
+            # λ(nm) = 1e7 / ν(cm⁻¹)
+            wl_nm = 1e7 / wl_raw
+        else:
+            wl_nm = wl_raw.copy()
+
+        # Tri
+        order = np.argsort(wl_nm)
+        wl_nm = wl_nm[order]
+        val_raw = val_raw[order]
+
+        # --- Option : concaténer avec FTIR déjà chargé ---
+        if (
+            getattr(self, "_last_ftir_wl", None) is not None and
+            getattr(self, "_last_ftir_spec", None) is not None
+        ):
+            msg2 = QMessageBox(self)
+            msg2.setIcon(QMessageBox.Question)
+            msg2.setWindowTitle("Concatenate with FTIR")
+            ftir_name = self._last_ftir_sample or self.label_ftir_sample.text()
+            if not ftir_name or "No FTIR" in ftir_name:
+                ftir_name = "FTIR spectrum"
+            msg2.setText(
+                f"A FTIR spectrum ('{ftir_name}') is already loaded.\n\n"
+                "Do you want to concatenate it with this one ?"
+            )
+            btn_yes = msg2.addButton("Yes, concatenate", QMessageBox.AcceptRole)
+            btn_no = msg2.addButton("No", QMessageBox.RejectRole)
+            msg2.exec_()
+            clicked2 = msg2.clickedButton()
+
+            if clicked2 is btn_yes:
+                wl_comb = np.concatenate([wl_nm, self._last_ftir_wl])
+                spec_comb = np.concatenate([val_raw, self._last_ftir_spec])
+
+                order2 = np.argsort(wl_comb)
+                wl_nm = wl_comb[order2]
+                val_raw = spec_comb[order2]
+
+        # --- Construire un "cube" 1x1xL ---
+        data = val_raw.astype(float).reshape(1, 1, -1)
+        L = data.shape[2]
+
+        # cube_info minimal pour que load_cube puisse afficher un nom
+        cube_one = Hypercube(data=data, wl=wl_nm, filepath=path)
+        cube_one.metadata = getattr(cube_one, "metadata", {}) or {}
+        cube_one.metadata.setdefault("name", sample)
+        cube_one.metadata["is_single_spectrum_cube"] = True
+
+        # --- Charger ce "cube" dans l'outil, comme un cube normal ---
+        self.load_cube(cube=cube_one, range=None)
+
+        # Mettre à jour le label dédié
+        self.label_one_spectrum.setText(sample + f"  (L={L})")
 
     # </editor-fold>
 

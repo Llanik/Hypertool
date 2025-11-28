@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIX] : &#10;- added conversion tool from cm-1 to nm">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,14 +137,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00095" summary="[IDENTIFICATION] : Modif savig path and learning thread.&#10;Added crop spectral in hypercube class">
-      <option name="closed" value="true" />
-      <created>1758544886116</created>
-      <option name="number" value="00095" />
-      <option name="presentableId" value="LOCAL-00095" />
-      <option name="project" value="LOCAL" />
-      <updated>1758544886117</updated>
     </task>
     <task id="LOCAL-00096" summary="[GROUND TRUTH] :&#10;-&gt; Gestion of diminution of class numbers : erase or reassign with choice. &#10;-&gt; Save last label choice when selecting">
       <option name="closed" value="true" />
@@ -528,7 +522,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764253967023</updated>
     </task>
-    <option name="localTasksCounter" value="144" />
+    <task id="LOCAL-00144" summary="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM">
+      <option name="closed" value="true" />
+      <created>1764333271746</created>
+      <option name="number" value="00144" />
+      <option name="presentableId" value="LOCAL-00144" />
+      <option name="project" value="LOCAL" />
+      <updated>1764333271748</updated>
+    </task>
+    <option name="localTasksCounter" value="145" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -580,7 +582,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- fixed lable of library bugg&#10;- fixed bug of EM sources for multiples jobs&#10;- progress bar implemented to dynamic 5%" />
     <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- same normalization for cube and EM OK" />
     <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- same normalization for cube and EM OK&#10;- update abundance map OK" />
     <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- ROI bugg fixed" />
@@ -605,6 +606,7 @@
     <MESSAGE value="[MAIN-CALIB-UNMIX] : &#10;- one tool dialog after adding cube&#10;- savgol filters adusted to order 4 and window 43" />
     <MESSAGE value="[UNMIX] : &#10;- ADD one FTIR spectrum to an hypercube OK&#10;- Select good sample if csv with multiple samples" />
     <MESSAGE value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm" />
-    <option name="LAST_COMMIT_MESSAGE" value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm" />
+    <MESSAGE value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM" />
+    <option name="LAST_COMMIT_MESSAGE" value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM" />
   </component>
 </project>
