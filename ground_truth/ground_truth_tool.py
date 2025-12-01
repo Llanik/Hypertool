@@ -546,47 +546,70 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
     def eventFilter(self, source, event):
         mode = self.comboBox_pixel_selection_mode.currentText()
 
-        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
-            return False      ## to dont block drag
+        # 1) Mouse press ---------------------------------------------------------
+        if event.type() == QEvent.MouseButtonPress:
 
-        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.RightButton and (self.selecting_pixels or self.erase_selection):
-            if not (self.selecting_pixels or self.erase_selection):
-                return False
-            print('Clicked OK')
-            pos = self.viewer_left.mapToScene(event.pos())
-            x0, y0 = int(pos.x()), int(pos.y())
-            if mode == 'pixel':
-                # on commence la collecte
-                self._pixel_selecting = True
-                self._pixel_coords = [(x0, y0)]
-                return True
-            elif mode == 'rectangle':
-                # début du drag
-                from PyQt5.QtWidgets import QRubberBand
-                self.origin = event.pos()
-                self.rubberBand = QRubberBand(QRubberBand.Rectangle,
-                                              self.viewer_left.viewport())
-                self.rubberBand.setGeometry(self.origin.x(),
-                                            self.origin.y(), 1, 1)
-                self.rubberBand.show()
-                return True
-            elif mode == 'ellipse':
-                from PyQt5.QtWidgets import QGraphicsEllipseItem
-                from PyQt5.QtGui import QPen
+            # calcul des modifieurs UNIQUEMENT pour les events souris
+            mods = Qt.NoModifier
+            if hasattr(event, "modifiers"):
+                try:
+                    mods = event.modifiers()
+                except TypeError:
+                    mods = Qt.NoModifier
+            ctrl = bool(mods & Qt.ControlModifier)
 
-                self.origin = event.pos()
-                pen = QPen(Qt.red)
-                pen.setStyle(Qt.DashLine)
-                self.ellipse_item = QGraphicsEllipseItem()
-                self.ellipse_item.setPen(pen)
-                self.ellipse_item.setBrush(Qt.transparent)
-                self.viewer_left.scene().addItem(self.ellipse_item)
+            # --- clic gauche simple = drag/pan normal ---
+            if event.button() == Qt.LeftButton and not ctrl:
+                return False      # ne pas bloquer le ScrollHandDrag
+
+            # --- clic droit OU Ctrl+clic gauche = démarrer sélection ---
+            if (event.button() == Qt.RightButton or (event.button() == Qt.LeftButton and ctrl)) \
+                    and (self.selecting_pixels or self.erase_selection):
+
+                if not (self.selecting_pixels or self.erase_selection):
+                    return False
+
+                print('Clicked OK')
+                pos = self.viewer_left.mapToScene(event.pos())
+                x0, y0 = int(pos.x()), int(pos.y())
+
+                if mode == 'pixel':
+                    # on commence la collecte
+                    self._pixel_selecting = True
+                    self._pixel_coords = [(x0, y0)]
+                    return True
+
+                elif mode == 'rectangle':
+                    # début du drag
+                    from PyQt5.QtWidgets import QRubberBand
+                    self.origin = event.pos()
+                    self.rubberBand = QRubberBand(QRubberBand.Rectangle,
+                                                  self.viewer_left.viewport())
+                    self.rubberBand.setGeometry(self.origin.x(),
+                                                self.origin.y(), 1, 1)
+                    self.rubberBand.show()
+                    return True
+
+                elif mode == 'ellipse':
+                    from PyQt5.QtWidgets import QGraphicsEllipseItem
+                    from PyQt5.QtGui import QPen
+
+                    self.origin = event.pos()
+                    pen = QPen(Qt.red)
+                    pen.setStyle(Qt.DashLine)
+                    self.ellipse_item = QGraphicsEllipseItem()
+                    self.ellipse_item.setPen(pen)
+                    self.ellipse_item.setBrush(Qt.transparent)
+                    self.viewer_left.scene().addItem(self.ellipse_item)
+                    return True
+
+            # --- clic molette = toggle live spectra (comme avant) ---
+            if event.button() == Qt.MiddleButton:
+                if not self.selecting_pixels:
+                    self.checkBox_live_spectra.toggle()
                 return True
 
-        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.MiddleButton:
-            if not self.selecting_pixels:
-                self.checkBox_live_spectra.toggle()
-        # 2) Mouvement souris → mise à jour de la selection en cours
+        # 2) Mouvement souris → mise à jour de la sélection en cours -------------
         if event.type() == QEvent.MouseMove and self._pixel_selecting and mode == 'pixel':
             if not (self.selecting_pixels or self.erase_selection):
                 return False
@@ -627,15 +650,15 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             self.ellipse_item.setRect(rect)
             return True
 
-        # 3) Relâchement souris → calcul de la sélection
-
-        if event.type() == QEvent.MouseButtonRelease and event.button() == Qt.RightButton and mode == 'pixel' and self._pixel_selecting :
+        # 3) Relâchement souris → calcul de la sélection -------------------------
+        # IMPORTANT : on ne teste PLUS le bouton (Right ou Ctrl+Left), seulement le mode + flag
+        if event.type() == QEvent.MouseButtonRelease and mode == 'pixel' and self._pixel_selecting:
             if not (self.selecting_pixels or self.erase_selection):
                 return False
             print('realeased OK')
             # get pixels
             coords = self._pixel_coords.copy()
-            #  Si au moins 3 points, propose de fermer le cheminif min 3 points, propose contour
+            #  Si au moins 3 points, propose de fermer le chemin
             if len(coords) >= 3:
                 reply = QMessageBox.question(
                     self, "Close Path?",
@@ -654,7 +677,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                             if poly.contains_point((xx, yy)):
                                 filled.append((xx, yy))
 
-                    # to avoid dobbles
+                    # to avoid doubles
                     seen = set()
                     coords = []
                     for p in filled:
@@ -664,8 +687,8 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
             if self.erase_selection:
                 self._handle_erasure(coords)
-            else :
-                self._handle_selection(coords) # close selection
+            else:
+                self._handle_selection(coords)  # close selection
 
             # ready to new selection
             self._pixel_selecting = False
@@ -722,11 +745,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 self._handle_selection(coords)  # close selection
             return True
 
-        # 4) Mouvement souris pour le live spectrum
-        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and         self.checkBox_live_spectra.isChecked():
+        # 4) Mouvement souris pour le live spectrum ------------------------------
+        if source is self.viewer_left.viewport() and event.type() == QEvent.MouseMove and self.checkBox_live_spectra.isChecked():
             if self.checkBox_live_spectra.isChecked() and self.data is not None:
                 pos = self.viewer_left.mapToScene(event.pos())
-                x,y=int(pos.x()),int(pos.y())
+                x, y = int(pos.x()), int(pos.y())
                 H, W = self.data.shape[0], self.data.shape[1]
                 if 0 <= x < W and 0 <= y < H:
                     self.update_spectra(x, y)
