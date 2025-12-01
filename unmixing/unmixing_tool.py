@@ -40,7 +40,8 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
-#todo : put Fran parametros
+#todo : check metrics different
+#todo : adjust size of loaded cube in viewers.
 #todo : color map of abundance map ?
 #todo : export results en h5 or multiple png
 #todo : open and vizualize previous unmix analysis saved
