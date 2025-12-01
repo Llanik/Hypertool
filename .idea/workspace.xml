@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIX] : &#10;- bugg of empty EM combobox fixed&#10;- save and load results OK">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIX] : &#10;- ctrl+clic gauche OK pour selectionner&#10;[GROUND TRUTH] : &#10;- IDEM avec ctrl+clic gauche">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,14 +134,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00099" summary="Icon_illumination">
-      <option name="closed" value="true" />
-      <created>1759831965939</created>
-      <option name="number" value="00099" />
-      <option name="presentableId" value="LOCAL-00099" />
-      <option name="project" value="LOCAL" />
-      <updated>1759831965940</updated>
     </task>
     <task id="LOCAL-00100" summary="[unmixing] : &#10;- unmixing_backend with pyspotools and laars&#10;- ui -&gt; OK for cube viz and end members auto extraction">
       <option name="closed" value="true" />
@@ -528,7 +519,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764596140857</updated>
     </task>
-    <option name="localTasksCounter" value="148" />
+    <task id="LOCAL-00148" summary="[UNMIX] : &#10;- ctrl+clic gauche OK pour selectionner&#10;[GROUND TRUTH] : &#10;- IDEM avec ctrl+clic gauche">
+      <option name="closed" value="true" />
+      <created>1764596969488</created>
+      <option name="number" value="00148" />
+      <option name="presentableId" value="LOCAL-00148" />
+      <option name="project" value="LOCAL" />
+      <updated>1764596969488</updated>
+    </task>
+    <option name="localTasksCounter" value="149" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -580,7 +579,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[unmixing] : implementing unmixing jobs&#10;- ROI bugg fixed" />
     <MESSAGE value="[unmixing] : working on merging manual selection and library" />
     <MESSAGE value="[unmixing] : working on merging manual selection and library&#10;-&gt; OK if same wl" />
     <MESSAGE value="[unmixing] : working on merging manual selection and library&#10;-&gt; OK if wl different with dialog box" />
@@ -605,6 +603,7 @@
     <MESSAGE value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM" />
     <MESSAGE value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM&#10;- unique spectra from csv file added" />
     <MESSAGE value="[UNMIX] : &#10;- bugg of empty EM combobox fixed&#10;- save and load results OK" />
-    <option name="LAST_COMMIT_MESSAGE" value="[UNMIX] : &#10;- bugg of empty EM combobox fixed&#10;- save and load results OK" />
+    <MESSAGE value="[UNMIX] : &#10;- ctrl+clic gauche OK pour selectionner&#10;[GROUND TRUTH] : &#10;- IDEM avec ctrl+clic gauche" />
+    <option name="LAST_COMMIT_MESSAGE" value="[UNMIX] : &#10;- ctrl+clic gauche OK pour selectionner&#10;[GROUND TRUTH] : &#10;- IDEM avec ctrl+clic gauche" />
   </component>
 </project>
