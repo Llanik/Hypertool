@@ -126,17 +126,11 @@
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <widget class="QPushButton" name="pushButton_load_map">
+          <property name="text">
+           <string>Load Map</string>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_reset">
@@ -302,8 +296,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>520</width>
-                   <height>120</height>
+                   <width>496</width>
+                   <height>112</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -379,8 +373,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>63</width>
-                   <height>20</height>
+                   <width>98</width>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -530,8 +524,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>181</width>
-                   <height>20</height>
+                   <width>198</width>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -990,7 +984,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
@@ -1247,7 +1241,7 @@ color: rgb(255, 255, 255);</string>
           <item>
            <widget class="QStackedWidget" name="stackedWidget_2">
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="page_abundance_viz">
              <layout class="QVBoxLayout" name="verticalLayout_9">

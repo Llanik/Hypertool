@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 from PIL import Image
 import h5py
+import json
 
 import numpy as np
 import re
@@ -1410,6 +1411,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.radioButton_view_abundance.toggled.connect(self._refresh_abundance_view)
         self.radioButton_norm_show_abundance_global.toggled.connect(self._refresh_abundance_view)
         self.pushButton_show_all.clicked.connect(self._open_abundance_gallery)
+        self.pushButton_save_map.clicked.connect(self.save_unmix_job_h5)
+        self.pushButton_load_map.clicked.connect(self.load_unmix_job_h5)
 
         # Unmix window
         self.radioButton_view_em.toggled.connect(self.toggle_em_viz_stacked)
@@ -2428,16 +2431,52 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         job_name = self.comboBox_viz_show_model.itemText(idx_job)
         job = self.jobs.get(job_name)
-        idx_em = self.comboBox_viz_show_EM.currentIndex()
-        self.comboBox_viz_show_EM.clear()
-        for name in job.labels:
-            name=name.split('#')[0]
-            self.comboBox_viz_show_EM.addItem(name)
+        if job is None:
+            self.comboBox_viz_show_EM.clear()
+            return
 
-        try:
-            self.comboBox_viz_show_EM.setCurrentIndex(idx_em)
-        except:
+        # On essaie de garder l’index précédent si possible
+        prev_idx = self.comboBox_viz_show_EM.currentIndex()
+
+        self.comboBox_viz_show_EM.blockSignals(True)
+        self.comboBox_viz_show_EM.clear()
+
+        # Récupération des labels (qui peuvent être int OU str)
+        labels = getattr(job, "labels", None)
+
+        # Fallback : si pas de labels, essayer de déduire depuis A
+        if labels is None:
+            A = getattr(job, "A", None)
+            if A is not None:
+                # A est (L, p) ou (Npix, p) selon ton implémentation -> on prend p
+                p = A.shape[-1]
+                labels = [f"EM_{k:02d}" for k in range(p)]
+            else:
+                labels = []
+
+        # Remplir la combo avec des noms propres
+        for lab in np.asarray(labels).ravel():
+            txt = str(lab)  # <- évite le bug avec les int
+            txt = txt.split('#')[0]  # enlève éventuels suffixes
+            txt = txt.strip()
+            if not txt:
+                txt = "EM"
+            self.comboBox_viz_show_EM.addItem(txt)
+
+        # Si aucun EM, on sort proprement
+        if self.comboBox_viz_show_EM.count() == 0:
+            self.comboBox_viz_show_EM.blockSignals(False)
+            self._refresh_abundance_view()
+            self._draw_current_rect(use_job=True, surface=False)
+            return
+
+        # Restaurer l’index précédent si encore valide, sinon mettre sur le 1er
+        if 0 <= prev_idx < self.comboBox_viz_show_EM.count():
+            self.comboBox_viz_show_EM.setCurrentIndex(prev_idx)
+        else:
             self.comboBox_viz_show_EM.setCurrentIndex(0)
+
+        self.comboBox_viz_show_EM.blockSignals(False)
 
         self._refresh_abundance_view()
         self._draw_current_rect(use_job=True, surface=False)
@@ -2658,7 +2697,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     fontsize='small',
                     ncol=ncol
                 )
-                leg.set_draggable(True)
+                leg.set_draggable(False)
                 self.spec_fig.subplots_adjust(right=0.95)
                 self.spec_canvas.draw_idle()
             else :
@@ -3514,7 +3553,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.load_cube(cube=cube_one, range=None)
 
         # Mettre à jour le label dédié
-        self.label_one_spectrum.setText(sample + f"  (L={L})")
+        self.label_one_spectrum.setText(sample)
 
     # </editor-fold>
 
@@ -4961,6 +5000,307 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         return {'manual': self.norm_manual,
                 'auto': self.norm_auto,
                 'lib': self.norm_lib}[self.active_source]
+
+    def _default_unmix_h5_name(self, job) -> str:
+        """
+        Propose un nom de fichier HDF5 du type :
+        <cube>_<job>.unmix.h5
+        """
+        base_cube = _safe_filename_from(self.cube) if getattr(self, "cube", None) is not None else "cube"
+        base_cube = os.path.splitext(base_cube)[0]
+        safe_job = str(job.name).replace(" ", "_")
+        return f"{base_cube}_{safe_job}_unmix.h5"
+
+    def save_unmix_job_h5(self):
+        if not self.jobs:
+            QMessageBox.information(self, "Unmixing", "No unmixing job to save.")
+            return
+
+        # 1) Déterminer le job à sauver : ligne sélectionnée dans la table
+        job_name = None
+        job_name = self.comboBox_viz_show_model.currentText()
+
+        # fallback : premier job terminé
+        if not job_name:
+            done_jobs = [n for n, j in self.jobs.items()
+                         if getattr(j, "A", None) is not None and j.status == "Done"]
+            if not done_jobs:
+                QMessageBox.information(self, "Unmixing", "No finished job to save.")
+                return
+            job_name = done_jobs[0]
+
+        job = self.jobs.get(job_name)
+        if job is None or getattr(job, "A", None) is None:
+            QMessageBox.warning(self, "Unmixing",
+                                f"Job '{job_name}' has no abundance matrix to save.")
+            return
+
+        ans = QMessageBox.question(
+            self,
+            "Save current visualize job",
+            f"The current visualized job {job_name} will be saved.\n"
+            f"Do you confirm ?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if ans != QMessageBox.Yes:
+            return
+        # 2) Proposer un fichier
+        base_dir = ""
+        try:
+            if getattr(self.cube, "cube_info", None) is not None:
+                base_dir = os.path.dirname(self.cube.cube_info.filepath or "")
+        except Exception:
+            pass
+
+        default_name = self._default_unmix_h5_name(job)
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save unmixing result (.h5)",
+            os.path.join(base_dir, default_name),
+            "HDF5 files (*.h5);;All files (*)"
+        )
+        if not path:
+            return
+
+        # 3) Écriture HDF5
+        try:
+            with h5py.File(path, "w") as f:
+                f.attrs["type"] = "unmixing_result"
+                f.attrs["tool"] = "UnmixingTool"
+                f.attrs["version"] = 1
+
+                # --- Cube info minimal ---
+                g_cube = f.create_group("Cube")
+                if getattr(self, "cube", None) is not None:
+                    ci = getattr(self.cube, "cube_info", None)
+                    if ci is not None:
+                        fp = getattr(ci, "filepath", "")
+                        g_cube.attrs["filepath"] = fp
+                    if getattr(self, "wl", None) is not None:
+                        g_cube.create_dataset("wl", data=np.asarray(self.wl, dtype=float))
+                    if getattr(self, "data", None) is not None:
+                        g_cube.create_dataset("shape", data=np.asarray(self.data.shape, dtype=np.int64))
+
+                # --- Groupe Job ---
+                g_job = f.create_group("Job")
+                g_job.attrs["name"] = str(job.name)
+                g_job.attrs["model"] = str(job.model)
+                g_job.attrs["normalization"] = str(job.normalization)
+                g_job.attrs["lam"] = float(getattr(job, "lam", 1e-3))
+                g_job.attrs["rho"] = float(getattr(job, "rho", 1.0))
+                g_job.attrs["anc"] = bool(getattr(job, "anc", True))
+                g_job.attrs["asc"] = bool(getattr(job, "asc", False))
+                g_job.attrs["max_iter"] = int(getattr(job, "max_iter", 0))
+                g_job.attrs["tol"] = float(getattr(job, "tol", 0.0))
+                g_job.attrs["preprocess"] = str(getattr(job, "preprocess", "raw"))
+                g_job.attrs["status"] = str(getattr(job, "status", "Done"))
+
+                # paramètres “complets” si dispo
+                try:
+                    if getattr(job, "params", None):
+                        g_job.attrs["params_json"] = json.dumps(job.params)
+                except Exception:
+                    pass
+
+                # --- Matrices principales ---
+                A = np.asarray(job.A, dtype=np.float32)
+                g_job.create_dataset("A", data=A)
+
+                if getattr(job, "E_used", None) is not None:
+                    g_job.create_dataset("E_used", data=np.asarray(job.E_used, dtype=np.float32))
+
+                if getattr(job, "wl_job", None) is not None:
+                    g_job.create_dataset("wl_job", data=np.asarray(job.wl_job, dtype=float))
+
+                if getattr(job, "wl_cube", None) is not None:
+                    g_job.create_dataset("wl_cube", data=np.asarray(job.wl_cube, dtype=float))
+
+                # --- Labels des endmembers ---
+                if getattr(job, "labels", None) is not None:
+                    labels = np.asarray(job.labels, dtype=object)
+                    dt = self._h5_str_dtype()
+                    g_job.create_dataset("labels", data=labels.astype(dt), dtype=dt)
+
+                # --- Cartes d'abondance par groupe (maps_by_group) ---
+                maps = getattr(job, "maps_by_group", None) or {}
+                if maps:
+                    g_maps = g_job.create_group("maps_by_group")
+                    for key, arr in maps.items():
+                        if arr is None:
+                            continue
+                        name = str(key)
+                        g_maps.create_dataset(name, data=np.asarray(arr, dtype=np.float32))
+
+        except Exception as e:
+            QMessageBox.critical(self, "Unmixing", f"Error while saving HDF5:\n{e}")
+            return
+
+        QMessageBox.information(self, "Unmixing",
+                                f"Job '{job_name}' saved to:\n{path}")
+
+    def load_unmix_job_h5(self, path = None):
+        # 1) Choix du fichier
+        if not path:
+            print("[LOAD UNMIX JOB] path is None ? -> ", path)
+
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Load unmixing result (.h5)",
+                "",
+                "HDF5 files (*.h5)"
+            )
+            if not path:
+                return
+
+        print("[LOAD UNMIX JOB] path : ",path)
+
+        # 2) Lecture HDF5
+        try:
+            with h5py.File(path, "r") as f:
+                # Optionnel : vérifier type
+                t = f.attrs.get("type", "")
+                if isinstance(t, bytes):
+                    t = t.decode("utf-8", errors="ignore")
+                if t not in ("unmixing_result",):
+                    # On n'interdit pas, mais on prévient
+                    print(f"[Unmixing] Warning: HDF5 type='{t}' (expected 'unmixing_result').")
+
+                g_job = f["Job"]
+
+                # attrs
+                base_name = g_job.attrs.get("name", "Loaded job")
+                if isinstance(base_name, bytes):
+                    base_name = base_name.decode("utf-8", errors="ignore")
+                base_name = str(base_name)
+
+                model = g_job.attrs.get("model", "UCLS")
+                if isinstance(model, bytes):
+                    model = model.decode("utf-8", errors="ignore")
+
+                norm = g_job.attrs.get("normalization", "None")
+                if isinstance(norm, bytes):
+                    norm = norm.decode("utf-8", errors="ignore")
+
+                lam = float(g_job.attrs.get("lam", 1e-3))
+                rho = float(g_job.attrs.get("rho", 1.0))
+                anc = bool(g_job.attrs.get("anc", True))
+                asc = bool(g_job.attrs.get("asc", False))
+                max_iter = int(g_job.attrs.get("max_iter", 0))
+                tol = float(g_job.attrs.get("tol", 0.0))
+                preprocess = g_job.attrs.get("preprocess", "raw")
+                if isinstance(preprocess, bytes):
+                    preprocess = preprocess.decode("utf-8", errors="ignore")
+
+                params = {}
+                if "params_json" in g_job.attrs:
+                    try:
+                        raw = g_job.attrs["params_json"]
+                        if isinstance(raw, bytes):
+                            raw = raw.decode("utf-8", errors="ignore")
+                        params = json.loads(raw)
+                    except Exception:
+                        params = {}
+
+                # Matrices
+                A = np.asarray(g_job["A"][...], dtype=np.float32)
+
+                E_used = None
+                if "E_used" in g_job:
+                    E_used = np.asarray(g_job["E_used"][...], dtype=np.float32)
+
+                wl_job = None
+                if "wl_job" in g_job:
+                    wl_job = np.asarray(g_job["wl_job"][...], dtype=float)
+
+                wl_cube = None
+                if "wl_cube" in g_job:
+                    wl_cube = np.asarray(g_job["wl_cube"][...], dtype=float)
+
+                labels = None
+                if "labels" in g_job:
+                    raw_lab = g_job["labels"][...]
+                    # h5py renvoie souvent un dtype 'bytes', on convertit
+                    labels = np.array([l.decode("utf-8") if isinstance(l, (bytes, bytearray)) else str(l)
+                                       for l in raw_lab], dtype=object)
+
+                # maps_by_group
+                maps_by_group = {}
+                if "maps_by_group" in g_job:
+                    g_maps = g_job["maps_by_group"]
+                    for k in g_maps.keys():
+                        maps_by_group[str(k)] = np.asarray(g_maps[k][...], dtype=np.float32)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Unmixing", f"Error while reading HDF5:\n{e}")
+            return
+
+        # 3) Construire un nouvel UnmixJob dans la structure de l'UI
+        #    On utilise _ensure_unique_name pour éviter les collisions.
+        name = self._ensure_unique_name(base_name)
+
+        job = UnmixJob(
+            name=name,
+            model=str(model),
+            normalization=str(norm),
+            max_iter=int(max_iter),
+            tol=float(tol),
+            lam=float(lam),
+            rho=float(rho),
+            anc=bool(anc),
+            asc=bool(asc),
+            preprocess=str(preprocess),
+            params=params or {},
+            _frozen_params=tuple(sorted((params or {}).items())),
+        )
+
+        # Attacher les données de résultat
+        job.A = A
+        job.E_used = E_used
+        job.labels = labels
+        job.wl_job = wl_job
+        job.wl_cube = wl_cube
+        job.maps_by_group = maps_by_group
+        job.status = "Done"
+        job.progress = 100
+        job.duration_s = None
+
+        # 4) Insérer dans la liste de jobs + UI
+        self.jobs[name] = job
+        self.job_order.append(name)
+
+        # Si on a des params, on les réutilise pour la colonne "Params",
+        # sinon on fabrique un dict minimal pour _insert_job_row
+        P = params or dict(
+            algo=model,
+            norm=norm,
+            anc=anc,
+            asc=asc,
+            tol=tol,
+            lam=lam,
+            rho=rho,
+            max_iter=max_iter,
+            em_src=getattr(job, "em_src", "Loaded"),
+            em_merge=False,
+            p=A.shape[0] if A.ndim >= 1 else 0,
+            preprocess=preprocess,
+        )
+
+        self._insert_job_row(name, P)
+        self._refresh_viz_model_combo(select_name=name)
+        self._on_model_viz_change()
+        self._update_row_from_job(name)
+        self._refresh_abundance_view()
+
+        QMessageBox.information(
+            self, "Unmixing",
+            f"Unmixing job '{name}' was loaded from:\n{path}"
+        )
+
+    @staticmethod
+    def _h5_str_dtype():
+        """Type string UTF-8 pour HDF5."""
+        return h5py.string_dtype(encoding="utf-8")
 
     # </editor-fold>
 
