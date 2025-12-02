@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QHeaderView,QP
                             QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton,
                              QDialogButtonBox, QCheckBox, QScrollArea, QWidget, QFileDialog, QMessageBox,
                              QRadioButton,QInputDialog,QTableWidget, QTableWidgetItem,QGraphicsView,QAbstractItemView,
-                             QComboBox
+                             QComboBox,QSpinBox
                              )
 
 from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem,QColor
@@ -42,10 +42,6 @@ from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
 #todo : check metrics different
-#todo : adjust size of loaded cube in viewers.
-#todo : color map of abundance map ?
-#todo : viz spectra -> show/hide by clicking line or title (or ctrl+click)
-#todo : select pixels of endmembers also with ctrl+clic left
 # </editor-fold>
 
 class SelectEMDialog(QDialog):
@@ -445,6 +441,7 @@ class AbundanceGalleryWindow(QDialog):
         self.tool = tool
         self.setWindowTitle("Abundance maps gallery")
         self.resize(1000, 800)
+        self._row_height = 200
 
         main = QVBoxLayout(self)
 
@@ -474,12 +471,26 @@ class AbundanceGalleryWindow(QDialog):
         row.addWidget(self.combo_target)
         row.addWidget(QLabel("Sort:"))
         row.addWidget(self.combo_sort)
+
+        row.addSpacing(12)
+        row.addWidget(QLabel("Row height:"))
+
+        self.spin_row_height = QSpinBox()
+        self.spin_row_height.setRange(10, 800)
+        self.spin_row_height.setSingleStep(20)
+        self.spin_row_height.setValue(self._row_height)
+        self.spin_row_height.setToolTip("Hauteur des viewers (en pixels)")
+        row.addWidget(self.spin_row_height)
+
         row.addStretch(1)
         main.addLayout(row)
 
         # --- Zone scrollable avec les cartes ---
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        for w in (self.scroll, self.scroll.viewport()):
+            w.installEventFilter(self)
+
         self.inner = QWidget()
         self.inner_layout = QVBoxLayout(self.inner)
         self.inner_layout.setContentsMargins(4, 4, 4, 4)
@@ -493,11 +504,18 @@ class AbundanceGalleryWindow(QDialog):
         self.combo_mode.currentIndexChanged.connect(self._rebuild_target_combo)
         self.combo_target.currentIndexChanged.connect(self._rebuild_gallery)
         self.combo_sort.currentIndexChanged.connect(self._rebuild_gallery)
+        self.spin_row_height.valueChanged.connect(self._on_row_height_changed)
 
         # Init
         self._rebuild_target_combo()
 
     # ----------------- Helpers internes -----------------
+    def eventFilter(self, obj, event):
+        # On bloque la roulette sur la zone scrollable pour qu'elle n'interagisse
+        # pas avec le QScrollArea, mais on laisse les SyncedAbundanceView tranquilles.
+        if obj in (self.scroll, self.scroll.viewport()) and event.type() == QEvent.Wheel:
+            return True  # on mange l'événement, pas de scroll
+        return super().eventFilter(obj, event)
 
     def _done_jobs(self):
         out = []
@@ -582,6 +600,17 @@ class AbundanceGalleryWindow(QDialog):
                 v.blockSignals(False)
         except Exception as e:
             print("[GALLERY SYNC] error:", e)
+
+    def _on_row_height_changed(self, value: int):
+        """Met à jour la hauteur minimale de tous les viewers existants."""
+        self._row_height = int(value)
+        for v in self._views:
+            try:
+                v.setMinimumHeight(self._row_height)
+                v.updateGeometry()
+            except Exception:
+                pass
+
 
     def _rebuild_gallery(self):
         self._clear_gallery()
@@ -754,7 +783,7 @@ class AbundanceGalleryWindow(QDialog):
             view = SyncedAbundanceView()
             view.setDragMode(QGraphicsView.ScrollHandDrag)
             view.setCursor(Qt.CrossCursor)
-            view.setMinimumHeight(200)
+            view.setMinimumHeight(self._row_height)
 
             pix = self.tool._np2pixmap(it["img"])
             view.setImage(pix)
@@ -1358,6 +1387,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.load_btn.clicked.connect(self.open_load_cube_dialog)
         self.pushButton_load_FTIR.clicked.connect(self.load_ftir_spectrum)
         self.pushButton_load_one_spectrum.clicked.connect(self.load_one_spectrum)
+        self.pushButton_reset.clicked.connect(self.reset_all)
         self.sliders_rgb = [
             self.horizontalSlider_red_channel,
             self.horizontalSlider_green_channel,
@@ -1463,45 +1493,187 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
     # <editor-fold desc="Visual elements">
 
     def reset_all(self):
+        """
+        Fully reset the UnmixingTool state.
+
+        - Cancels any running unmixing jobs and clears the job queue/results
+        - Clears the currently loaded cube and derived RGB image
+        - Clears manual / auto endmembers and selections
+        - Clears FTIR / one-spectrum information
+        The spectral library (E_lib) is intentionally kept.
+        """
+        from PyQt5.QtGui import QPixmap
+        from PyQt5.QtWidgets import QMessageBox
 
         reply = QMessageBox.question(
-            self, "Reset all ?",
-            f"Are you sure to reset all current jobs ?",
-            QMessageBox.Yes | QMessageBox.No
+            self,
+            "Reset all ?",
+            "This will clear the loaded cube, selections, FTIR/one-spectra, "
+            "manual/auto endmembers and all unmixing jobs.\n\n"
+            "Do you want to continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
-        if reply == QMessageBox.No:
+        if reply != QMessageBox.Yes:
             return
 
-        # Réinit internes
-        self.job_order = []
-        self.jobs = {}
-        self._init_classification_table(self.tableWidget_classificationList)
-        self._init_cleaning_list()
+        # --- Stop any running worker / queue ---
+        try:
+            if hasattr(self, "_on_cancel_queue"):
+                self._on_cancel_queue()
+        except Exception:
+            try:
+                self._stop_all = True
+                if getattr(self, "_current_worker", None) is not None:
+                    cancel = getattr(self._current_worker, "cancel", None)
+                    if callable(cancel):
+                        cancel()
+            except Exception:
+                pass
 
-        self.threadpool = QThreadPool()
+        # --- Clear job queue and results (no extra confirmation here) ---
+        try:
+            self.remove_all_jobs(ask_confirm=False)
+        except Exception:
+            self.jobs = {}
+            self.job_order = []
+            try:
+                self._init_classification_table(self.tableWidget_classificationList)
+            except Exception:
+                pass
+            try:
+                self._refresh_viz_model_combo()
+            except Exception:
+                pass
+
+        # Reset internal queue state flags
         self._running_idx = -1
         self._current_worker = None
         self._stop_all = False
         self.only_selected = False
 
-        self.comboBox_clas_show_model.clear()
-        self._refresh_show_model_combo()
-
+        # --- Clear cube and associated arrays ---
         self._last_vnir = None
         self._last_swir = None
         self.cube = None
         self.data = None
         self.wl = None
-        self.saved_rec = None
         self.whole_range = None
+        self.saved_rec = None
+        if hasattr(self, "rgb_image"):
+            self.rgb_image = None
 
-        # Vider les viewers
-        if hasattr(self, "viewer_left"):
-            self.viewer_left.setImage(QPixmap())  # plus d’image à gauche
-        if hasattr(self, "viewer_right"):
-            self.viewer_right.setImage(QPixmap())  # plus d’image à droite
+        # Selection masks
 
-        self._set_info_rows()
+        self.selection_mask_map_manual = None
+        self.selection_mask_map_auto = None
+        self.selection_mask_map_lib = None
+
+        # Manual selection state
+        self.samples = {}
+        self.sample_coords = {}
+        self.regions = {}
+        self._pixel_coords = []
+        self._preview_mask = None
+        self.selecting_pixels = False
+        self._pixel_selecting = False
+        self.erase_selection = False
+        self._last_label = 0
+        try:
+            self.nclass_box.setValue(self.last_class_number)
+        except Exception:
+            pass
+
+        # Endmembers (manual / auto)
+        self.E_manual = {}
+        self.class_info_manual = {}
+        self.param_manual = {}
+        self.wl_manual = None
+
+        self.E_auto = {}
+        self.class_info_auto = {}
+        self.param_auto = {}
+        self.wl_auto = None
+
+        # Library EM are kept (E_lib, class_info_lib, param_lib, wl_lib)
+
+        # Global class statistics
+        self.class_means = {}
+        self.class_stds = {}
+        self.class_ncount = {}
+
+        # Maps / unmixing results
+        self.cls_map = None
+        self.index_map = None
+        self.A = None
+        self.maps_by_group = {}
+
+        # FTIR / one-spectrum history
+        self._last_ftir_wl = None
+        self._last_ftir_spec = None
+        self._last_ftir_sample = None
+
+        # Band selection
+        self.selected_bands = []
+        self.selected_span_patch = []
+
+        # Reset abundance view toggle
+        try:
+            self.radioButton_view_abundance.setChecked(False)
+        except Exception:
+            pass
+
+        # --- UI clean-up: labels, viewers, spectra plot ---
+        for name in ("label_cube_file", "label_ftir_file", "label_ftir_sample", "label_one_spectrum"):
+            lbl = getattr(self, name, None)
+            if lbl is not None:
+                try:
+                    lbl.setText("")
+                except Exception:
+                    pass
+
+        # Clear left viewer
+        viewer = getattr(self, "viewer_left", None)
+        if viewer is not None:
+            try:
+                viewer.setImage(QPixmap())
+            except Exception:
+                try:
+                    scene = viewer.scene()
+                    if scene is not None:
+                        scene.clear()
+                except Exception:
+                    pass
+
+        # Clear right viewer
+        viewer = getattr(self, "viewer_right", None)
+        if viewer is not None:
+            try:
+                viewer.setImage(QPixmap())
+            except Exception:
+                try:
+                    scene = viewer.scene()
+                    if scene is not None:
+                        scene.clear()
+                except Exception:
+                    pass
+
+        # Clear spectra canvas
+        try:
+            self.spec_ax.cla()
+            self.spec_ax.set_xlabel("Wavelength (nm)")
+            self.spec_ax.set_ylabel("Reflectance")
+            self.spec_ax.grid(True)
+            self.spec_canvas.draw_idle()
+        except Exception:
+            pass
+
+        # Reset EM source combo if possible
+        try:
+            if self.comboBox_endmembers_spectra.count() > 0:
+                self.comboBox_endmembers_spectra.setCurrentIndex(0)
+        except Exception:
+            pass
 
     def toggle_spectra(self):
         if self.checkBox_showGraph.isChecked():
@@ -2896,6 +3068,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.update_rgb_controls()
         self.show_rgb_image()
         self.update_overlay()
+
+        for viewer in [self.viewer_left,self.viewer_right]:
+            rect = viewer.pixmap_item.boundingRect()
+            viewer.fitInView(rect, Qt.KeepAspectRatio)
+            viewer.scale(0.7, 0.7)  # zoom avant (1.0 = cadre exact, 0.7 = ~70% de l'écran)
 
         self.regions = {}
 

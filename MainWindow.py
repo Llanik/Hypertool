@@ -30,6 +30,7 @@ from ground_truth.ground_truth_tool import GroundTruthWidget
 from minicube.minicube_tool import MiniCubeTool
 from identification.identification_tool import IdentificationWidget
 from illumination.illumination_tool import IlluminationWidget
+from unmixing.unmixing_tool import UnmixingTool
 
 # grafics to control changes
 import matplotlib.pyplot as plt
@@ -241,6 +242,11 @@ class CubeDestinationDialog(QtWidgets.QDialog):
         # Ligne 5 : Identification
         add_button("Identification VNIR", "ident_vnir", row, 0)
         add_button("Identification SWIR", "ident_swir", row, 1)
+        row += 1
+
+        # Ligne 6 : Unmixing
+        add_button("Unmixing VNIR", "unmix_vnir", row, 0)
+        add_button("Unmixing SWIR", "unmix_swir", row, 1)
 
         layout.addLayout(btn_layout)
 
@@ -301,12 +307,14 @@ class MainApp(QtWidgets.QMainWindow):
         self.gt_dock=self._add_dock("Ground Truth",   GroundTruthWidget,     QtCore.Qt.RightDockWidgetArea)
         self.minicube_dock=self._add_dock("Minicube Extract",   MiniCubeTool,     QtCore.Qt.RightDockWidgetArea)
         self.identification_dock=self._add_dock("Identification", IdentificationWidget, QtCore.Qt.RightDockWidgetArea)
+        self.unmixing_dock=self._add_dock("Unmixing", UnmixingTool, QtCore.Qt.RightDockWidgetArea)
         self.illumination_dock=self._add_dock("Illumination", IlluminationWidget, QtCore.Qt.RightDockWidgetArea)
         self.tabifyDockWidget(self.reg_dock, self.gt_dock)
         self.tabifyDockWidget(self.reg_dock, self.data_viz_dock)
         self.tabifyDockWidget(self.reg_dock, self.minicube_dock)
         self.tabifyDockWidget(self.reg_dock, self.identification_dock)
         self.tabifyDockWidget(self.reg_dock, self.illumination_dock)
+        self.tabifyDockWidget(self.reg_dock, self.unmixing_dock)
 
         self.gt_dock.raise_()
 
@@ -330,6 +338,8 @@ class MainApp(QtWidgets.QMainWindow):
         act_gt =self.onToolButtonPress(self.gt_dock, "GT_icon_1.png", "Ground Truth")
         self.toolbar.addSeparator()
         act_ident=self.onToolButtonPress(self.identification_dock,"Ident_icon.png","Identification")
+        act_unmix=self.onToolButtonPress(self.unmixing_dock,"unmixing_icon.png","Unmixing")
+
         self.toolbar.addSeparator()
 
         # Cubes "list"
@@ -587,12 +597,17 @@ class MainApp(QtWidgets.QMainWindow):
                     self._send_to_identification(filepath, 0)
                 elif choice == "ident_swir":
                     self._send_to_identification(filepath, 1)
+                elif choice == "unmix_vnir":
+                    self._send_to_unmix(filepath, 0)
+                elif choice == "unmix_swir":
+                    self._send_to_unmix(filepath, 1)
             except Exception:
                 QMessageBox.warning(
                     self,
                     'Cube not loaded',
                     "Cube not loaded to selected tool. Check format."
                 )
+
     def calib_cube(self,filepath):
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
         hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
@@ -667,6 +682,25 @@ class MainApp(QtWidgets.QMainWindow):
 
         if show_tab:
             self.identification_dock.raise_()
+
+        if hc.data is None:
+            widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range)
+        else:
+            print('Try registered with cube sended')
+            hc.cube_info = ci
+            widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range,cube=hc)
+            print(f'[SEND TO IDENT] path : {filepath} of range {range}')
+        pass
+
+    def _send_to_unmix(self,filepath,icube,show_tab=True):
+        widget = self.unmixing_dock.widget()
+        ci = self.hypercube_manager.add_or_sync_cube(filepath)
+        hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
+
+        range=['VNIR','SWIR'][icube]
+
+        if show_tab:
+            self.unmixing_dock.raise_()
 
         if hc.data is None:
             widget.load_cube(filepath=ci.filepath,cube_info=ci,range=range)
@@ -828,18 +862,34 @@ class MainApp(QtWidgets.QMainWindow):
             )
             menu_load_ident.addAction(act_ident_vnir)
 
-            # Envoyer au dock illum
-            act_illum = QtWidgets.QAction("Send to Illumination", self)
-            act_illum.triggered.connect(lambda checked, p=path: self._send_to_illumination(p))
-            sub.addAction(act_illum)
-
-            # Action Moving
             act_ident_swir = QtWidgets.QAction("SWIR Cube", self)
             act_ident_swir.triggered.connect(
                 lambda _, p=path: self._send_to_identification(p, 1)
             )
             menu_load_ident.addAction(act_ident_swir)
+
             sub.addMenu(menu_load_ident)
+
+            # Envoyer au dock unmix
+            menu_load_unmix = QtWidgets.QMenu("Send to Unmix Tool", sub)
+            act_unmix_vnir = QtWidgets.QAction("VNIR Cube", self)
+            act_unmix_vnir.triggered.connect(
+                lambda _, p=path: self._send_to_unmix(p, 0)
+            )
+            menu_load_unmix.addAction(act_unmix_vnir)
+
+            act_unmix_swir = QtWidgets.QAction("SWIR Cube", self)
+            act_unmix_swir.triggered.connect(
+                lambda _, p=path: self._send_to_unmix(p, 1)
+            )
+            menu_load_unmix.addAction(act_unmix_swir)
+
+            sub.addMenu(menu_load_unmix)
+
+            # Envoyer au dock illum
+            act_illum = QtWidgets.QAction("Send to Illumination", self)
+            act_illum.triggered.connect(lambda checked, p=path: self._send_to_illumination(p))
+            sub.addAction(act_illum)
 
             # White calibration
             sub.addSeparator()
@@ -1008,7 +1058,7 @@ def check_resolution_change():
 
 if __name__ == "__main__":
 
-    sys.excepthook = excepthook #set the exception handler
+    # sys.excepthook = excepthook #set the exception handler
 
     app = QtWidgets.QApplication(sys.argv)
 
@@ -1018,10 +1068,10 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
-    # fname = '00189-VNIR-mock-up.h5'
-    # filepath = os.path.join(folder, fname)
-    # main._on_add_cube([filepath,filepath.replace('189','191')])
+    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
+    fname = '00189-VNIR-mock-up.h5'
+    filepath = os.path.join(folder, fname)
+    main._on_add_cube([filepath,filepath.replace('189','191')])
 
     try:
         import matlab.engine
