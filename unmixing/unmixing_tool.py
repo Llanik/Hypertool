@@ -41,7 +41,9 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
-#todo : check metrics different
+#todo : check FTIR results -> OK with reflectance but strange with FTIR
+#todo : fijar unas cositas para que la ui se quede mejor
+#todo : check with Fran results
 # </editor-fold>
 
 class SelectEMDialog(QDialog):
@@ -1240,13 +1242,21 @@ class UnmixWorker(QRunnable):
                         tol=self.job.tol,
                     )
                 elif self.job.model in {"Metric (cGFC)","METRIC (CGFC)"}:
-                    A_sub = unmix_metric(
+                    # A_sub = unmix_metric(
+                    #     E, Y_sub,
+                    #     metric="cGFC",
+                    #     anc=self.job.anc,
+                    #     asc=self.job.asc,
+                    #     max_iter=self.job.max_iter,
+                    #     step=1e-2,
+                    #     tol=self.job.tol,
+                    # )
+                    A_sub = unmix_metric_scipy(
                         E, Y_sub,
                         metric="cGFC",
                         anc=self.job.anc,
                         asc=self.job.asc,
                         max_iter=self.job.max_iter,
-                        step=1e-2,
                         tol=self.job.tol,
                     )
                 else:

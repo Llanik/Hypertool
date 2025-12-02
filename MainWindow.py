@@ -1058,7 +1058,7 @@ def check_resolution_change():
 
 if __name__ == "__main__":
 
-    # sys.excepthook = excepthook #set the exception handler
+    sys.excepthook = excepthook #set the exception handler
 
     app = QtWidgets.QApplication(sys.argv)
 

@@ -40,6 +40,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from scipy.signal import savgol_filter
+from scipy.optimize import minimize
 import numpy as np
 
 _aliases = {'int': int, 'float': float, 'bool': bool}
@@ -615,7 +616,124 @@ def unmix_metric(E: np.ndarray,
 
     return A
 
-# ---------- Helpers: sanity checks, preprocessing -----------------------------
+
+def _unmix_metric_scipy_single(E: np.ndarray,
+                               y: np.ndarray,
+                               metric: str = "cGFC",
+                               anc: bool = True,
+                               asc: bool = True,
+                               max_iter: int = 500,
+                               tol: float = 1e-6) -> np.ndarray:
+    """
+    Unmixing d'un pixel unique via scipy.optimize.minimize (SLSQP),
+    en mode 'fmincon-like'.
+
+    min_a J(a) = metric(Ea, y)
+    s.t.  a >= 0 (si anc=True)
+          sum(a) = 1 (si asc=True)
+    """
+    E = np.asarray(E, dtype=float)
+    y = np.asarray(y, dtype=float).ravel()
+    L, p = E.shape
+    if y.shape[0] != L:
+        raise ValueError("E and y must have consistent number of bands")
+
+    # --- fonction coût en utilisant tes métriques existantes ---
+    def _cost(a: np.ndarray) -> float:
+        # a: (p,)
+        z = E @ a
+        m = (metric or "cGFC").lower()
+        if m in ("mse", "ls", "l2"):
+            return metric_mse(y, z)
+        elif m == "cgfc":
+            return metric_cgfc(y, z)
+        else:
+            raise ValueError(f"Unknown metric: {metric}")
+
+    # --- initialisation ---
+    if asc:
+        x0 = np.full(p, 1.0 / p, dtype=float)  # uniforme sur le simplexe
+    else:
+        x0 = np.zeros(p, dtype=float)
+        x0[0] = 1.0
+
+    # --- contraintes / bornes ---
+    constraints = []
+    if asc:
+        constraints.append({
+            "type": "eq",
+            "fun": lambda a: np.sum(a) - 1.0,
+        })
+
+    if anc:
+        bounds = [(0.0, None)] * p
+    else:
+        bounds = [(None, None)] * p
+
+    # --- appel SciPy ---
+    res = minimize(
+        _cost,
+        x0,
+        method="SLSQP",
+        bounds=bounds,
+        constraints=constraints if constraints else None,
+        options={
+            "maxiter": int(max_iter),
+            "ftol": float(tol),
+            "disp": False,
+        },
+    )
+
+    a_opt = np.asarray(res.x, dtype=float)
+
+    # Sécurité au cas où l'optim n'a pas bien convergé
+    if asc and anc:
+        # On projette sur le simplexe pour être sûr
+        a_opt = _proj_simplex(a_opt)
+    elif anc:
+        a_opt = np.maximum(a_opt, 0.0)
+
+    return a_opt
+
+
+def unmix_metric_scipy(E: np.ndarray,
+                       Y: np.ndarray,
+                       metric: str = "cGFC",
+                       anc: bool = True,
+                       asc: bool = True,
+                       max_iter: int = 500,
+                       tol: float = 1e-6) -> np.ndarray:
+    """
+    Unmixing par métrique générale (cGFC, MSE, ...)
+    en utilisant scipy.optimize.minimize (SLSQP).
+
+    E : (L, p)
+    Y : (L, N)
+    Retourne A : (p, N)
+    """
+    E = np.asarray(E, dtype=float)
+    Y = np.asarray(Y, dtype=float)
+    L, p = E.shape
+    if Y.shape[0] != L:
+        raise ValueError("E and Y must share the same number of bands (rows)")
+
+    N = Y.shape[1]
+    A = np.zeros((p, N), dtype=float)
+
+    for j in range(N):
+        y = Y[:, j]
+        a_j = _unmix_metric_scipy_single(
+            E, y,
+            metric=metric,
+            anc=anc,
+            asc=asc,
+            max_iter=max_iter,
+            tol=tol,
+        )
+        A[:, j] = a_j
+
+    return A
+
 
 # --- Endmember groups utilities (UI ↔ backend) ---
 
