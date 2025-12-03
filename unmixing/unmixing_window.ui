@@ -37,7 +37,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,8,0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0,0,0,8,0">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
@@ -57,6 +57,60 @@
           </property>
           <property name="text">
            <string>No Cube File</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_load_map">
+          <property name="text">
+           <string>Load Map</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_reset">
+          <property name="toolTip">
+           <string>Reset all data loaded in the tool.</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgba(255, 0, 0, 125);</string>
+          </property>
+          <property name="text">
+           <string>Reset all</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_16">
+        <item>
+         <widget class="QPushButton" name="pushButton_load_FTIR">
+          <property name="text">
+           <string>Add FTIR spectrum</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_ftir_file">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>No FTIR File</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -87,29 +141,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_load_FTIR">
-          <property name="text">
-           <string>FTIR spectrum</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_ftir_file">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>No FTIR File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QLabel" name="label_ftir_sample">
           <property name="maximumSize">
            <size>
@@ -125,27 +156,14 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_load_map">
-          <property name="text">
-           <string>Load Map</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_reset">
-          <property name="toolTip">
-           <string>Reset all data loaded in the tool.</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgba(255, 0, 0, 125);</string>
-          </property>
-          <property name="text">
-           <string>Reset all</string>
-          </property>
-         </widget>
-        </item>
        </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QTabWidget" name="tabWidget">
@@ -153,7 +171,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_endmembers">
          <attribute name="title">
@@ -296,8 +314,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>496</width>
-                   <height>112</height>
+                   <width>401</width>
+                   <height>103</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -373,8 +391,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>98</width>
-                   <height>28</height>
+                   <width>63</width>
+                   <height>20</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -524,8 +542,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>198</width>
-                   <height>28</height>
+                   <width>181</width>
+                   <height>20</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -984,7 +1002,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">

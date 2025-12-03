@@ -509,8 +509,15 @@ class AbundanceGalleryWindow(QDialog):
         self.spin_row_height.valueChanged.connect(self._on_row_height_changed)
 
         # Init
-        self._rebuild_target_combo()
+        self.combo_mode.blockSignals(True)
+        self.combo_sort.blockSignals(True)
+        self.combo_mode.setCurrentIndex(1)
+        self.combo_sort.setCurrentIndex(2)
+        self.combo_mode.blockSignals(False)
+        self.combo_sort.blockSignals(False)
 
+        self._rebuild_target_combo()
+        self._rebuild_gallery()
     # ----------------- Helpers internes -----------------
     def eventFilter(self, obj, event):
         # On bloque la roulette sur la zone scrollable pour qu'elle n'interagisse
@@ -613,8 +620,21 @@ class AbundanceGalleryWindow(QDialog):
             except Exception:
                 pass
 
-
     def _rebuild_gallery(self):
+        # --- mémoriser le zoom/pan courant (si des vues existent) ---
+        saved_transform = None
+        saved_center = None
+        if self._views:
+            try:
+                ref_view = self._views[0]
+                saved_transform = ref_view.transform()
+                saved_center = ref_view.mapToScene(ref_view.viewport().rect().center())
+            except Exception as e:
+                print("[GALLERY] could not save view state:", e)
+                saved_transform = None
+                saved_center = None
+
+        # --- reconstruction de la galerie comme avant ---
         self._clear_gallery()
         if self.combo_target.count() == 0:
             return
@@ -649,7 +669,6 @@ class AbundanceGalleryWindow(QDialog):
                     global_sum=global_sum,
                     name_key=job.name,
                 ))
-
 
         # --- Mode 1 : tous les endmembers d’un modèle ---
         else:
@@ -719,21 +738,10 @@ class AbundanceGalleryWindow(QDialog):
             items.sort(key=lambda d: d["global_sum"], reverse=True)
 
         # --- Calcul des pourcentages pour affichage ---
-
-        # max local en % (on suppose que les abondances sont ~[0,1])
         for it in items:
             it["max_pct"] = 100.0 * it["local_max"]
 
-        # sum_pct :
-        #   - en mode 0 (compare same endmember for all models) :
-        #       sum_pct = 100 * global_sum(EM_k du modèle M) / sum( global_sum(TOUS les EM de M) )
-        #       => on doit repartir du job.A complet
-        #   - en mode 1 (see all endmembers for one model) :
-        #       items contient déjà tous les EM du même modèle,
-        #       donc on peut normaliser par la somme des global_sum de items.
-
         if mode == 0:
-            # On calcule une fois la somme totale des abondances pour chaque job à partir de job.A
             model_totals = {}
             for it in items:
                 job_name = it["job_name"]
@@ -750,21 +758,14 @@ class AbundanceGalleryWindow(QDialog):
             for it in items:
                 job_name = it["job_name"]
                 tot = model_totals.get(job_name, 0.0)
-                if tot > 0:
-                    it["sum_pct"] = 100.0 * it["global_sum"] / tot
-                else:
-                    it["sum_pct"] = 0.0
-
+                it["sum_pct"] = 100.0 * it["global_sum"] / tot if tot > 0 else 0.0
         else:
-            # mode 1 : on a tous les EM d'un seul modèle dans items
             total_sum = sum(it["global_sum"] for it in items)
             for it in items:
-                if total_sum > 0:
-                    it["sum_pct"] = 100.0 * it["global_sum"] / total_sum
-                else:
-                    it["sum_pct"] = 0.0
+                it["sum_pct"] = 100.0 * it["global_sum"] / total_sum if total_sum > 0 else 0.0
 
         # --- Construction des cartes dans le scroll ---
+        self._views = []
         for it in items:
             card = QWidget()
             vlay = QVBoxLayout(card)
@@ -797,6 +798,17 @@ class AbundanceGalleryWindow(QDialog):
             self.inner_layout.addWidget(card)
 
         self.inner_layout.addStretch(1)
+
+        # --- réappliquer le zoom/pan sauvegardé à toutes les nouvelles vues ---
+        if saved_transform is not None and saved_center is not None and self._views:
+            try:
+                for v in self._views:
+                    v.blockSignals(True)
+                    v.setTransform(saved_transform)
+                    v.centerOn(saved_center)
+                    v.blockSignals(False)
+            except Exception as e:
+                print("[GALLERY] could not restore view state:", e)
 
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
@@ -1345,6 +1357,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.nclass_box.setValue(self.last_class_number)
         self.selected_bands=[] #band selection
         self.selected_span_patch=[] # rectangle patch of selected bands
+        self.job_wl_patches = []  # patch pour montrer le wl_job / spectral_range_used
 
         # data variable
         self._last_vnir = None
@@ -2367,6 +2380,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
             # 4) On rafraîchit le canvas
 
+        self._update_job_wl_patch()
         self.spec_canvas.draw_idle()
 
     def band_selection(self,checked):
@@ -2658,6 +2672,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         self.comboBox_viz_show_EM.blockSignals(False)
 
+        self._update_job_wl_patch(job)
         self._refresh_abundance_view()
         self._draw_current_rect(use_job=True, surface=False)
 
@@ -2903,6 +2918,85 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         dlg = AbundanceGalleryWindow(self, parent=self)
         dlg.exec_()
+
+    def _update_job_wl_patch(self, job=None):
+        """
+        Colorie les bandes spectrales utilisées par le job courant (wl_job)
+        sous forme de plusieurs rectangles semi-transparents sur le graphe.
+        On reconstruit les indices dans self.wl à partir de wl_job.
+        """
+        if not hasattr(self, "spec_ax") or not hasattr(self, "spec_canvas"):
+            return
+
+        ax = self.spec_ax
+
+        # 1) Nettoyer les anciens patches
+        for p in getattr(self, "job_wl_patches", []):
+            try:
+                p.remove()
+            except Exception:
+                pass
+        self.job_wl_patches = []
+
+        # 2) Récupérer le job courant si non fourni
+        if job is None:
+            idx_job = self.comboBox_viz_show_model.currentIndex()
+            if idx_job < 0:
+                self.spec_canvas.draw_idle()
+                return
+            job_name = self.comboBox_viz_show_model.itemText(idx_job)
+            job = self.jobs.get(job_name)
+
+        if job is None or self.wl is None:
+            self.spec_canvas.draw_idle()
+            return
+
+        wl_cube = np.asarray(self.wl, dtype=float)
+        wl_job = getattr(job, "wl_job", None)
+        if wl_job is None or len(wl_job) == 0:
+            self.spec_canvas.draw_idle()
+            return
+
+        wl_job = np.asarray(wl_job, dtype=float)
+
+        # 3) Reprojeter wl_job sur les indices de wl_cube
+        idx_list = []
+        for w in wl_job:
+            k = int(np.argmin(np.abs(wl_cube - w)))
+            idx_list.append(k)
+
+        if not idx_list:
+            self.spec_canvas.draw_idle()
+            return
+
+        idx = np.unique(np.asarray(idx_list, dtype=int))
+        idx = idx[(idx >= 0) & (idx < wl_cube.size)]
+        if idx.size == 0:
+            self.spec_canvas.draw_idle()
+            return
+
+        # 4) Compacter en intervalles contigus
+        bands = []
+        start = prev = int(idx[0])
+        for k in idx[1:]:
+            k = int(k)
+            if k == prev + 1:
+                prev = k
+            else:
+                bands.append((start, prev))
+                start = prev = k
+        bands.append((start, prev))
+
+        # 5) Dessiner un patch orange par intervalle
+        patches = []
+        for i0, i1 in bands:
+            lam0, lam1 = float(wl_cube[i0]), float(wl_cube[i1])
+            p = ax.axvspan(lam0, lam1, alpha=0.15, color="orange", zorder=0)
+            patches.append(p)
+
+        self.job_wl_patches = patches
+        self.spec_canvas.draw_idle()
+
     # </editor-fold>
 
     # <editor-fold desc="Cube">
@@ -3346,7 +3440,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         - concatène SANS CROP au cube actuel (puis tri par longueur d’onde)
         """
         if self.cube is None or self.data is None or self.wl is None:
-            QMessageBox.warning(self, "FTIR", "Charge d’abord un hypercube.")
+            QMessageBox.warning(self, "Add FTIR", "Load a cube or other spectrum first.")
             return
 
         # On vérifie qu’on ne garde pas des jobs incohérents
@@ -5284,6 +5378,16 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 g_job.attrs["tol"] = float(getattr(job, "tol", 0.0))
                 g_job.attrs["preprocess"] = str(getattr(job, "preprocess", "raw"))
                 g_job.attrs["status"] = str(getattr(job, "status", "Done"))
+                g_job.attrs["band_selection_mode"] = str(getattr(job, "band_selection_mode", "all"))
+
+                sr = getattr(job, "spectral_range_used", None)
+                if sr is not None:
+                    g_job.attrs["spectral_range_used"] = np.asarray(sr, dtype=float)
+
+                sel_idx = getattr(job, "selected_band_indices", None)
+                if sel_idx is not None:
+                    g_job.create_dataset("selected_band_indices",
+                                         data=np.asarray(sel_idx, dtype=np.int64))
 
                 # paramètres “complets” si dispo
                 try:
@@ -5420,6 +5524,23 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     for k in g_maps.keys():
                         maps_by_group[str(k)] = np.asarray(g_maps[k][...], dtype=np.float32)
 
+                band_selection_mode = g_job.attrs.get("band_selection_mode", "all")
+                if isinstance(band_selection_mode, bytes):
+                    band_selection_mode = band_selection_mode.decode("utf-8", errors="ignore")
+
+                spectral_range_used = None
+                if "spectral_range_used" in g_job.attrs:
+                    sr = np.asarray(g_job.attrs["spectral_range_used"][...], dtype=float)
+                    if sr.size == 2:
+                        spectral_range_used = (float(sr[0]), float(sr[1]))
+
+                selected_band_indices = None
+                if "selected_band_indices" in g_job:
+                    selected_band_indices = np.asarray(
+                        g_job["selected_band_indices"][...], dtype=np.int64
+                    )
+
+
         except Exception as e:
             QMessageBox.critical(self, "Unmixing", f"Error while reading HDF5:\n{e}")
             return
@@ -5453,6 +5574,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         job.status = "Done"
         job.progress = 100
         job.duration_s = None
+        job.band_selection_mode = band_selection_mode
+        job.selected_band_indices = selected_band_indices
+        job.spectral_range_used = spectral_range_used
 
         # 4) Insérer dans la liste de jobs + UI
         self.jobs[name] = job
@@ -6022,6 +6146,23 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         job.wl_job = wl_job            # grid réellement utilisée pour ce job
         job.wl_cube = self.wl          # grid originale du cube (métadonnée)
 
+        # 1) mode de sélection
+        if getattr(self, "selected_bands", None):
+            job.band_selection_mode = "manual"
+            job.selected_band_indices = np.asarray(
+                sorted(set(self.selected_bands)), dtype=np.int64
+            )
+        else:
+            job.band_selection_mode = "all"
+            job.selected_band_indices = None
+
+        # 2) range spectral effectivement utilisé par le job
+        if wl_job is not None and len(wl_job) > 0:
+            wl_job = np.asarray(wl_job, dtype=float)
+            job.spectral_range_used = (float(wl_job.min()), float(wl_job.max()))
+        else:
+            job.spectral_range_used = None
+
         # Marque comme Running
         import time
         job.status = "Running"
@@ -6139,6 +6280,33 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             # misma rejilla → sin recorte ni interpolación especial
             wl_em_eff = wl_em
 
+        # --- Aplicar selección manual de bandas (si existe) ---
+        sel = getattr(self, "selected_bands", None)
+        if sel:
+            # masque manuel sur la grille du cube
+            manual_mask = np.zeros_like(wl_cube, dtype=bool)
+            for idx in sel:
+                if 0 <= idx < manual_mask.size:
+                    manual_mask[idx] = True
+
+            if band_mask_cube is None:
+                # pas de recadrage précédent → uniquement la sélection manuelle
+                band_mask_cube = manual_mask
+            else:
+                # intersection recouvrement cube/EM ∩ sélection manuelle
+                band_mask_cube = band_mask_cube & manual_mask
+
+            target_wl = wl_cube[band_mask_cube]
+
+            if target_wl.size < 2:
+                QMessageBox.warning(
+                    self, "Too few bands",
+                    "The intersection between band selection and spectral overlap "
+                    "has fewer than 2 bands. Aborting job."
+                )
+                raise RuntimeError("Too few bands after band selection.")
+
+
         # --- Helper para formas (L x n) ---
         def _to_LxN(arr):
             A = np.asarray(arr, dtype=float)
@@ -6175,9 +6343,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     A_rs[:, j] = np.interp(target_wl, wl_em_eff, A_cut[:, j])
                 A = A_rs      # (L_target, n_reg)
             else:
-                # misma rejilla → nada que hacer, pero si por algún motivo
-                # target_wl != wl_cube, se trataría fuera (aquí target_wl == wl_cube)
-                pass
+                # misma rejilla: recortamos según band_mask_cube si hace falta
+                if band_mask_cube is not None:
+                    A = A[band_mask_cube, :]
 
             # Etiquetas de columnas
             if merge_groups:
