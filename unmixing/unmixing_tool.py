@@ -1455,6 +1455,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.checkBox_showLegend.toggled.connect(self.update_spectra)
         self.checkBox_showGraph.toggled.connect(self.toggle_spectra)
         self.pushButton_band_selection.toggled.connect(self.band_selection)
+        self.checkBox_see_job_bands.toggled.connect(self._on_toggle_job_wl_bands)
 
         #Results viz window
         self.comboBox_viz_show_model.currentIndexChanged.connect(self._on_model_viz_change)
@@ -1503,6 +1504,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.pushButton_clas_remove_all.clicked.connect(self.remove_all_jobs)
         self.pushButton_clas_up.clicked.connect(lambda: self._move_job(-1))
         self.pushButton_clas_down.clicked.connect(lambda: self._move_job(+1))
+        self.pushButton_clas_reinit.clicked.connect(self._on_reinit_selected_job)
 
         mem_strech_factors={0:5,2:5,1:2}
         for key,val in mem_strech_factors.items():
@@ -2938,6 +2940,11 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 pass
         self.job_wl_patches = []
 
+        # Si la checkbox existe et est décochée : on s'arrête là
+        if hasattr(self, "checkBox_see_job_bands") and not self.checkBox_see_job_bands.isChecked():
+            self.spec_canvas.draw_idle()
+            return
+
         # 2) Récupérer le job courant si non fourni
         if job is None:
             idx_job = self.comboBox_viz_show_model.currentIndex()
@@ -2996,6 +3003,26 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         self.job_wl_patches = patches
         self.spec_canvas.draw_idle()
+
+    def _on_toggle_job_wl_bands(self, checked):
+        """
+        Affiche ou masque les bandes wl_job du job courant sur le graphe.
+        """
+        # Si décoché : on supprime les patches et on ne redessine rien
+        if not checked:
+            for p in getattr(self, "job_wl_patches", []):
+                try:
+                    p.remove()
+                except Exception:
+                    pass
+            self.job_wl_patches = []
+            if hasattr(self, "spec_canvas"):
+                self.spec_canvas.draw_idle()
+            return
+
+        # Si coché : on redessine en utilisant le job courant
+        self._update_job_wl_patch()
+
 
     # </editor-fold>
 
@@ -5773,6 +5800,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         )
         # Tu pourras plus tard remplir job.E et/ou un tag sur la source EM au moment du run.
 
+        job.status = ""
+        job.progress = 0
+        job.duration_s = None
+
         self.jobs[name] = job
         self.job_order.append(name)
 
@@ -5937,6 +5968,40 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._refresh_table()
         self.tableWidget_classificationList.selectRow(new_row)
 
+    def _on_reinit_selected_job(self):
+        """
+        Remet le job sélectionné à l'état 'Idle' (status neutre),
+        sans toucher à la définition du job (paramètres, E, etc.).
+        """
+        table = self.tableWidget_classificationList
+        row = table.currentRow()
+        if row < 0:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.information(self, "Unmixing", "Select a job to re-init.")
+            return
+
+        name_item = table.item(row, 0)
+        if not name_item:
+            return
+
+        name = name_item.text()
+        job = self.jobs.get(name)
+        if job is None:
+            return
+
+        # Ré-initialise l'état
+        job.status = ""
+        job.progress = 0
+        job.duration_s = None
+        if hasattr(job, "_t0"):
+            job._t0 = None
+
+        # Met à jour la ligne dans la table
+        self._update_row_from_job(name)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Unmixing on work">
     def _refresh_viz_model_combo(self, select_name: str = None):
         """Rebuild comboBox_viz_show_model with ALL jobs present in job_order (Queued/Running/Done).
            Keep selection when possible; disable if empty."""
@@ -5962,12 +6027,21 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         finally:
             cb.blockSignals(was_blocked)
 
-    # </editor-fold>
 
-    # <editor-fold desc="Unmixing on work">
     def _on_start_all(self):
         if not self.job_order: return
         self._stop_all = False
+
+        for name in self.job_order:
+            job = self.jobs.get(name)
+            if job is None:
+                continue
+            if job.status != "Done":
+                job.status = "Queued"
+                job.progress = 0
+                job.duration_s = None
+                self._update_row_from_job(name)
+
         self._run_next_in_queue()
         self.radioButton_view_abundance.setChecked(True)
         self._refresh_abundance_view()
@@ -6095,7 +6169,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         next_name = None
         for n in self.job_order:
             st = getattr(self.jobs.get(n, None), "status", "")
-            if st in ("", None, "Queued"):
+            if st == "Queued":
                 next_name = n
                 break
         if next_name is None:
