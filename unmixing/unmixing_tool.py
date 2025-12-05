@@ -41,9 +41,10 @@ from interface.some_widget_for_interface import ZoomableGraphicsView
 from identification.load_cube_dialog import Ui_Dialog
 
 # <editor-fold desc="To do">
-#todo : check FTIR results -> OK with reflectance but strange with FTIR
+#todo : check FTIR results -> OK with reflectance but strange with FTIR - >check with Fran results
 #todo : fijar unas cositas para que la ui se quede mejor
-#todo : check with Fran results
+#todo : Quit sunsal ?
+#todo :see actual band selection
 # </editor-fold>
 
 class SelectEMDialog(QDialog):
@@ -1000,6 +1001,8 @@ def fused_cube(cube1, cube2, *, copy_common_meta: bool = True):
     fused.metadata["source_names"]  = [_safe_name_from(VNIR),     _safe_name_from(SWIR)]
 
     return fused
+
+
 
 # ------------------------------- Signals --------------------------------------
 class UnmixingSignals(QObject):
@@ -4685,6 +4688,30 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         if event.type() == QEvent.MouseButtonPress:
             ctrl = bool(event.modifiers() & Qt.ControlModifier)
 
+            if event.button() == Qt.RightButton:
+                # On ne déclenche le menu que si on n'est PAS en mode sélection / erase
+                # pour ne pas casser ton comportement actuel de sélection manuelle.
+                if not (self.selecting_pixels or self.erase_selection):
+                    # Ici tu peux limiter à viewer_left si tu veux vraiment :
+                    # if source is self.viewer_left.viewport():
+                    if source is self.viewer_right.viewport():
+                        from PyQt5.QtWidgets import QMenu
+                        menu = QMenu(self)
+                        act_save = menu.addAction("Save abundance value of this pixel")
+
+                        # coordonnées du clic dans la scène
+                        if source is self.viewer_left.viewport():
+                            pos_scene = self.viewer_left.mapToScene(event.pos())
+                        else:
+                            pos_scene = self.viewer_right.mapToScene(event.pos())
+
+                        x, y = int(pos_scene.x()), int(pos_scene.y())
+
+                        chosen = menu.exec_(source.mapToGlobal(event.pos()))
+                        if chosen is act_save:
+                            self._save_abundance_for_pixel(x, y)
+                        return True  # on a géré le clic droit
+
             # --- clic gauche simple : laisser le drag du viewer ---
             if event.button() == Qt.LeftButton and not ctrl:
                 return False
@@ -6027,10 +6054,135 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         finally:
             cb.blockSignals(was_blocked)
 
+    def _maybe_adjust_preprocess_for_irregular_grid(self, job, wl_job, band_mask):
+        """
+        Si le job est en dérivée Savitzky–Golay et que wl_job est très irrégulier
+        (cas typique VNIR+SWIR+FTIR fusionné sur toute la plage),
+        proposer 3 options :
+          1) désactiver Savitzky–Golay (raw),
+          2) garder la dérivée,
+          3) rééchantillonner cube + EM sur une grille régulière et garder Savitzky–Golay.
+        """
+        import numpy as _np
+        from PyQt5.QtWidgets import QMessageBox
+
+        pre = (getattr(job, "preprocess", "raw") or "raw").lower()
+        if pre not in ("deriv1", "deriv2"):
+            return
+
+        # On ne se préoccupe que du cas "tout le spectre"
+        full_range = (band_mask is None)
+        if (band_mask is not None) and _np.all(band_mask):
+            full_range = True
+
+        # Indice simple : on a fusionné du FTIR ?
+        has_ftir = getattr(self, "_last_ftir_wl", None) is not None
+
+        if not (full_range and has_ftir):
+            # L'utilisateur a déjà restreint à une sous-plage, ou pas de FTIR
+            return
+
+        wl = _np.asarray(wl_job, dtype=float)
+        if wl.size < 3:
+            return
+
+        diffs = _np.diff(wl)
+        diffs = diffs[_np.isfinite(diffs)]
+        if diffs.size < 2:
+            return
+
+        dmin = float(_np.min(diffs))
+        dmax = float(_np.max(diffs))
+        if dmin <= 0:
+            return
+
+        ratio = dmax / dmin
+        if ratio < 2.0:
+            # grille "assez régulière" -> on laisse Savitzky–Golay tranquille
+            return
+
+        # --- Grille très irrégulière sur toute la plage VNIR+SWIR+FTIR ---
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("Savitzky–Golay sur VNIR+SWIR+FTIR irrégulier")
+        msg.setText(
+            "Tu as choisi une dérivée Savitzky–Golay (1ᵉ ou 2ᵉ) sur un spectre "
+            "VNIR+SWIR+FTIR fusionné dont les longueurs d’onde sont très irrégulières.\n\n"
+            "Dans ce cas, la dérivée peut être physiquement trompeuse."
+        )
+        msg.setInformativeText(
+            "Que veux-tu faire pour CE job ?\n\n"
+            " • Désactiver Savitzky–Golay et utiliser les spectres bruts (recommandé),\n"
+            " • Garder la dérivée telle quelle,\n"
+            " • Rééchantillonner cube + EM sur une grille régulière (5 nm)\n"
+            "   et garder Savitzky–Golay."
+        )
+
+        btn_disable = msg.addButton("Désactiver Savitzky–Golay (raw)", QMessageBox.AcceptRole)
+        btn_keep = msg.addButton("Garder la dérivée telle quelle", QMessageBox.DestructiveRole)
+        btn_resample = msg.addButton("Rééchantillonner (5 nm) + garder SG", QMessageBox.ActionRole)
+        msg.setDefaultButton(btn_disable)
+
+        msg.exec_()
+        clicked = msg.clickedButton()
+
+        if clicked is btn_disable:
+            # 1) On force ce job en 'raw'
+            job.preprocess = "raw"
+            if isinstance(getattr(job, "params", None), dict):
+                job.params["preprocess"] = "raw"
+            # (éventuellement mettre à jour la table)
+            self._refresh_table()
+            return
+
+        if clicked is btn_keep:
+            # 2) Ne rien changer : grille irrégulière + Savitzky–Golay => l'utilisateur assume
+            return
+
+        if clicked is btn_resample:
+            # 3) Rééchantillonner cube + EM sur une grille régulière (5 nm) pour CE job
+
+            try:
+                # On travaille sur job.cube (H, W, L_job) et job.E (L_job, p)
+                cube = job.cube
+                E = job.E
+                wl = wl_job
+
+                # 3.a) Rééchantillonnage du cube sur une grille régulière
+                cube_rs, wl_reg = resample_spectra_to_regular_grid(
+                    cube,
+                    wl,
+                    step_nm=5.0,
+                    axis=2,  # axe spectral du cube
+                )
+
+                # 3.b) Rééchantillonnage des endmembers sur la même grille
+                E_rs, _ = resample_spectra_to_regular_grid(
+                    E,
+                    wl,
+                    step_nm=5.0,
+                    axis=0,  # axe spectral des EM
+                )
+
+                job.cube = cube_rs
+                job.E = E_rs
+                job.wl_job = wl_reg
+                # wl_cube reste la grille originale du cube, pour métadonnées
+                # On peut garder job.preprocess = 'deriv1'/'deriv2'
+
+                # Optionnel : garder une trace
+                job.regular_grid_step_nm = 5.0
+
+            except Exception as e:
+                print("[UNMIXING] Rééchantillonnage en grille régulière a échoué :", e)
+                # En cas de problème, on ne change rien d'autre
+                return
 
     def _on_start_all(self):
         if not self.job_order: return
         self._stop_all = False
+
+        self.radioButton_view_abundance.setChecked(True)
 
         for name in self.job_order:
             job = self.jobs.get(name)
@@ -6053,6 +6205,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         y arranca el worker en el threadpool.
         """
         self._stop_all = False
+        self.radioButton_view_abundance.setChecked(True)
 
         # 1) Resolver qué job lanzar (seleccionado o último)
         table = self.tableWidget_classificationList
@@ -6187,10 +6340,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._activate_endmembers(src)
 
         # construit E_mat, labels, wl_job et éventuellement un masque de bandes pour le cube
+        # construit E_mat, labels, wl_job et éventuellement un masque de bandes pour le cube
         try:
             E_mat, labels, wl_job, band_mask = self._prepare_job_inputs_from_current_E(
                 src=src, merge_groups=merge_groups
             )
+
         except RuntimeError as e:
             # cas "Cancel job" ou pas de recouvrement
             print(f"[RUN NEXT JOB] job '{next_name}' cancelled during wavelength alignment:", e)
@@ -6202,6 +6357,37 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self._current_worker = None
             self._run_next_in_queue()
             return
+
+        except ValueError as e:
+            # cas typique : "No endmembers for this source."
+            msg = str(e)
+            if "No endmembers for this source" in msg:
+                from PyQt5.QtWidgets import QMessageBox
+                QMessageBox.warning(
+                    self, "Unmixing",
+                    f"No endmembers available for source '{job.em_src}'.\n"
+                    f"Job '{next_name}' will be skipped."
+                )
+                job.status = "Error"   # ou "Canceled" si tu préfères
+                job.progress = 0
+                job.duration_s = None
+                self._update_row_from_job(next_name)
+                self._current_worker = None
+                self._run_next_in_queue()
+                return
+            else:
+                # autre ValueError inattendue -> on traite comme une erreur générique
+                import traceback
+                print(f"[RUN NEXT JOB] error while preparing job '{next_name}':", e)
+                traceback.print_exc()
+                job.status = "Error"
+                job.progress = 0
+                job.duration_s = None
+                self._update_row_from_job(next_name)
+                self._current_worker = None
+                self._run_next_in_queue()
+                return
+
         except Exception as e:
             # erreur inattendue
             import traceback
@@ -6228,6 +6414,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         job.roi_mask = self._current_roi_mask()
         job.wl_job = wl_job            # grid réellement utilisée pour ce job
         job.wl_cube = self.wl          # grid originale du cube (métadonnée)
+
+        # # Ajuster éventuellement le prétraitement / rééchantillonner si grille très irrégulière
+        # try:
+        #     self._maybe_adjust_preprocess_for_irregular_grid(job, wl_job, band_mask)
+        # except Exception as e:
+        #     print("[UNMIXING] warning: _maybe_adjust_preprocess_for_irregular_grid failed:", e)
 
         # 1) mode de sélection
         if getattr(self, "selected_bands", None):
@@ -6521,6 +6713,151 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._current_worker = None
         if not self._stop_all:
             self._run_next_in_queue()
+
+    def _save_abundance_for_pixel(self, x: int, y: int):
+        """
+        Sauvegarde dans un CSV le vecteur d'abondances du pixel (x,y)
+        pour le job actuellement visualisé dans comboBox_viz_show_model.
+
+        Colonnes : Endmember, Abundance, Sample, Metadata
+        """
+        import pandas as pd
+
+        # 1) Quelques vérifications de base
+        if self.data is None:
+            QMessageBox.warning(self, "Abundances", "No cube loaded.")
+            return
+
+        if not self.radioButton_view_abundance.isChecked():
+            QMessageBox.information(
+                self, "Abundances",
+                "Switch to 'abundance map' mode to export abundances."
+            )
+            return
+
+        H, W = self.data.shape[:2]
+        if not (0 <= x < W and 0 <= y < H):
+            QMessageBox.warning(self, "Abundances", "Clicked pixel is outside image bounds.")
+            return
+
+        idx_job = self.comboBox_viz_show_model.currentIndex()
+        if idx_job < 0:
+            QMessageBox.warning(self, "Abundances", "No unmixing job selected.")
+            return
+
+        job_name = self.comboBox_viz_show_model.itemText(idx_job)
+        job = self.jobs.get(job_name)
+        if job is None:
+            QMessageBox.warning(self, "Abundances", f"Job '{job_name}' not found.")
+            return
+
+        A = getattr(job, "A", None)
+        if A is None:
+            QMessageBox.warning(self, "Abundances", f"Job '{job_name}' has no abundance matrix.")
+            return
+
+        # 2) Mise en forme de A -> (H, W, p) comme dans _update_abundance_legend_for_pixel
+        A = np.asarray(A)
+        if A.ndim == 2:
+            p, N = A.shape
+            if N != H * W:
+                QMessageBox.warning(self, "Abundances", "Inconsistent abundance matrix shape.")
+                return
+            A3 = A.reshape(p, H, W).transpose(1, 2, 0)  # (H,W,p)
+        elif A.ndim == 3:
+            A3 = A
+            if not (A3.shape[0] == H and A3.shape[1] == W):
+                if A3.shape[2] == H and A3.shape[1] == W:
+                    A3 = np.transpose(A3, (2, 1, 0))
+                else:
+                    QMessageBox.warning(self, "Abundances", "Unexpected abundance tensor shape.")
+                    return
+        else:
+            QMessageBox.warning(self, "Abundances", "Abundance matrix has unsupported shape.")
+            return
+
+        if not (0 <= y < A3.shape[0] and 0 <= x < A3.shape[1]):
+            QMessageBox.warning(self, "Abundances", "Pixel coordinates out of abundance map.")
+            return
+
+        row_vals = A3[y, x, :].astype(float)  # (p,)
+
+        # 3) Noms des endmembers : on prend job.labels si dispo, sinon EM0, EM1...
+        labels_arr = getattr(job, "labels", None)
+        if labels_arr is not None:
+            labels_arr = np.asarray(labels_arr, dtype=object)
+            if labels_arr.shape[0] == row_vals.shape[0]:
+                em_names = [str(l) for l in labels_arr]
+            else:
+                em_names = [f"EM{i}" for i in range(row_vals.size)]
+        else:
+            em_names = [f"EM{i}" for i in range(row_vals.size)]
+
+        # 4) Sample & metadata
+        sample_name = ""
+        try:
+            if hasattr(self, "label_cube_file"):
+                sample_name = self.label_cube_file.text().strip()
+            if (not sample_name) and getattr(self.cube, "cube_info", None) is not None:
+                import os
+                path = self.cube.cube_info.filepath
+                if path:
+                    sample_name = os.path.basename(path).split('.')[0]
+        except Exception:
+            pass
+
+        if not sample_name:
+            sample_name = "sample"
+
+        meta_str = ""
+        try:
+            meta = getattr(self.cube, "metadata", None)
+            if isinstance(meta, dict):
+                # "k1=v1; k2=v2; ..."
+                meta_str = "; ".join(f"{k}={v}" for k, v in meta.items())
+            elif meta is not None:
+                meta_str = str(meta)
+        except Exception:
+            pass
+
+        # 5) Construire le DataFrame
+        n = len(em_names)
+        df = pd.DataFrame({
+            "Endmember": em_names,
+            "Abundance": row_vals,
+            "Sample": [sample_name] * n,
+            "Metadata": [meta_str] * n,
+        })
+
+        # 6) Boîte de dialogue Save As...
+        import os
+        base_dir = ""
+        try:
+            if getattr(self.cube, "cube_info", None) is not None:
+                base_dir = os.path.dirname(self.cube.cube_info.filepath or "")
+        except Exception:
+            pass
+
+        default_name = f"{sample_name}_x{x}_y{y}_{job_name}_abundances.csv"
+        save_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save abundance values (CSV)",
+            os.path.join(base_dir, default_name),
+            "CSV files (*.csv);;All files (*)"
+        )
+        if not save_path:
+            return
+
+        try:
+            df.to_csv(save_path, index=False)
+        except Exception as e:
+            QMessageBox.critical(self, "Abundances", f"Could not save CSV:\n{e}")
+            return
+
+        QMessageBox.information(
+            self, "Abundances",
+            f"Abundance values of pixel (x={x}, y={y}) saved to:\n{save_path}"
+        )
 
     # </editor-fold>
 

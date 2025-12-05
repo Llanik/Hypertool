@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1425</width>
-    <height>823</height>
+    <width>1429</width>
+    <height>832</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -118,6 +118,22 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="label_ftir_sample">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>No FTIR sample</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="pushButton_load_one_spectrum">
           <property name="text">
            <string>Load One Spectrum</string>
@@ -134,22 +150,6 @@
           </property>
           <property name="text">
            <string>No Cube File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_ftir_sample">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>No FTIR sample</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -314,8 +314,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>20</width>
-                   <height>20</height>
+                   <width>590</width>
+                   <height>113</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -391,7 +391,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>80</width>
+                   <width>63</width>
                    <height>20</height>
                   </rect>
                  </property>
@@ -542,7 +542,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>198</width>
+                   <width>181</width>
                    <height>20</height>
                   </rect>
                  </property>
@@ -1446,8 +1446,18 @@ color: rgb(255, 255, 255);</string>
          <attribute name="title">
           <string>Spectra</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_5">
-          <item>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="checkBox_showLegend">
+            <property name="text">
+             <string>Show legend</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
            <widget class="QComboBox" name="comboBox_endmembers_spectra">
             <property name="toolTip">
              <string>Choose between supervised segmentation (need selection first) or Unsupervised (Clusterisation)</string>
@@ -1469,27 +1479,20 @@ color: rgb(255, 255, 255);</string>
             </item>
            </widget>
           </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_showLegend">
-            <property name="text">
-             <string>Show legend</string>
+          <item row="3" column="0" colspan="2">
+           <widget class="QPushButton" name="pushButton_band_selection">
+            <property name="toolTip">
+             <string>If you want to perform segmentation only using some bands of the whole spectrum.</string>
             </property>
-            <property name="checked">
+            <property name="text">
+             <string>Band selection</string>
+            </property>
+            <property name="checkable">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QCheckBox" name="checkBox_showGraph">
-            <property name="text">
-             <string>Show graph</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
+          <item row="4" column="0">
            <widget class="QCheckBox" name="checkBox_see_job_bands">
             <property name="text">
              <string>See job bands</string>
@@ -1499,15 +1502,22 @@ color: rgb(255, 255, 255);</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_band_selection">
-            <property name="toolTip">
-             <string>If you want to perform segmentation only using some bands of the whole spectrum.</string>
-            </property>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="checkBox_showGraph">
             <property name="text">
-             <string>Band selection</string>
+             <string>Show graph</string>
             </property>
-            <property name="checkable">
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QCheckBox" name="checkBox_see_actual_bands">
+            <property name="text">
+             <string>See actual selected bands</string>
+            </property>
+            <property name="checked">
              <bool>true</bool>
             </property>
            </widget>

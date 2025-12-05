@@ -41,6 +41,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 from scipy.signal import savgol_filter
 from scipy.optimize import minimize
+from scipy.interpolate import PchipInterpolator
 import numpy as np
 
 _aliases = {'int': int, 'float': float, 'bool': bool}
@@ -168,7 +169,6 @@ def _auto_sg_window(n_bands: int,
         w = max(3, n_bands if n_bands % 2 == 1 else n_bands - 1)
     return max(3, w)
 
-
 def _apply_savgol(data: np.ndarray,
                   wl: Optional[np.ndarray],
                   order: int,
@@ -176,37 +176,134 @@ def _apply_savgol(data: np.ndarray,
                   polyorder: int = 4) -> np.ndarray:
     """
     Applique Savitzky–Golay (dérivée d'ordre 0,1,2) le long de l'axe spectral.
+
+    Si wl contient plusieurs "morceaux" séparés par de gros trous en λ,
+    on applique Savitzky–Golay indépendamment sur chaque morceau.
     """
     arr = np.asarray(data, dtype=float)
-    n_bands = arr.shape[axis]
 
+    # On met l'axe spectral en dernière position pour simplifier
+    arr_moved = np.moveaxis(arr, axis, -1)      # shape (..., L)
+    orig_shape = arr_moved.shape
+    L = orig_shape[-1]
 
+    flat = arr_moved.reshape(-1, L)             # (N, L) avec N = nb de spectres
 
-    if wl is not None and len(wl) >= 2:
-        wl = np.asarray(wl, dtype=float)
-        delta = float(np.mean(np.diff(wl)))
+    # Cas simple: pas de wl → grille régulière implicite
+    if wl is None or len(wl) < 2:
+        window_length = _auto_sg_window(L, max_win=25, min_win=5)
+        delta = 1.0
+        print(f"[SAVGOL] uniform grid, window_length={window_length}, delta={delta}")
 
-        if len(wl) > 100:
-            window_length=43
-        else:
-            window_length = _auto_sg_window(n_bands, max_win=25, min_win=5)
+        out_flat = savgol_filter(
+            flat,
+            window_length=window_length,
+            polyorder=polyorder,
+            deriv=order,
+            delta=delta,
+            axis=-1,
+            mode="interp",
+        )
 
     else:
-        delta = 1.0
-        window_length = _auto_sg_window(n_bands, max_win=25, min_win=5)
+        wl = np.asarray(wl, dtype=float)
+        segments = _split_wavelength_segments(wl, gap_factor=3.0)
 
-    print('[SAVGOL] window_length : ',window_length)
+        # fenêtre "de base" (max) calculée sur tout le spectre
+        if L > 100:
+            base_win = 43
+        else:
+            base_win = _auto_sg_window(L, max_win=25, min_win=5)
 
-    out = savgol_filter(
-        arr,
-        window_length=window_length,
-        polyorder=polyorder,
-        deriv=order,       # 0 = lissage, 1 = 1ère dérivée, 2 = 2nde
-        delta=delta,
-        axis=axis,
-        mode="interp",
-    )
+        out_flat = np.empty_like(flat)
+        print(f"[SAVGOL] segments={segments}, base_win={base_win}")
+
+        for (s0, s1) in segments:
+            s0 = int(s0)
+            s1 = int(s1)
+            n_seg = s1 - s0 + 1
+            if n_seg <= 2:
+                # Trop peu de points → pas de SG, on recopie
+                print(f"[SAVGOL] segment {s0}:{s1} (n={n_seg}) -> copy (too short)")
+                out_flat[:, s0:s1 + 1] = flat[:, s0:s1 + 1]
+                continue
+
+            wl_seg = wl[s0:s1 + 1]
+            diffs_seg = np.diff(wl_seg)
+            finite_seg = diffs_seg[np.isfinite(diffs_seg)]
+            if finite_seg.size == 0:
+                delta = 1.0
+            else:
+                delta = float(np.mean(finite_seg))
+
+            # Fenêtre pour ce segment
+            w = min(base_win, n_seg)
+            if w % 2 == 0:
+                w -= 1
+            # Il faut window_length > polyorder
+            if w <= polyorder:
+                # Segment trop court pour ce polyorder → on recopie brut
+                print(f"[SAVGOL] segment {s0}:{s1} (n={n_seg}) -> copy (w<polyorder)")
+                out_flat[:, s0:s1 + 1] = flat[:, s0:s1 + 1]
+                continue
+
+            print(f"[SAVGOL] segment {s0}:{s1} (n={n_seg}) "
+                  f"-> window_length={w}, delta={delta:.3g}")
+
+            out_flat[:, s0:s1 + 1] = savgol_filter(
+                flat[:, s0:s1 + 1],
+                window_length=w,
+                polyorder=polyorder,
+                deriv=order,
+                delta=delta,
+                axis=-1,
+                mode="interp",
+            )
+
+    # On remet en forme / à la bonne position d'axe
+    out_moved = out_flat.reshape(orig_shape)
+    out = np.moveaxis(out_moved, -1, axis)
     return out
+
+
+# def _apply_savgol(data: np.ndarray,
+#                   wl: Optional[np.ndarray],
+#                   order: int,
+#                   axis: int,
+#                   polyorder: int = 4) -> np.ndarray:
+#     """
+#     Applique Savitzky–Golay (dérivée d'ordre 0,1,2) le long de l'axe spectral.
+#     """
+#     arr = np.asarray(data, dtype=float)
+#     n_bands = arr.shape[axis]
+#
+#
+#
+#     if wl is not None and len(wl) >= 2:
+#         wl = np.asarray(wl, dtype=float)
+#         delta = float(np.mean(np.diff(wl)))
+#
+#         if len(wl) > 100:
+#             window_length=43
+#         else:
+#             window_length = _auto_sg_window(n_bands, max_win=25, min_win=5)
+#
+#     else:
+#         delta = 1.0
+#         window_length = _auto_sg_window(n_bands, max_win=25, min_win=5)
+#
+#     print('[SAVGOL] window_length : ',window_length)
+#
+#     out = savgol_filter(
+#         arr,
+#         window_length=window_length,
+#         polyorder=polyorder,
+#         deriv=order,       # 0 = lissage, 1 = 1ère dérivée, 2 = 2nde
+#         delta=delta,
+#         axis=axis,
+#         mode="interp",
+#     )
+#     return out
 
 def preprocess_spectra(data: np.ndarray,
                        mode: str = "raw",
@@ -226,6 +323,51 @@ def preprocess_spectra(data: np.ndarray,
         return _apply_savgol(data, wl=wl, order=2, axis=axis)
 
     raise ValueError(f"Unknown preprocess mode: {mode}")
+
+def _split_wavelength_segments(wl: np.ndarray,
+                               gap_factor: float = 3.0) -> list[tuple[int, int]]:
+    """
+    Découpe wl en segments quasi réguliers en se basant sur les grands sauts de Δλ.
+
+    On retourne une liste de paires (start, end) d'indices, inclusifs,
+    telles que wl[start:end+1] soit un "morceau" à traiter par Savitzky–Golay.
+    """
+    wl = np.asarray(wl, dtype=float)
+    n = wl.size
+    if n <= 1:
+        return [(0, n - 1)] if n == 1 else []
+
+    diffs = np.diff(wl)
+    finite = diffs[np.isfinite(diffs)]
+    # Si on n'arrive pas à estimer un pas typique, on considère un seul segment
+    if finite.size == 0:
+        return [(0, n - 1)]
+
+    # On ne regarde que les pas strictement positifs pour estimer le pas typique
+    pos = finite[finite > 0]
+    if pos.size == 0:
+        return [(0, n - 1)]
+    step_ref = float(np.median(pos))
+    if step_ref <= 0:
+        return [(0, n - 1)]
+
+    # Ruptures là où le pas est bien plus grand que le pas typique
+    boundaries = np.where(diffs > gap_factor * step_ref)[0]
+
+    if boundaries.size == 0:
+        return [(0, n - 1)]
+
+    segments: list[tuple[int, int]] = []
+    start = 0
+    for b in boundaries:
+        end = int(b)
+        if end >= start:
+            segments.append((start, end))
+        start = int(b) + 1
+    if start < n:
+        segments.append((start, n - 1))
+    return segments
+
 
 # ---------- Optional dependency: pysptools wrappers ----------------------------
 
