@@ -1003,7 +1003,6 @@ def fused_cube(cube1, cube2, *, copy_common_meta: bool = True):
     return fused
 
 
-
 # ------------------------------- Signals --------------------------------------
 class UnmixingSignals(QObject):
     error = pyqtSignal(str)
@@ -1327,8 +1326,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.signals = UnmixingSignals()
 
         # Remplacer placeholders par ZoomableGraphicsView
-        self._replace_placeholder('viewer_left', ZoomableGraphicsView)
-        self._replace_placeholder('viewer_right', ZoomableGraphicsView)
+        self._replace_placeholder('viewer_left', ZoomableGraphicsView,cursor=Qt.CrossCursor)
+        self._replace_placeholder('viewer_right', ZoomableGraphicsView,cursor=Qt.CrossCursor)
         self.viewer_left.enable_rect_selection = True  # no rectangle selection for left view
         self.viewer_right.enable_rect_selection = False # no rectangle selection for right view
         self.viewer_left.viewport().installEventFilter(self)
@@ -1339,7 +1338,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.viewer_right.setDragMode(QGraphicsView.ScrollHandDrag)
         self.viewer_right.setCursor(Qt.CrossCursor)
         self.viewer_left.setCursor(Qt.CrossCursor)
-
 
         # Promote spec_canvas placeholder to FigureCanvas
         self._promote_canvas('spec_canvas', FigureCanvas)
@@ -6789,45 +6787,61 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             if labels_arr.shape[0] == row_vals.shape[0]:
                 em_names = [str(l) for l in labels_arr]
             else:
-                em_names = [f"EM{i}" for i in range(row_vals.size)]
+                em_names = [f"EM_{i:02d}" for i in range(row_vals.size)]
         else:
-            em_names = [f"EM{i}" for i in range(row_vals.size)]
+            em_names = [f"EM_{i:02d}" for i in range(row_vals.size)]
 
-        # 4) Sample & metadata
-        sample_name = ""
+        # 4) Métadonnées : uniquement celles que tu veux
+        import os
+        cube_name = ""
         try:
-            if hasattr(self, "label_cube_file"):
-                sample_name = self.label_cube_file.text().strip()
-            if (not sample_name) and getattr(self.cube, "cube_info", None) is not None:
-                import os
-                path = self.cube.cube_info.filepath
+            if getattr(self.cube, "cube_info", None) is not None:
+                path = self.cube.cube_info.filepath or ""
                 if path:
-                    sample_name = os.path.basename(path).split('.')[0]
+                    cube_name = os.path.basename(path).rsplit(".", 1)[0]
         except Exception:
             pass
+        if not cube_name:
+            cube_name = "cube"
 
-        if not sample_name:
-            sample_name = "sample"
-
-        meta_str = ""
-        try:
-            meta = getattr(self.cube, "metadata", None)
-            if isinstance(meta, dict):
-                # "k1=v1; k2=v2; ..."
-                meta_str = "; ".join(f"{k}={v}" for k, v in meta.items())
-            elif meta is not None:
-                meta_str = str(meta)
-        except Exception:
-            pass
+        meta_dict = {
+            "x":x,
+            "y":y,
+            "cube_name": cube_name,
+            "job.name": getattr(job, "name", job_name),
+            "job.model": getattr(job, "model", ""),
+            "job.normalization": getattr(job, "normalization", ""),
+            "job.anc": getattr(job, "anc", ""),
+            "job.asc": getattr(job, "asc", ""),
+            "job.preprocess": getattr(job, "preprocess", ""),
+        }
 
         # 5) Construire le DataFrame
-        n = len(em_names)
-        df = pd.DataFrame({
-            "Endmember": em_names,
-            "Abundance": row_vals,
-            "Sample": [sample_name] * n,
-            "Metadata": [meta_str] * n,
-        })
+        # -> zip_longest entre (Endmember, Abundance) et (MetaKey, MetaValue)
+        from itertools import zip_longest
+        rows = []
+        em_seq = list(zip(em_names, row_vals))
+        meta_seq = list(meta_dict.items())
+
+        for pair_em, pair_meta in zip_longest(em_seq, meta_seq, fillvalue=None):
+            if pair_em is not None:
+                em, val = pair_em
+            else:
+                em, val = None, None
+
+            if pair_meta is not None:
+                k, v = pair_meta
+            else:
+                k, v = None, None
+
+            rows.append({
+                "Endmember": em,
+                "Abundance": float(val) if val is not None else None,
+                "MetaKey": k,
+                "MetaValue": v,
+            })
+
+        df = pd.DataFrame(rows)
 
         # 6) Boîte de dialogue Save As...
         import os
@@ -6837,7 +6851,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 base_dir = os.path.dirname(self.cube.cube_info.filepath or "")
         except Exception:
             pass
-
+        sample_name = cube_name or "sample"
         default_name = f"{sample_name}_x{x}_y{y}_{job_name}_abundances.csv"
         save_path, _ = QFileDialog.getSaveFileName(
             self,

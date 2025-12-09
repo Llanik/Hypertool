@@ -29,11 +29,11 @@ class ZoomableGraphicsView(QGraphicsView):
     moveFeatureEnd = pyqtSignal()
     selectionChanged = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self,cursor=Qt.CrossCursor):
         super().__init__()
         self.setScene(QGraphicsScene())
         self.setDragMode(QGraphicsView.ScrollHandDrag)
-        self.setCursor(Qt.OpenHandCursor)
+        self.setCursor(cursor)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.pixmap_item = None  # check if image loaded
 
@@ -67,12 +67,14 @@ class ZoomableGraphicsView(QGraphicsView):
             self.scale(scale_factor, scale_factor)
 
     def wheelEvent(self, event):
+        self.viewport().setCursor(Qt.CrossCursor)
         zoom_in_factor = 1.25
         zoom_out_factor = 1 / zoom_in_factor
         zoom = zoom_in_factor if event.angleDelta().y() > 0 else zoom_out_factor
         self.scale(zoom, zoom)
 
     def mousePressEvent(self, event):
+        self.viewport().setCursor(Qt.CrossCursor)
         if (event.button() == Qt.RightButton and self.pixmap_item and self.enable_rect_selection): # rectangle selection
             self.viewport().setCursor(Qt.CrossCursor)
             self.origin = event.pos()
@@ -99,6 +101,7 @@ class ZoomableGraphicsView(QGraphicsView):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        self.viewport().setCursor(Qt.CrossCursor)
         if self._selecting:
             max_w = self.viewport().width() - 1
             max_h = self.viewport().height() - 1
@@ -114,9 +117,11 @@ class ZoomableGraphicsView(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        self.viewport().setCursor(Qt.CrossCursor)
         if event.button() == Qt.RightButton and self.pixmap_item and self._selecting:
             self.rubber_band.hide()
-            self.viewport().setCursor(Qt.OpenHandCursor)
+            # self.viewport().setCursor(Qt.OpenHandCursor)
+            self.viewport().setCursor(Qt.CrossCursor)
             self._selecting = False
 
             # Convert view coords to scene coords
@@ -162,6 +167,7 @@ class ZoomableGraphicsView(QGraphicsView):
 
         self.selectionChanged.emit()
         super().mouseReleaseEvent(event)
+
 
     def get_rect_coords(self):
         return self.rect_coords

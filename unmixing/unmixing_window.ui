@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1429</width>
-    <height>832</height>
+    <width>1433</width>
+    <height>841</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -64,22 +64,25 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_load_map">
+         <widget class="QPushButton" name="pushButton_load_one_spectrum">
           <property name="text">
-           <string>Load Map</string>
+           <string>Load One Spectrum</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_reset">
-          <property name="toolTip">
-           <string>Reset all data loaded in the tool.</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: rgba(255, 0, 0, 125);</string>
+         <widget class="QLabel" name="label_one_spectrum">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>20</height>
+           </size>
           </property>
           <property name="text">
-           <string>Reset all</string>
+           <string>No sample</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -134,25 +137,22 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_load_one_spectrum">
+         <widget class="QPushButton" name="pushButton_load_map">
           <property name="text">
-           <string>Load One Spectrum</string>
+           <string>Load Map</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_one_spectrum">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
+         <widget class="QPushButton" name="pushButton_reset">
+          <property name="toolTip">
+           <string>Reset all data loaded in the tool.</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: rgba(255, 0, 0, 125);</string>
           </property>
           <property name="text">
-           <string>No Cube File</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <string>Reset all</string>
           </property>
          </widget>
         </item>
@@ -314,8 +314,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>590</width>
-                   <height>113</height>
+                   <width>20</width>
+                   <height>20</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1002,7 +1002,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
