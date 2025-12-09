@@ -15,7 +15,7 @@ class Ui_GroundTruthWidget(object):
     def setupUi(self, GroundTruthWidget):
         GroundTruthWidget.setObjectName("GroundTruthWidget")
         GroundTruthWidget.resize(1451, 841)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(GroundTruthWidget.sizePolicy().hasHeightForWidth())
@@ -148,7 +148,7 @@ class Ui_GroundTruthWidget(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 80, 20))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 496, 103))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -676,9 +676,9 @@ class Ui_GroundTruthWidget(object):
         self.verticalLayout.setStretch(1, 6)
 
         self.retranslateUi(GroundTruthWidget)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget_Image.setCurrentIndex(0)
+        self.tabWidget_Image.setCurrentIndex(1)
         self.stackedWidget_2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(GroundTruthWidget)
 
