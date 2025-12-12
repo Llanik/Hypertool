@@ -1451,7 +1451,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.pushButton_remove_EM.clicked.connect(self._remove_em_from_lib)
         self.pushButton_wavenumber_to_wavelength.clicked.connect(self.wavenumber_to_wavelength)
         self.comboBox_endmembers_get.currentIndexChanged.connect(self.on_algo_endmember_change)
-        self.tabWidget.currentChanged.connect(self.stop_pixel_selection)
+        self.tabWidget.currentChanged.connect(self.stop_selec_if_tab_change)
         self.on_algo_endmember_change()
 
         # Spectra window
@@ -5062,6 +5062,13 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.update_overlay()
         self.viewer_left.enable_rect_selection = False
 
+    def stop_selec_if_tab_change(self):
+        if self.tabWidget.currentIndex() !=0:
+            self.stop_pixel_selection()
+            return
+        if "Manual" not in self.comboBox_endmembers_get.currentText():
+            self.stop_pixel_selection()
+
     def stop_pixel_selection(self):
 
         self.selecting_pixels = False
@@ -5079,9 +5086,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         # enfin, on affiche l'image normale (sans preview ni sélection en cours)
         self.show_rgb_image()
         self.update_overlay()
-        print(f'[MANUAL SELECTION] E shape : {len(self.samples)}')
-        for key in self.E_manual:
-            print(key,'->',self.E_manual[key].shape)
 
         self._activate_endmembers('manual')
         self.update_spectra(maxR=1)
