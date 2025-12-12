@@ -4,13 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update&#10;- modif matplotlib_toolbar and margen">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIX] : &#10;- fixing buggs and ui details">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.spec" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.spec" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,9 +103,6 @@
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="SDK_NAME" value="Python 3.12" />
       <option name="WORKING_DIRECTORY" value="C:\Users\Usuario\Documents\GitHub\Hypertool" />
@@ -142,22 +134,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00111" summary="[unmixing] : &#10;- implementando forms to show endmembers params">
-      <option name="closed" value="true" />
-      <created>1761828442929</created>
-      <option name="number" value="00111" />
-      <option name="presentableId" value="LOCAL-00111" />
-      <option name="project" value="LOCAL" />
-      <updated>1761828442929</updated>
-    </task>
-    <task id="LOCAL-00112" summary="[unmixing] : &#10;- scrolable labels for endmembers&#10;- dynamic cross to visualize automatic endmembers&#10;- get Raw endmembers spectrum and normalisation to save of before unmixing&#10;- transforms extended to selection_mask&#10;- radiobuttons and stecked tabs for result_viz">
-      <option name="closed" value="true" />
-      <created>1761921019704</created>
-      <option name="number" value="00112" />
-      <option name="presentableId" value="LOCAL-00112" />
-      <option name="project" value="LOCAL" />
-      <updated>1761921019705</updated>
     </task>
     <task id="LOCAL-00113" summary="[unmixing] : &#10;- endmmembers editing name for saving abd color for temporal visualization.&#10;- saving automatic abd manual endmmbers to csv. &#10;- Loading dispersive endmmbers like with multiple spectrum">
       <option name="closed" value="true" />
@@ -535,7 +511,23 @@
       <option name="project" value="LOCAL" />
       <updated>1765289588910</updated>
     </task>
-    <option name="localTasksCounter" value="160" />
+    <task id="LOCAL-00160" summary="[UNMIX] : &#10;- fixing buggs and ui details">
+      <option name="closed" value="true" />
+      <created>1765530570885</created>
+      <option name="number" value="00160" />
+      <option name="presentableId" value="LOCAL-00160" />
+      <option name="project" value="LOCAL" />
+      <updated>1765530570887</updated>
+    </task>
+    <task id="LOCAL-00161" summary="[UNMIX] : &#10;- fixing buggs and ui details">
+      <option name="closed" value="true" />
+      <created>1765532356680</created>
+      <option name="number" value="00161" />
+      <option name="presentableId" value="LOCAL-00161" />
+      <option name="project" value="LOCAL" />
+      <updated>1765532356680</updated>
+    </task>
+    <option name="localTasksCounter" value="162" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -587,7 +579,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[IDENTIFICATION] : &#10;- load_map added" />
     <MESSAGE value="[UNMIXING] : &#10;- One spectrum IR.&#10;- check if cm-1 o nm" />
     <MESSAGE value="[HYPERCUBE] : &#10;- Added crop refletance to calibration&#10;- Added possibility of calibration without white in image&#10;- Checked for IQ camera (results, REFLECTANCE.hdr)" />
     <MESSAGE value="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark" />
@@ -612,6 +603,7 @@
     <MESSAGE value="[UNMIX] : &#10;- small changes in ui&#10;- added save pixel abudances map on write clic" />
     <MESSAGE value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update" />
     <MESSAGE value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update&#10;- modif matplotlib_toolbar and margen" />
-    <option name="LAST_COMMIT_MESSAGE" value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update&#10;- modif matplotlib_toolbar and margen" />
+    <MESSAGE value="[UNMIX] : &#10;- fixing buggs and ui details" />
+    <option name="LAST_COMMIT_MESSAGE" value="[UNMIX] : &#10;- fixing buggs and ui details" />
   </component>
 </project>
