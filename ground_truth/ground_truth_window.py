@@ -384,7 +384,7 @@ class Ui_GroundTruthWidget(object):
         self.verticalLayout.setStretch(1, 6)
 
         self.retranslateUi(GroundTruthWidget)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         self.stackedWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(GroundTruthWidget)
 
@@ -438,7 +438,7 @@ class Ui_GroundTruthWidget(object):
         self.pushButton_flip_v.setText(_translate("GroundTruthWidget", "↕"))
         self.pushButton_flip_h.setToolTip(_translate("GroundTruthWidget", "Flip cube hoizontaly"))
         self.pushButton_flip_h.setText(_translate("GroundTruthWidget", "↔"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("GroundTruthWidget", "Cube Viz"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("GroundTruthWidget", "Img Adjust"))
         self.groupBox.setTitle(_translate("GroundTruthWidget", "Image Overlays"))
         self.label_GT_3.setText(_translate("GroundTruthWidget", "GT transparency"))
         self.horizontalSlider_transparency_GT.setToolTip(_translate("GroundTruthWidget", "Choose transparency of GT image overlay on cube representation."))

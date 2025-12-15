@@ -51,7 +51,7 @@ class SelectEMDialog(QDialog):
     Table with 3 columns: Name | Color | Select
     + a 'Select all/none' checkbox, Cancel, and Add Selected.
     """
-    def __init__(self, parent, rows, get_name, get_rgb):
+    def __init__(self, parent, rows, get_name, get_rgb,checked=True):
         super().__init__(parent)
         self.setWindowTitle("Add Endmembers to Library")
         self.resize(520, 420)
@@ -97,7 +97,7 @@ class SelectEMDialog(QDialog):
 
             # Checkbox
             chk = QCheckBox()
-            chk.setChecked(True)
+            chk.setChecked(checked)
             w = QWidget()
             lay = QHBoxLayout(w)
             lay.setContentsMargins(0, 0, 0, 0)
@@ -4507,7 +4507,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self,
             rows=keys,
             get_name=lambda k: self._ci_name(self.class_info_lib, k),
-            get_rgb=lambda k: self._ci_rgb(self.class_info_lib, k)
+            get_rgb=lambda k: self._ci_rgb(self.class_info_lib, k),
+            checked=False,
         )
 
         # Changer le texte du bouton principal

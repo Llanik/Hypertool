@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1472</width>
-    <height>0</height>
+    <height>518</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,8 +34,11 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="5,1,3">
       <item>
        <widget class="QTabWidget" name="tabWidget_Process">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;the workflow is Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage2">
          <attribute name="title">
@@ -46,6 +49,9 @@
            <layout class="QGridLayout" name="gridLayout">
             <item row="3" column="3">
              <widget class="QRadioButton" name="radioButton_band_selection_manual">
+              <property name="toolTip">
+               <string>Choose with the gray slider value to select manually the band to use for binarization</string>
+              </property>
               <property name="text">
                <string>Manual Band selection (Grayscale slider value)</string>
               </property>
@@ -53,6 +59,9 @@
             </item>
             <item row="1" column="2">
              <widget class="QComboBox" name="comboBox_bin_algorith_choice">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Binarization algorithm&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Select the binarization method used to separate foreground and background.&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Bradley&lt;/span&gt;: local mean thresholding using a fixed pixel window.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Sauvola&lt;/span&gt;: adaptive local thresholding based on mean and standard deviation (window defined as a fraction of image size).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wolf&lt;/span&gt;: variant of Sauvola using global minimum intensity to improve robustness.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Niblack&lt;/span&gt;: local mean and standard deviation thresholding with a fixed internal window.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Otsu&lt;/span&gt;: global histogram-based thresholding (no local window).&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <item>
                <property name="text">
                 <string>Bradley</string>
@@ -94,6 +103,9 @@
                 <height>16777215</height>
                </size>
               </property>
+              <property name="toolTip">
+               <string>Start binarization algorithm</string>
+              </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgb(0, 170, 0);</string>
               </property>
@@ -120,6 +132,9 @@
             </item>
             <item row="4" column="2">
              <widget class="QSpinBox" name="spinBox_bin_window_size">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Window size — Local neighborhood definition&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Defines how the local neighborhood is computed.&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;The meaning of this parameter depends on the selected algorithm.&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Bradley&lt;/span&gt;: window size in &lt;span style=&quot; font-weight:600;&quot;&gt;pixels&lt;/span&gt; (square window: &lt;span style=&quot; font-family:'Courier New';&quot;&gt;window_size × window_size&lt;/span&gt;).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Sauvola&lt;/span&gt;: window size as a &lt;span style=&quot; font-weight:600;&quot;&gt;division factor&lt;/span&gt; of the image dimensions&lt;br/&gt;(&lt;span style=&quot; font-family:'Courier New';&quot;&gt;window = image_size / window_size&lt;/span&gt;).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wolf&lt;/span&gt;: window size as a &lt;span style=&quot; font-weight:600;&quot;&gt;division factor&lt;/span&gt; of the image dimensions&lt;br/&gt;(&lt;span style=&quot; font-family:'Courier New';&quot;&gt;window = image_size / window_size&lt;/span&gt;).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Niblack&lt;/span&gt;: not used (window size is internally fixed).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Otsu&lt;/span&gt;: not used.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="value">
                <number>3</number>
               </property>
@@ -143,6 +158,9 @@
             </item>
             <item row="2" column="3">
              <widget class="QRadioButton" name="radioButton_band_selection_auto">
+              <property name="toolTip">
+               <string>Let the algorithm choose the best band for binarization</string>
+              </property>
               <property name="text">
                <string>Automatic best band selection</string>
               </property>
@@ -153,6 +171,9 @@
             </item>
             <item row="3" column="2">
              <widget class="QComboBox" name="comboBox_padding_mode">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Padding mode — Border handling&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Defines how image borders are handled when computing local statistics.&lt;br/&gt;Not used for Niblack and Otsu.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <item>
                <property name="text">
                 <string>replicate</string>
@@ -216,6 +237,9 @@
             </item>
             <item row="2" column="2">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_bin_k">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;k — Threshold sensitivity&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Controls how strongly the threshold adapts to local image statistics.&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Bradley&lt;/span&gt;: adjusts the threshold relative to the local mean (&lt;span style=&quot; font-family:'Courier New';&quot;&gt;mean × (1 − k)&lt;/span&gt;).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Sauvola&lt;/span&gt;: controls the influence of local contrast (standard deviation) on the threshold.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wolf&lt;/span&gt;: balances local mean, local contrast, and global minimum intensity.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Niblack&lt;/span&gt;: scales the contribution of the local standard deviation.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Otsu&lt;/span&gt;: not used.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="singleStep">
                <double>0.100000000000000</double>
               </property>
@@ -292,6 +316,9 @@ color: rgb(255, 255, 255);</string>
             </item>
             <item>
              <widget class="QComboBox" name="comboBox_clas_ink_model">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Ink model (classifier)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Select the ink classifier to add as a &lt;span style=&quot; font-style:italic;&quot;&gt;classification job&lt;/span&gt;.&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Clicking &lt;span style=&quot; font-weight:600;&quot;&gt;Add ink&lt;/span&gt; will create a job using this model name.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;If the current spectral range does not match the pretrained model, the job may require &lt;span style=&quot; font-weight:600;&quot;&gt;training&lt;/span&gt; first (prompted by the app).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add from disk...&lt;/span&gt; loads an external &lt;span style=&quot; font-family:'Courier New';&quot;&gt;.joblib&lt;/span&gt; classifier; if compatible, you can rename it and it will be used directly.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <item>
                <property name="text">
                 <string>LDA</string>
@@ -353,6 +380,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item>
                <widget class="QCheckBox" name="checkBox_classify_substrate_fast">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Fast mode (mean spectrum)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If enabled, substrate classification is performed on &lt;span style=&quot; font-weight:600;&quot;&gt;one single spectrum&lt;/span&gt;:&lt;br/&gt;the &lt;span style=&quot; font-weight:600;&quot;&gt;mean spectrum&lt;/span&gt; of all substrate pixels in the selected region.&lt;/p&gt;&lt;p&gt;If disabled, the classifier is applied to &lt;span style=&quot; font-weight:600;&quot;&gt;all substrate pixels&lt;/span&gt;, and the tool reports the percentage of each predicted class (the final label is the majority class).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="layoutDirection">
                  <enum>Qt::RightToLeft</enum>
                 </property>
@@ -368,6 +398,17 @@ color: rgb(255, 255, 255);</string>
             </item>
             <item>
              <widget class="QComboBox" name="comboBox_clas_substrate_model">
+              <property name="toolTip">
+               <string>Substrate model (background classifier)
+
+Select the substrate classifier used by Classify substrate (background / support material).
+
+Classification is applied only on pixels where the binarization map equals 0 (substrate pixels).
+
+If a rectangle is selected, classification is restricted to that region.
+
+If the model is not compatible with the current spectral range, the tool can propose training a new background (10%) model (only for LDA/KNN/RDF/SVM).</string>
+              </property>
               <item>
                <property name="text">
                 <string>LDA</string>
@@ -659,7 +700,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
@@ -1021,6 +1062,9 @@ color: rgb(255, 255, 255);</string>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="QPushButton" name="pushButton_load">
+          <property name="toolTip">
+           <string>Load a hypercube from your disk</string>
+          </property>
           <property name="text">
            <string>Load cube(s)</string>
           </property>
@@ -1041,6 +1085,9 @@ color: rgb(255, 255, 255);</string>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_load_map">
+          <property name="toolTip">
+           <string>Load a previous results of identification to visualize</string>
+          </property>
           <property name="text">
            <string>Load map</string>
           </property>

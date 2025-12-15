@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_IdentificationWidget(object):
     def setupUi(self, IdentificationWidget):
         IdentificationWidget.setObjectName("IdentificationWidget")
-        IdentificationWidget.resize(1472, 0)
+        IdentificationWidget.resize(1472, 518)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -530,33 +530,42 @@ class Ui_IdentificationWidget(object):
         self.verticalLayout.setStretch(1, 8)
 
         self.retranslateUi(IdentificationWidget)
-        self.tabWidget_Process.setCurrentIndex(0)
+        self.tabWidget_Process.setCurrentIndex(2)
         self.comboBox_clean_preset.setCurrentIndex(1)
-        self.tabWidget_Image.setCurrentIndex(0)
+        self.tabWidget_Image.setCurrentIndex(1)
         self.tabWidget_info_classification.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(IdentificationWidget)
 
     def retranslateUi(self, IdentificationWidget):
         _translate = QtCore.QCoreApplication.translate
+        self.tabWidget_Process.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Choose step of process. <br/><br/>the workflow is Binarization -&gt; Classification -&gt; Cleaning (optional)</p></body></html>"))
+        self.radioButton_band_selection_manual.setToolTip(_translate("IdentificationWidget", "Choose with the gray slider value to select manually the band to use for binarization"))
         self.radioButton_band_selection_manual.setText(_translate("IdentificationWidget", "Manual Band selection (Grayscale slider value)"))
+        self.comboBox_bin_algorith_choice.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Binarization algorithm</span></p><p>Select the binarization method used to separate foreground and background.</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Bradley</span>: local mean thresholding using a fixed pixel window.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Sauvola</span>: adaptive local thresholding based on mean and standard deviation (window defined as a fraction of image size).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Wolf</span>: variant of Sauvola using global minimum intensity to improve robustness.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Niblack</span>: local mean and standard deviation thresholding with a fixed internal window.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Otsu</span>: global histogram-based thresholding (no local window).</li></ul></body></html>"))
         self.comboBox_bin_algorith_choice.setItemText(0, _translate("IdentificationWidget", "Bradley"))
         self.comboBox_bin_algorith_choice.setItemText(1, _translate("IdentificationWidget", "Wolf"))
         self.comboBox_bin_algorith_choice.setItemText(2, _translate("IdentificationWidget", "Sauvola"))
         self.comboBox_bin_algorith_choice.setItemText(3, _translate("IdentificationWidget", "Otsu"))
         self.comboBox_bin_algorith_choice.setItemText(4, _translate("IdentificationWidget", "Niblack"))
+        self.pushButton_launch_bin.setToolTip(_translate("IdentificationWidget", "Start binarization algorithm"))
         self.pushButton_launch_bin.setText(_translate("IdentificationWidget", "Launch Binarization"))
         self.label_bin_k.setText(_translate("IdentificationWidget", "k :"))
+        self.spinBox_bin_window_size.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Window size — Local neighborhood definition</span></p><p>Defines how the local neighborhood is computed.<br/><span style=\" font-weight:600;\">The meaning of this parameter depends on the selected algorithm.</span></p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Bradley</span>: window size in <span style=\" font-weight:600;\">pixels</span> (square window: <span style=\" font-family:\'Courier New\';\">window_size × window_size</span>).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Sauvola</span>: window size as a <span style=\" font-weight:600;\">division factor</span> of the image dimensions<br/>(<span style=\" font-family:\'Courier New\';\">window = image_size / window_size</span>).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Wolf</span>: window size as a <span style=\" font-weight:600;\">division factor</span> of the image dimensions<br/>(<span style=\" font-family:\'Courier New\';\">window = image_size / window_size</span>).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Niblack</span>: not used (window size is internally fixed).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Otsu</span>: not used.</li></ul></body></html>"))
         self.label_padding_mode.setText(_translate("IdentificationWidget", "Padding :"))
+        self.radioButton_band_selection_auto.setToolTip(_translate("IdentificationWidget", "Let the algorithm choose the best band for binarization"))
         self.radioButton_band_selection_auto.setText(_translate("IdentificationWidget", "Automatic best band selection"))
+        self.comboBox_padding_mode.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Padding mode — Border handling</p><p><br/></p><p>Defines how image borders are handled when computing local statistics.<br/>Not used for Niblack and Otsu.</p></body></html>"))
         self.comboBox_padding_mode.setItemText(0, _translate("IdentificationWidget", "replicate"))
         self.comboBox_padding_mode.setItemText(1, _translate("IdentificationWidget", "symmetric"))
         self.comboBox_padding_mode.setItemText(2, _translate("IdentificationWidget", "circular"))
         self.comboBox_padding_mode.setItemText(3, _translate("IdentificationWidget", "constant"))
         self.label_bin_window_size.setText(_translate("IdentificationWidget", "window :"))
         self.label_bin_algorith_choice.setText(_translate("IdentificationWidget", "Binarization algorithm :"))
+        self.doubleSpinBox_bin_k.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">k — Threshold sensitivity</span></p><p>Controls how strongly the threshold adapts to local image statistics.</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Bradley</span>: adjusts the threshold relative to the local mean (<span style=\" font-family:\'Courier New\';\">mean × (1 − k)</span>).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Sauvola</span>: controls the influence of local contrast (standard deviation) on the threshold.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Wolf</span>: balances local mean, local contrast, and global minimum intensity.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Niblack</span>: scales the contribution of the local standard deviation.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Otsu</span>: not used.</li></ul></body></html>"))
         self.pushButton_reset_bin.setText(_translate("IdentificationWidget", "Reset Binarization"))
         self.tabWidget_Process.setTabText(self.tabWidget_Process.indexOf(self.tabWidgetPage2), _translate("IdentificationWidget", "Binarization Substrate/Inks"))
         self.label_clas_ink_model.setText(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Ink</span></p></body></html>"))
+        self.comboBox_clas_ink_model.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Ink model (classifier)</span></p><p>Select the ink classifier to add as a <span style=\" font-style:italic;\">classification job</span>.</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Clicking <span style=\" font-weight:600;\">Add ink</span> will create a job using this model name.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">If the current spectral range does not match the pretrained model, the job may require <span style=\" font-weight:600;\">training</span> first (prompted by the app).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Add from disk...</span> loads an external <span style=\" font-family:\'Courier New\';\">.joblib</span> classifier; if compatible, you can rename it and it will be used directly.</li></ul></body></html>"))
         self.comboBox_clas_ink_model.setItemText(0, _translate("IdentificationWidget", "LDA"))
         self.comboBox_clas_ink_model.setItemText(1, _translate("IdentificationWidget", "KNN"))
         self.comboBox_clas_ink_model.setItemText(2, _translate("IdentificationWidget", "RDF"))
@@ -564,7 +573,17 @@ class Ui_IdentificationWidget(object):
         self.comboBox_clas_ink_model.setItemText(4, _translate("IdentificationWidget", "Add from disk..."))
         self.pushButton_clas_add_ink.setText(_translate("IdentificationWidget", "Add Ink Classifier"))
         self.label_clas_substrate_model.setText(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Substrate</span></p></body></html>"))
+        self.checkBox_classify_substrate_fast.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Fast mode (mean spectrum)</span></p><p>If enabled, substrate classification is performed on <span style=\" font-weight:600;\">one single spectrum</span>:<br/>the <span style=\" font-weight:600;\">mean spectrum</span> of all substrate pixels in the selected region.</p><p>If disabled, the classifier is applied to <span style=\" font-weight:600;\">all substrate pixels</span>, and the tool reports the percentage of each predicted class (the final label is the majority class).</p></body></html>"))
         self.checkBox_classify_substrate_fast.setText(_translate("IdentificationWidget", "Fast"))
+        self.comboBox_clas_substrate_model.setToolTip(_translate("IdentificationWidget", "Substrate model (background classifier)\n"
+"\n"
+"Select the substrate classifier used by Classify substrate (background / support material).\n"
+"\n"
+"Classification is applied only on pixels where the binarization map equals 0 (substrate pixels).\n"
+"\n"
+"If a rectangle is selected, classification is restricted to that region.\n"
+"\n"
+"If the model is not compatible with the current spectral range, the tool can propose training a new background (10%) model (only for LDA/KNN/RDF/SVM)."))
         self.comboBox_clas_substrate_model.setItemText(0, _translate("IdentificationWidget", "LDA"))
         self.comboBox_clas_substrate_model.setItemText(1, _translate("IdentificationWidget", "KNN"))
         self.comboBox_clas_substrate_model.setItemText(2, _translate("IdentificationWidget", "RDF"))
@@ -614,9 +633,11 @@ class Ui_IdentificationWidget(object):
         self.radioButton_clean_show_cleaned.setText(_translate("IdentificationWidget", "Cleaned"))
         self.radioButton_clean_show_both.setText(_translate("IdentificationWidget", "Both"))
         self.tabWidget_Image.setTabText(self.tabWidget_Image.indexOf(self.tabWidgetPage2_2), _translate("IdentificationWidget", "Results Vizualisation"))
+        self.pushButton_load.setToolTip(_translate("IdentificationWidget", "Load a hypercube from your disk"))
         self.pushButton_load.setText(_translate("IdentificationWidget", "Load cube(s)"))
         self.pushButton_reset.setToolTip(_translate("IdentificationWidget", "Reset all data loaded in the tool."))
         self.pushButton_reset.setText(_translate("IdentificationWidget", "Reset all"))
+        self.pushButton_load_map.setToolTip(_translate("IdentificationWidget", "Load a previous results of identification to visualize"))
         self.pushButton_load_map.setText(_translate("IdentificationWidget", "Load map"))
         self.tabWidget_info_classification.setTabText(self.tabWidget_info_classification.indexOf(self.tab_legend), _translate("IdentificationWidget", "Info"))
         self.tabWidget_info_classification.setTabText(self.tabWidget_info_classification.indexOf(self.tab_statistics), _translate("IdentificationWidget", "Statistics"))
