@@ -30,7 +30,6 @@ from registration.registration_window import*
 from hypercubes.hypercube import*
 from interface.some_widget_for_interface import LoadingDialog
 
-
 def overlay_color_blend(fixed, aligned):
     blended = cv2.merge([
         cv2.normalize(fixed, None, 0, 255, cv2.NORM_MINMAX),
@@ -145,6 +144,11 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.viewer_aligned.moveFeatureUpdate.connect(self.update_move_feature)
         self.viewer_aligned.moveFeatureEnd.connect(self.end_move_feature)
 
+        self.overlay_selector.currentIndexChanged.connect(self._update_viewer_aligned_tooltip)
+        self._update_viewer_aligned_tooltip()
+        self.overlay_selector.currentIndexChanged.connect(self._update_view_matches_interaction_mode)
+        self._update_view_matches_interaction_mode()
+
         self.setLayout(self.main_layout)
 
         self.label_fixed.setAlignment(Qt.AlignCenter)
@@ -166,6 +170,22 @@ class RegistrationApp(QMainWindow, Ui_MainWindow):
         self.features_slider.valueChanged.connect(self.update_slider_packet)
 
         self.checkBox_auto_load_complental.setChecked(False)
+
+    def _update_viewer_aligned_tooltip(self):
+        if self.overlay_selector.currentText() == "View Matches":
+            self.viewer_aligned.setToolTip(
+                "Interaction in “View Matches”\n"
+                "- Middle-click near a match point to remove that match (by displayed index).\n"
+                "- Drag a match point to manually adjust its position (left or right side)."
+            )
+        else:
+            self.viewer_aligned.setToolTip("")
+
+    def _update_view_matches_interaction_mode(self):
+        is_view_matches = (self.overlay_selector.currentText() == "View Matches")
+
+        # Disable rectangle selection only in View Matches (right-click is used for keypoint move)
+        self.viewer_aligned.enable_rect_selection = (not is_view_matches)
 
     def update_sliders(self):
         if self.radioButton_whole_ref.isChecked():
@@ -1227,6 +1247,58 @@ class SaveWindow(QDialog, Ui_Save_Window):
         self.pushButton_save_cube_final.clicked.connect(self.accept)
         self.pushButton_Cancel.clicked.connect(self.reject)
 
+        # ----------------------------
+        # Tooltips (Save dialog)
+        # ----------------------------
+        self.comboBox_cube_format.setToolTip(
+            "Cube format\n"
+            "Choose the output cube format: MATLAB / HDF5 / ENVI (as provided by your Hypercube save backend)."
+        )
+
+        self.radioButton_both_cube_save.setToolTip(
+            "Save both cubes\n"
+            "If enabled, saves both:\n"
+            "- the aligned (registered) cube, and\n"
+            "- the fixed (reference) cube\n"
+            "into the same folder (separate filenames)."
+        )
+
+        self.checkBox_minicube_save.setToolTip(
+            "Save as minicube (crop)\n"
+            "If enabled, saves only the rectangle selected in the aligned viewer (minicube).\n"
+            "If no parent aligned cube exists yet, the tool may ask you to save the whole aligned cube first "
+            "for proper parent tracking."
+        )
+
+        self.checkBox_export_images.setToolTip(
+            "Export preview images\n"
+            "If enabled, saves an image file (same base name as the saved cube path)."
+        )
+
+        self.comboBox_image_format.setToolTip(
+            "Image format\n"
+            "Select the exported image format (used only if “Export preview images” is enabled)."
+        )
+
+        self.radioButton_RGB_save_image.setToolTip(
+            "Export as false RGB\n"
+            "If enabled, preview images are exported as false RGB using default wavelength triplets (VNIR/SWIR heuristics).\n"
+            "If disabled, exports the current grayscale images."
+        )
+
+        self.pushButton_save_cube_final.setToolTip(
+            "Save\n"
+            "Validate options and start export."
+        )
+
+        self.pushButton_Cancel.setToolTip(
+            "Cancel\n"
+            "Close this dialog without saving."
+        )
+
+        self.pushButton_save_cube_final.clicked.connect(self.accept)
+        self.pushButton_Cancel.clicked.connect(self.reject)
+
     def closeEvent(self, event):
         self.reject()
         super().closeEvent(event)
@@ -1246,7 +1318,6 @@ class SaveWindow(QDialog, Ui_Save_Window):
             opts['image_mode_rgb'] = False
         return opts
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
@@ -1254,15 +1325,14 @@ if __name__ == '__main__':
     window.show()
     app.setStyle('Fusion')
 
-    folder_cube=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria/'
-    path_fixed_cube=folder_cube+'MPD41a_SWIR.mat'
-    path_moving_cube=folder_cube+'MPD41a_VNIR.mat'
-
-    hc_fix=Hypercube(path_fixed_cube,load_init=True)
-    hc_mov=Hypercube(path_moving_cube,load_init=True)
-
-
-    window.load_cube(0,cube=hc_fix)
-    window.load_cube(1,cube=hc_mov)
+    # folder_cube=r'C:\Users\Usuario\Documents\DOC_Yannick\Hyperdoc_Test\Archivo chancilleria/'
+    # path_fixed_cube=folder_cube+'MPD41a_SWIR.mat'
+    # path_moving_cube=folder_cube+'MPD41a_VNIR.mat'
+    #
+    # hc_fix=Hypercube(path_fixed_cube,load_init=True)
+    # hc_mov=Hypercube(path_moving_cube,load_init=True)
+    #
+    # window.load_cube(0,cube=hc_fix)
+    # window.load_cube(1,cube=hc_mov)
 
     sys.exit(app.exec_())

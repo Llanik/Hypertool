@@ -325,3 +325,27 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'MainApp' object has no attribute 'unmixing_dock_dock'. Did you mean: 'unmixing_dock'?
 
+2025-12-15 13:37:21,192 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 841, in <lambda>
+    lambda: self.add_job(self.comboBox_clas_ink_model.currentText()))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 2197, in add_job
+    if len(self.wl) != len(self.TRAIN_WL):
+       ^^^^^^^^^^^^
+TypeError: object of type 'NoneType' has no len()
+
+2025-12-15 14:01:44,833 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 1267, in reset_binary
+    self.binary_map=np.ones((self.data.shape[0],self.data.shape[1]))
+                             ^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'shape'
+
+2025-12-15 14:01:52,903 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 1267, in reset_binary
+    self.binary_map=np.ones((self.data.shape[0],self.data.shape[1]))
+                             ^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'shape'
+

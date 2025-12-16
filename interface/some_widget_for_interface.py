@@ -75,6 +75,23 @@ class ZoomableGraphicsView(QGraphicsView):
 
     def mousePressEvent(self, event):
         self.viewport().setCursor(Qt.CrossCursor)
+
+        if event.button() == Qt.RightButton and self.pixmap_item:
+            if not self.enable_rect_selection:
+                # Keypoint move (View Matches mode)
+                scene_pos = self.mapToScene(event.pos())
+                self.moveFeatureStart.emit(scene_pos)
+                event.accept()
+                return
+            else:
+                # Rectangle selection
+                self.origin = event.pos()
+                self.rubber_band.setGeometry(QRect(self.origin, QSize()))
+                self.rubber_band.show()
+                self._selecting = True
+                event.accept()
+                return
+
         if (event.button() == Qt.RightButton and self.pixmap_item and self.enable_rect_selection): # rectangle selection
             self.viewport().setCursor(Qt.CrossCursor)
             self.origin = event.pos()

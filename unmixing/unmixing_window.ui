@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1508</width>
-    <height>841</height>
+    <height>815</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -50,7 +50,7 @@
         <item>
          <widget class="QPushButton" name="load_btn">
           <property name="toolTip">
-           <string>Load a hyperspectral cube file and initialize the workspace.</string>
+           <string>Load a hyperspectral cube file (or fuse two registrered cube)</string>
           </property>
           <property name="text">
            <string>Load Cube</string>
@@ -243,7 +243,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_endmembers">
          <attribute name="title">
@@ -317,7 +317,7 @@
              <item>
               <widget class="QPushButton" name="pushButton_class_name_assign">
                <property name="toolTip">
-                <string>To assign the good labels to the endmembers</string>
+                <string>To change labels of active endmembers</string>
                </property>
                <property name="text">
                 <string>Class name assign</string>
@@ -347,7 +347,7 @@
               <item>
                <widget class="QPushButton" name="pushButton_load_EM">
                 <property name="toolTip">
-                 <string>Load endmembers from file</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load endmembers from a csv file&lt;/p&gt;&lt;p&gt;-&amp;gt; first column : wl &lt;/p&gt;&lt;p&gt;-&amp;gt; first line : endmembers labels&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
@@ -372,7 +372,7 @@
                 <item>
                  <widget class="QPushButton" name="pushButton_remove_EM">
                   <property name="toolTip">
-                   <string>Remove endmembers from the active list.</string>
+                   <string>Remove endmembers from the list.</string>
                   </property>
                   <property name="text">
                    <string>Remove endmembers</string>
@@ -382,7 +382,7 @@
                 <item>
                  <widget class="QPushButton" name="pushButton_wavenumber_to_wavelength">
                   <property name="toolTip">
-                   <string>Convert an FTIR spectrum from wavenumber (cm⁻¹) to wavelength (nm)</string>
+                   <string>Convert a file of FTIR spectra from wavenumber (cm⁻¹) to wavelength (nm)</string>
                   </property>
                   <property name="text">
                    <string>From wavenumber to wavelenth</string>
@@ -455,7 +455,7 @@
                  <bool>true</bool>
                 </property>
                 <property name="toolTip">
-                 <string>Start/Stop manual selection using RIGHT CLICK or CTRL + LEFT CLICK</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start/Stop manual selection &lt;br/&gt;Select using RIGHT CLICK or CTRL + LEFT CLICK and drag mouse&lt;br/&gt;If in pixel mode, it will be asked if you want to close the path and select all pixels in the path. &lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
@@ -630,7 +630,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>198</width>
-                   <height>20</height>
+                   <height>143</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -690,7 +690,7 @@
             <item row="2" column="5">
              <widget class="QCheckBox" name="checkBox_unmix_merge_EM_groups">
               <property name="toolTip">
-               <string>Merge endmember groups and treat all endmembers as a single pool during unmixing.</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Merge endmember groups and treat all endmembers as a single pool during unmixing.&lt;br/&gt;Use only in the special case of multiple spectra for one endmember class.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>Merge EM groups</string>
@@ -801,7 +801,7 @@ color: rgb(255, 255, 255);</string>
                </sizepolicy>
               </property>
               <property name="toolTip">
-               <string>Choose derivative to apply to the spectrum</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose derivative to apply to the spectrum.&lt;br/&gt;RAW : No derivative&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <item>
                <property name="text">
@@ -1215,7 +1215,7 @@ color: rgb(255, 255, 255);</string>
          </sizepolicy>
         </property>
         <property name="toolTip">
-         <string>Choose how the image is displayed (RGB or grayscale) and adjust display bands.</string>
+         <string/>
         </property>
         <property name="currentIndex">
          <number>0</number>
@@ -1223,6 +1223,9 @@ color: rgb(255, 255, 255);</string>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
           <string>Image Adjustment</string>
+         </attribute>
+         <attribute name="toolTip">
+          <string>Choose how the image is displayed (RGB or grayscale) and adjust display bands.</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>

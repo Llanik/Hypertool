@@ -360,7 +360,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         self.horizontalSlider_ref_channel.valueChanged['int'].connect(self.spinBox_ref_channel.setValue) # type: ignore
         self.spinBox_ref_channel.valueChanged['int'].connect(self.horizontalSlider_ref_channel.setValue) # type: ignore
         self.horizontalSlider_mov_channel.valueChanged['int'].connect(self.spinBox_mov_channel.setValue) # type: ignore
@@ -377,13 +377,29 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Registration Tool"))
+        self.checkBox_auto_load_complental.setToolTip(_translate("MainWindow", "Auto-load paired cube\n"
+"When enabled, loading a file containing VNIR (or SWIR) will try to automatically load the corresponding SWIR (or VNIR) cube from the same folder (by filename replacement)."))
         self.checkBox_auto_load_complental.setText(_translate("MainWindow", "Automatic search for complentary cube"))
+        self.pushButton_switch_images.setToolTip(_translate("MainWindow", "Swap fixed / moving\n"
+"Swap the fixed and moving cubes (and refresh their viewers and wavelength controls)."))
         self.pushButton_switch_images.setText(_translate("MainWindow", " <->"))
+        self.pushButton_open_ref_hypercube.setToolTip(_translate("MainWindow", "Load FIXED cube\n"
+"Load the reference (fixed) hyperspectral cube. Supported formats: .mat, .h5, .hdr."))
         self.pushButton_open_ref_hypercube.setText(_translate("MainWindow", "Open Reference Cubes"))
+        self.pushButton_open_mov_hypercube.setToolTip(_translate("MainWindow", "Load MOVING cube\n"
+"Load the moving hyperspectral cube (to be aligned onto the fixed cube). Supported formats: .mat, .h5, .hdr"))
         self.pushButton_open_mov_hypercube.setText(_translate("MainWindow", "Open Moving Cubes"))
         self.groupBox_image_ref.setTitle(_translate("MainWindow", "Gray Mode for Ref"))
+        self.horizontalSlider_ref_channel.setToolTip(_translate("MainWindow", "Fixed wavelength (nm)\n"
+"Select the wavelength (in nm) used for the fixed image display (single-band mode only)."))
+        self.spinBox_ref_channel.setToolTip(_translate("MainWindow", "Fixed wavelength (nm)\n"
+"Select the wavelength (in nm) used for the fixed image display (single-band mode only)."))
         self.label_nm.setText(_translate("MainWindow", "nm"))
+        self.radioButton_whole_ref.setToolTip(_translate("MainWindow", "Mean image display\n"
+"Show the mean image over all spectral bands. Disables the wavelength controls."))
         self.radioButton_whole_ref.setText(_translate("MainWindow", "Whole range"))
+        self.radioButton_one_ref.setToolTip(_translate("MainWindow", "Single band display\n"
+"Show one wavelength band (selected by the wavelength slider/spinbox). Enables the wavelength controls."))
         self.radioButton_one_ref.setText(_translate("MainWindow", "One channel"))
         self.groupBox_transform_fix.setTitle(_translate("MainWindow", "Transform"))
         self.pushButton_flip_h_fix.setToolTip(_translate("MainWindow", "Flip cube hoizontaly"))
@@ -393,8 +409,16 @@ class Ui_MainWindow(object):
         self.pushButton_rotate_fix.setToolTip(_translate("MainWindow", "Rotate cube"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Ref"))
         self.groupBox_imag_move.setTitle(_translate("MainWindow", "Gray Mode for Moving"))
+        self.radioButton_whole_mov.setToolTip(_translate("MainWindow", "Mean image display\n"
+"Show the mean image over all spectral bands. Disables the wavelength controls."))
         self.radioButton_whole_mov.setText(_translate("MainWindow", "Whole range"))
+        self.horizontalSlider_mov_channel.setToolTip(_translate("MainWindow", "Fixed wavelength (nm)\n"
+"Select the wavelength (in nm) used for the moving image display (single-band mode only)."))
+        self.spinBox_mov_channel.setToolTip(_translate("MainWindow", "Fixed wavelength (nm)\n"
+"Select the wavelength (in nm) used for the moving image display (single-band mode only)."))
         self.label_nm_2.setText(_translate("MainWindow", "nm"))
+        self.radioButton_one_mov.setToolTip(_translate("MainWindow", "Single band display\n"
+"Show one wavelength band (selected by the wavelength slider/spinbox). Enables the wavelength controls."))
         self.radioButton_one_mov.setText(_translate("MainWindow", "One channel"))
         self.groupBox_transform_mov.setTitle(_translate("MainWindow", "Transform"))
         self.pushButton_flip_h_mov.setToolTip(_translate("MainWindow", "Flip cube hoizontaly"))
@@ -404,27 +428,53 @@ class Ui_MainWindow(object):
         self.pushButton_rotate_mov.setToolTip(_translate("MainWindow", "Rotate cube"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Moving"))
         self.groupBox.setTitle(_translate("MainWindow", "Registration parameters"))
+        self.checkBox_crop.setToolTip(_translate("MainWindow", "Crop for feature detection\n"
+"If enabled, feature detection is computed only inside the rectangle(s) selected on the fixed and/or moving images."))
         self.checkBox_crop.setText(_translate("MainWindow", "Only selected zone ?"))
+        self.pushButton_getFeatures.setToolTip(_translate("MainWindow", "Detect features\n"
+"Compute keypoints and matches between fixed and moving images (using the selected detector), then immediately runs registration using the current settings."))
         self.pushButton_getFeatures.setText(_translate("MainWindow", "Get features"))
+        self.checkBox_autorize_modify.setToolTip(_translate("MainWindow", "Authorize modifying registered cube\n"
+"Safety lock. This must be enabled to run feature detection / registration.\n"
+"Disabling it prevents further modifications and preserves the current “parent cube” logic used for minicube extraction."))
         self.checkBox_autorize_modify.setText(_translate("MainWindow", "Autorize modifying registered cube"))
+        self.transform_selector.setToolTip(_translate("MainWindow", "Transform model\n"
+"Choose the geometric model used to align the moving cube:\n"
+"\n"
+"Affine: estimated from ≥ 3 matches\n"
+"\n"
+"Perspective (Homography): estimated from ≥ 4 matches"))
         self.transform_selector.setCurrentText(_translate("MainWindow", "Perspective"))
         self.transform_selector.setItemText(0, _translate("MainWindow", "Perspective"))
         self.transform_selector.setItemText(1, _translate("MainWindow", "Affine"))
         self.label_feature.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">% features to keep : </p></body></html>"))
+        self.features_slider.setToolTip(_translate("MainWindow", "Keep best matches (%)\n"
+"Select the percentage of the best matches (lowest distance) kept for estimating the transform.\n"
+"Lower values are more selective; higher values include more matches."))
         self.label_2.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">Transformation</p></body></html>"))
         self.label.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">Matching Method</p></body></html>"))
+        self.pushButton_register.setToolTip(_translate("MainWindow", "<html><head/><body><p>Register (apply transform)</p><p>Estimate the selected transform using the currently retained matches, warp the moving image, and warp every spectral band to build the aligned cube.</p></body></html>"))
         self.pushButton_register.setText(_translate("MainWindow", "Re-register"))
+        self.method_selector.setToolTip(_translate("MainWindow", "Feature detector\n"
+"Choose the OpenCV detector used to extract and match features: ORB, AKAZE, or SIFT."))
         self.method_selector.setItemText(0, _translate("MainWindow", "AKAZE"))
         self.method_selector.setItemText(1, _translate("MainWindow", "ORB"))
         self.groupBox_Visualization.setTitle(_translate("MainWindow", "Visualization"))
         self.label_3.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">features per packet</p></body></html>"))
+        self.spinBox_keypointPerPacket.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Matches per page</span></p><p>Number of matches displayed at once when “View Matches” is selected.</p></body></html>"))
         self.label_5.setText(_translate("MainWindow", "Results view :"))
+        self.overlay_selector.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Aligned view mode</span></p><p><br/></p><p>Choose how the aligned result is displayed:</p><p><br/></p><p>Color: fixed vs aligned channel blend (pseudo-color overlay)</p><p><br/></p><p>Checkboard: alternating tiles from fixed and aligned</p><p><br/></p><p>View Matches: display match lines and indices</p><p><br/></p><p>Only aligned: show aligned image only</p></body></html>"))
         self.overlay_selector.setItemText(0, _translate("MainWindow", "Checkboard"))
         self.overlay_selector.setItemText(1, _translate("MainWindow", "Color"))
         self.overlay_selector.setItemText(2, _translate("MainWindow", "View Matches"))
         self.overlay_selector.setItemText(3, _translate("MainWindow", "Only aligned"))
+        self.horizontalSlider_keyPacketToShow.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Match page index</span><br/>Select which match packet/page to display (packet size = “Matches per page / features per packet”). </p></body></html>"))
+        self.pushButton_reset.setToolTip(_translate("MainWindow", "<html><head/><body><p>Clear loaded cubes, images, matches, selected rectangles, and restore default UI state. This cannot be undone.</p></body></html>"))
         self.pushButton_reset.setText(_translate("MainWindow", "Reset All"))
-        self.label_packetToShow.setText(_translate("MainWindow", "features"))
+        self.label_packetToShow.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Displayed match range</span><br/>Shows the feature index interval currently displayed and the total number of matches. Turns red if the packet index exceeds the fraction currently kept by the “Keep best matches” slider.</p></body></html>"))
+        self.label_packetToShow.setText(_translate("MainWindow", "features index to show"))
+        self.pushButton_save_cube.setToolTip(_translate("MainWindow", "Save registered cube(s)\n"
+"Open the save dialog to export the aligned cube, optionally also the fixed cube, optionally as minicubes (crop), and optionally export preview images."))
         self.pushButton_save_cube.setText(_translate("MainWindow", "Save Registered Cube"))
 
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1340</width>
-    <height>1185</height>
+    <height>531</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -36,6 +36,10 @@
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="QPushButton" name="load_btn">
+          <property name="toolTip">
+           <string>Load a hyperspectral cube (.mat, .h5, .hdr).
+If a Ground Truth already exists in the cube metadata or as a matching *_GT.png, it can be auto-loaded.</string>
+          </property>
           <property name="text">
            <string>Load Cube</string>
           </property>
@@ -43,6 +47,10 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_load_GT">
+          <property name="toolTip">
+           <string>Load Ground Truth (PNG)
+Load a GT indexed PNG (palette + labels) and rebuild internal class indices, class colors, and (if available) mean/std spectra from metadata.</string>
+          </property>
           <property name="text">
            <string>Load GT image</string>
           </property>
@@ -50,6 +58,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_reset_transform">
+          <property name="toolTip">
+           <string>Reset transforms applied to the cube</string>
+          </property>
           <property name="text">
            <string>Reset transforms</string>
           </property>
@@ -58,7 +69,7 @@
         <item>
          <widget class="QPushButton" name="pushButton_reset">
           <property name="toolTip">
-           <string>Reset all data loaded in the tool.</string>
+           <string>Clear the current cube and all Ground Truth work (segmentation map, manual selection, class colors, spectra prototypes, selected bands, and displays).</string>
           </property>
           <property name="styleSheet">
            <string notr="true">color: rgba(255, 0, 0, 125);</string>
@@ -95,7 +106,8 @@
             <item row="3" column="7" colspan="2">
              <widget class="QCheckBox" name="checkBox_enable_segment">
               <property name="toolTip">
-               <string>Check if you want to erase previous ground truth image by clicking Segmentation. Uncheck if you want to pretect it.</string>
+               <string>When enabled, the Run button is allowed to compute a segmentation map.
+When disabled, Run is blocked to prevent overwriting existing work. </string>
               </property>
               <property name="text">
                <string>Enable auto segmentation</string>
@@ -137,7 +149,9 @@
                <bool>true</bool>
               </property>
               <property name="toolTip">
-               <string>Start selection for supervised mode or manual correction using RIGHT CLICK.</string>
+               <string>Start / Stop selection
+Toggle manual selection mode to label reference pixels.
+Selection is started with Right click or Ctrl + Left click in the left viewer, using the current selection shape (pixel / rectangle / ellipse)</string>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgba(186, 255, 112, 125);</string>
@@ -153,7 +167,8 @@
             <item row="3" column="4">
              <widget class="QPushButton" name="run_btn">
               <property name="toolTip">
-               <string>Lauch segmentation with parameters</string>
+               <string>Run the current segmentation mode (Unsupervised or Supervised).
+If band selection is active, segmentation is computed only on the selected bands. </string>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgb(173, 173, 173);</string>
@@ -166,7 +181,8 @@
             <item row="2" column="7">
              <widget class="QPushButton" name="pushButton_erase_selected_pix">
               <property name="toolTip">
-               <string>To erase a previous selection. Only useful if you have assigned piel to a class that you want to be determined by segmentation.</string>
+               <string>Erase pixels (Stop Erasing)
+Toggle erase mode: selected pixels are removed from the manual selection and associated class structures are updated accordingly.</string>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgb(255, 206, 206);</string>
@@ -182,7 +198,11 @@
             <item row="2" column="2" colspan="2">
              <widget class="QComboBox" name="comboBox_ClassifMode">
               <property name="toolTip">
-               <string>Choose between supervised segmentation (need selection first) or Unsupervised (Clusterisation)</string>
+               <string>Choose how the segmentation map is computed:
+
+Unsupervised: clustering-based segmentation (KMeans).
+
+Supervised: classify pixels using manually selected class prototypes (mean spectra) and a spectral distance.</string>
               </property>
               <item>
                <property name="text">
@@ -238,7 +258,12 @@
             <item row="2" column="5" rowspan="2">
              <widget class="QSlider" name="slider_class_thr">
               <property name="toolTip">
-               <string>Add a new classe if classified point is to far from a class. The slider fixed how far we consider the point too far. If at the top, no effect.</string>
+               <string>Classification threshold (%)
+Only used in Supervised mode.
+
+100%: always assign the closest class.
+
+&lt;100%: pixels too far from all prototypes are assigned to an “other” label.</string>
               </property>
               <property name="minimum">
                <number>0</number>
@@ -278,7 +303,9 @@
                      </sizepolicy>
                     </property>
                     <property name="toolTip">
-                     <string>Choose distance for supervised classification</string>
+                     <string>Spectral distance (Supervised)
+Distance used to compare each pixel to class prototypes (mean spectra).
+Available options include: sqeuclidean, cosine, correlation.</string>
                     </property>
                     <item>
                      <property name="text">
@@ -310,7 +337,8 @@
                      </sizepolicy>
                     </property>
                     <property name="toolTip">
-                     <string>Normalized spectra or not (Raw)</string>
+                     <string>Spectral normalization (Unsupervised)
+If set to Normalize, each pixel spectrum is normalized by its own maximum before clustering.</string>
                     </property>
                     <item>
                      <property name="text">
@@ -333,7 +361,14 @@
             <item row="2" column="8">
              <widget class="QComboBox" name="comboBox_pixel_selection_mode">
               <property name="toolTip">
-               <string>Shape used for pixel selection.</string>
+               <string>Selection shape
+Select how reference pixels are collected:
+
+pixel: freehand path by dragging; on release you can optionally close the path to fill the polygon.
+
+rectangle: rubber band rectangle.
+
+ellipse: ellipse ROI.</string>
               </property>
               <item>
                <property name="text">
@@ -355,7 +390,9 @@
             <item row="3" column="3">
              <widget class="QSpinBox" name="nclass_box">
               <property name="toolTip">
-               <string>Number of class to segment. Another class will be added in supervised mode if threashold not at maximum.</string>
+               <string>Number of classes
+Defines the valid class index range 0 .. (N−1).
+If you reduce N while higher labels already exist, the tool prompts you to erase or reassign those classes.</string>
               </property>
               <property name="minimum">
                <number>2</number>
@@ -398,6 +435,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <item>
               <widget class="QRadioButton" name="radioButton_rgb_default">
+               <property name="toolTip">
+                <string>Display the cube using the default RGB band mapping.</string>
+               </property>
                <property name="text">
                 <string>RGB default</string>
                </property>
@@ -411,6 +451,9 @@
                <property name="enabled">
                 <bool>true</bool>
                </property>
+               <property name="toolTip">
+                <string>Display the cube using user-selected RGB band indices.</string>
+               </property>
                <property name="text">
                 <string>RGB user</string>
                </property>
@@ -421,6 +464,9 @@
              </item>
              <item>
               <widget class="QRadioButton" name="radioButton_grayscale">
+               <property name="toolTip">
+                <string>Display a single band as a grayscale image.</string>
+               </property>
                <property name="text">
                 <string>Grayscale</string>
                </property>
@@ -433,6 +479,9 @@
            <layout class="QGridLayout" name="gridLayout_RGBchannels_3">
             <item row="2" column="2">
              <widget class="QSlider" name="horizontalSlider_blue_channel">
+              <property name="toolTip">
+               <string>Blue channel band index (for user RGB).</string>
+              </property>
               <property name="maximum">
                <number>149</number>
               </property>
@@ -456,6 +505,9 @@
             </item>
             <item row="1" column="1">
              <widget class="QSpinBox" name="spinBox_green_channel">
+              <property name="toolTip">
+               <string>Green channel band index (for user RGB).</string>
+              </property>
               <property name="maximum">
                <number>149</number>
               </property>
@@ -482,6 +534,9 @@
                 <height>0</height>
                </size>
               </property>
+              <property name="toolTip">
+               <string>Red channel band index (for user RGB).</string>
+              </property>
               <property name="maximum">
                <number>149</number>
               </property>
@@ -495,6 +550,9 @@
             </item>
             <item row="1" column="2">
              <widget class="QSlider" name="horizontalSlider_green_channel">
+              <property name="toolTip">
+               <string>Green channel band index (for user RGB).</string>
+              </property>
               <property name="maximum">
                <number>149</number>
               </property>
@@ -508,6 +566,9 @@
             </item>
             <item row="2" column="1">
              <widget class="QSpinBox" name="spinBox_blue_channel">
+              <property name="toolTip">
+               <string>Blue channel band index (for user RGB).</string>
+              </property>
               <property name="maximum">
                <number>149</number>
               </property>
@@ -528,6 +589,9 @@
             </item>
             <item row="0" column="1">
              <widget class="QSpinBox" name="spinBox_red_channel">
+              <property name="toolTip">
+               <string>Red channel band index (for user RGB).</string>
+              </property>
               <property name="maximum">
                <number>149</number>
               </property>
@@ -658,7 +722,12 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>Choose transparency of GT image overlay on cube representation.</string>
+            <string>GT overlay transparency (alpha)
+Controls blending between the hyperspectral RGB display and the GT class-color overlay:
+
+0% = only the hyperspectral RGB,
+
+100% = only the GT overlay.</string>
            </property>
            <property name="maximum">
             <number>100</number>
@@ -677,7 +746,7 @@
          <item>
           <widget class="QCheckBox" name="checkBox_see_selection_overlay">
            <property name="toolTip">
-            <string>See manually selected pixels.</string>
+            <string>Show / hide the manual selection mask over the current display (independent from the segmentation map).</string>
            </property>
            <property name="text">
             <string>See selection</string>
@@ -699,7 +768,7 @@
          <item>
           <widget class="QCheckBox" name="checkBox_live_spectra">
            <property name="toolTip">
-            <string>Check to active live spectrum visualization (will disabled drag mode on cube representation)</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Live spectrum tracking&lt;/span&gt;&lt;br/&gt;When enabled, moving the mouse over the left image updates the pixel spectrum in real time (will disabled drag mode on cube representation).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Tip: middle-click toggles this checkbox when not in selection mode.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string>Live</string>
@@ -712,7 +781,7 @@
          <item>
           <widget class="QCheckBox" name="checkBox_seeGTspectra">
            <property name="toolTip">
-            <string>Check to see mean spectra of the segmented classes.</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show GT class spectra&lt;/p&gt;&lt;p&gt;Overlay class mean spectra with ±1 std envelope on the spectra plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string>See GT spectra</string>
@@ -725,7 +794,9 @@
          <item>
           <widget class="QPushButton" name="pushButton_band_selection">
            <property name="toolTip">
-            <string>If you want to perform segmentation only using some bands of the whole spectrum.</string>
+            <string>Band selection (SpanSelector)
+Enable wavelength range selection on the spectra plot.
+You will be prompted to Add, Suppress, or Clear bands. Selected bands constrain the data used for segmentation/classification.</string>
            </property>
            <property name="text">
             <string>Band selection</string>
@@ -750,7 +821,8 @@
         <item>
          <widget class="QPushButton" name="pushButton_merge">
           <property name="toolTip">
-           <string>Will merge automatic GT image with you manual selection.</string>
+           <string>Merge manual selection into segmentation
+Overwrite the segmentation labels with the manual selection where available, then recompute class mean/std spectra from the updated map.</string>
           </property>
           <property name="text">
            <string>Merge GT and select</string>
@@ -760,7 +832,8 @@
         <item>
          <widget class="QPushButton" name="pushButton_class_name_assign">
           <property name="toolTip">
-           <string>To assign the good labels and index to the classes.</string>
+           <string>Assign material names / colors
+Open the class table to assign a material label and palette color to each class (used for display and for saving GT).</string>
           </property>
           <property name="text">
            <string>Class name assign</string>
@@ -770,7 +843,9 @@
         <item>
          <widget class="QPushButton" name="pushButton_save_GT">
           <property name="toolTip">
-           <string>Save segmented image and Ground Truth information in metadata of hypercube file</string>
+           <string>Save Ground Truth
+Export the GT as an indexed PNG (*_GT.png) and store GT information into the cube metadata (gt_index_map, GTLabels, GT_cmap, spectra_mean, spectra_std, etc.).
+After saving the PNG, the tool can also save the updated cube file.</string>
           </property>
           <property name="text">
            <string>Save GT work</string>
@@ -823,12 +898,12 @@
             </property>
             <widget class="QWidget" name="viewer_left" native="true">
              <property name="toolTip">
-              <string>Promote to ZoomableGraphicsView</string>
+              <string/>
              </property>
             </widget>
             <widget class="QWidget" name="viewer_right" native="true">
              <property name="toolTip">
-              <string>Promote to ZoomableGraphicsView</string>
+              <string/>
              </property>
             </widget>
            </widget>
@@ -837,7 +912,7 @@
         </widget>
         <widget class="QWidget" name="spec_canvas" native="true">
          <property name="toolTip">
-          <string>Promote to FigureCanvas</string>
+          <string/>
          </property>
          <property name="autoFillBackground">
           <bool>false</bool>

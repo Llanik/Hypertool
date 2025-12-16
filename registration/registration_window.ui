@@ -108,6 +108,10 @@
               <layout class="QGridLayout" name="gridLayout" columnstretch="2,1,1,2">
                <item row="3" column="0" colspan="4">
                 <widget class="QCheckBox" name="checkBox_auto_load_complental">
+                 <property name="toolTip">
+                  <string>Auto-load paired cube
+When enabled, loading a file containing VNIR (or SWIR) will try to automatically load the corresponding SWIR (or VNIR) cube from the same folder (by filename replacement).</string>
+                 </property>
                  <property name="text">
                   <string>Automatic search for complentary cube</string>
                  </property>
@@ -118,6 +122,10 @@
                </item>
                <item row="2" column="1" colspan="2">
                 <widget class="QPushButton" name="pushButton_switch_images">
+                 <property name="toolTip">
+                  <string>Swap fixed / moving
+Swap the fixed and moving cubes (and refresh their viewers and wavelength controls).</string>
+                 </property>
                  <property name="text">
                   <string> &lt;-&gt;</string>
                  </property>
@@ -125,6 +133,10 @@
                </item>
                <item row="2" column="0">
                 <widget class="QPushButton" name="pushButton_open_ref_hypercube">
+                 <property name="toolTip">
+                  <string>Load FIXED cube
+Load the reference (fixed) hyperspectral cube. Supported formats: .mat, .h5, .hdr.</string>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(150, 150, 150);</string>
                  </property>
@@ -138,6 +150,10 @@
                </item>
                <item row="2" column="3">
                 <widget class="QPushButton" name="pushButton_open_mov_hypercube">
+                 <property name="toolTip">
+                  <string>Load MOVING cube
+Load the moving hyperspectral cube (to be aligned onto the fixed cube). Supported formats: .mat, .h5, .hdr</string>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(150, 150, 150);</string>
                  </property>
@@ -152,7 +168,7 @@
                   <enum>QTabWidget::West</enum>
                  </property>
                  <property name="currentIndex">
-                  <number>0</number>
+                  <number>1</number>
                  </property>
                  <widget class="QWidget" name="tab">
                   <attribute name="title">
@@ -174,6 +190,10 @@
                             <width>16777215</width>
                             <height>20</height>
                            </size>
+                          </property>
+                          <property name="toolTip">
+                           <string>Fixed wavelength (nm)
+Select the wavelength (in nm) used for the fixed image display (single-band mode only).</string>
                           </property>
                           <property name="maximum">
                            <number>149</number>
@@ -200,6 +220,10 @@
                             <height>20</height>
                            </size>
                           </property>
+                          <property name="toolTip">
+                           <string>Fixed wavelength (nm)
+Select the wavelength (in nm) used for the fixed image display (single-band mode only).</string>
+                          </property>
                           <property name="maximum">
                            <number>149</number>
                           </property>
@@ -225,6 +249,10 @@
                         <property name="enabled">
                          <bool>true</bool>
                         </property>
+                        <property name="toolTip">
+                         <string>Mean image display
+Show the mean image over all spectral bands. Disables the wavelength controls.</string>
+                        </property>
                         <property name="text">
                          <string>Whole range</string>
                         </property>
@@ -235,6 +263,10 @@
                       </item>
                       <item row="0" column="1">
                        <widget class="QRadioButton" name="radioButton_one_ref">
+                        <property name="toolTip">
+                         <string>Single band display
+Show one wavelength band (selected by the wavelength slider/spinbox). Enables the wavelength controls.</string>
+                        </property>
                         <property name="text">
                          <string>One channel</string>
                         </property>
@@ -321,6 +353,10 @@
                         <property name="enabled">
                          <bool>true</bool>
                         </property>
+                        <property name="toolTip">
+                         <string>Mean image display
+Show the mean image over all spectral bands. Disables the wavelength controls.</string>
+                        </property>
                         <property name="text">
                          <string>Whole range</string>
                         </property>
@@ -342,6 +378,10 @@
                             <height>20</height>
                            </size>
                           </property>
+                          <property name="toolTip">
+                           <string>Fixed wavelength (nm)
+Select the wavelength (in nm) used for the moving image display (single-band mode only).</string>
+                          </property>
                           <property name="orientation">
                            <enum>Qt::Horizontal</enum>
                           </property>
@@ -361,6 +401,10 @@
                             <height>20</height>
                            </size>
                           </property>
+                          <property name="toolTip">
+                           <string>Fixed wavelength (nm)
+Select the wavelength (in nm) used for the moving image display (single-band mode only).</string>
+                          </property>
                          </widget>
                         </item>
                         <item>
@@ -374,6 +418,10 @@
                       </item>
                       <item row="0" column="1">
                        <widget class="QRadioButton" name="radioButton_one_mov">
+                        <property name="toolTip">
+                         <string>Single band display
+Show one wavelength band (selected by the wavelength slider/spinbox). Enables the wavelength controls.</string>
+                        </property>
                         <property name="text">
                          <string>One channel</string>
                         </property>
@@ -466,6 +514,10 @@
                  <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1,0">
                   <item row="2" column="2">
                    <widget class="QCheckBox" name="checkBox_crop">
+                    <property name="toolTip">
+                     <string>Crop for feature detection
+If enabled, feature detection is computed only inside the rectangle(s) selected on the fixed and/or moving images.</string>
+                    </property>
                     <property name="text">
                      <string>Only selected zone ?</string>
                     </property>
@@ -473,6 +525,10 @@
                   </item>
                   <item row="3" column="2">
                    <widget class="QPushButton" name="pushButton_getFeatures">
+                    <property name="toolTip">
+                     <string>Detect features
+Compute keypoints and matches between fixed and moving images (using the selected detector), then immediately runs registration using the current settings.</string>
+                    </property>
                     <property name="styleSheet">
                      <string notr="true">background-color: rgb(150, 150, 150);</string>
                     </property>
@@ -483,6 +539,11 @@
                   </item>
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="checkBox_autorize_modify">
+                    <property name="toolTip">
+                     <string>Authorize modifying registered cube
+Safety lock. This must be enabled to run feature detection / registration.
+Disabling it prevents further modifications and preserves the current “parent cube” logic used for minicube extraction.</string>
+                    </property>
                     <property name="text">
                      <string>Autorize modifying registered cube</string>
                     </property>
@@ -493,6 +554,14 @@
                   </item>
                   <item row="2" column="1">
                    <widget class="QComboBox" name="transform_selector">
+                    <property name="toolTip">
+                     <string>Transform model
+Choose the geometric model used to align the moving cube:
+
+Affine: estimated from ≥ 3 matches
+
+Perspective (Homography): estimated from ≥ 4 matches</string>
+                    </property>
                     <property name="currentText">
                      <string>Perspective</string>
                     </property>
@@ -540,6 +609,11 @@
                          <width>16777215</width>
                          <height>20</height>
                         </size>
+                       </property>
+                       <property name="toolTip">
+                        <string>Keep best matches (%)
+Select the percentage of the best matches (lowest distance) kept for estimating the transform.
+Lower values are more selective; higher values include more matches.</string>
                        </property>
                        <property name="maximum">
                         <number>100</number>
@@ -589,6 +663,9 @@
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Register (apply transform)&lt;/p&gt;&lt;p&gt;Estimate the selected transform using the currently retained matches, warp the moving image, and warp every spectral band to build the aligned cube.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="styleSheet">
                      <string notr="true"/>
                     </property>
@@ -599,6 +676,10 @@
                   </item>
                   <item row="2" column="0">
                    <widget class="QComboBox" name="method_selector">
+                    <property name="toolTip">
+                     <string>Feature detector
+Choose the OpenCV detector used to extract and match features: ORB, AKAZE, or SIFT.</string>
+                    </property>
                     <property name="currentText">
                      <string notr="true">AKAZE</string>
                     </property>
@@ -634,7 +715,7 @@
                  <property name="title">
                   <string>Visualization</string>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1,0" columnminimumwidth="0,0,0">
+                 <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,1" columnminimumwidth="0,0">
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_3">
                     <property name="maximumSize">
@@ -650,6 +731,9 @@
                   </item>
                   <item row="1" column="0">
                    <widget class="QSpinBox" name="spinBox_keypointPerPacket">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Matches per page&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Number of matches displayed at once when “View Matches” is selected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="wrapping">
                      <bool>false</bool>
                     </property>
@@ -676,6 +760,9 @@
                   </item>
                   <item row="3" column="1">
                    <widget class="QComboBox" name="overlay_selector">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Aligned view mode&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Choose how the aligned result is displayed:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Color: fixed vs aligned channel blend (pseudo-color overlay)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Checkboard: alternating tiles from fixed and aligned&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;View Matches: display match lines and indices&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Only aligned: show aligned image only&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <item>
                      <property name="text">
                       <string>Checkboard</string>
@@ -700,6 +787,9 @@
                   </item>
                   <item row="1" column="1">
                    <widget class="QSlider" name="horizontalSlider_keyPacketToShow">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Match page index&lt;/span&gt;&lt;br/&gt;Select which match packet/page to display (packet size = “Matches per page / features per packet”). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="pageStep">
                      <number>1</number>
                     </property>
@@ -713,6 +803,9 @@
                   </item>
                   <item row="4" column="0">
                    <widget class="QPushButton" name="pushButton_reset">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clear loaded cubes, images, matches, selected rectangles, and restore default UI state. This cannot be undone.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="styleSheet">
                      <string notr="true">color: rgb(255, 0, 0);</string>
                     </property>
@@ -729,8 +822,11 @@
                       <height>20</height>
                      </size>
                     </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Displayed match range&lt;/span&gt;&lt;br/&gt;Shows the feature index interval currently displayed and the total number of matches. Turns red if the packet index exceeds the fraction currently kept by the “Keep best matches” slider.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
                     <property name="text">
-                     <string>features</string>
+                     <string>features index to show</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -741,6 +837,10 @@
                    <widget class="QPushButton" name="pushButton_save_cube">
                     <property name="enabled">
                      <bool>false</bool>
+                    </property>
+                    <property name="toolTip">
+                     <string>Save registered cube(s)
+Open the save dialog to export the aligned cube, optionally also the fixed cube, optionally as minicubes (crop), and optionally export preview images.</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">background-color: rgb(150, 150, 150);</string>

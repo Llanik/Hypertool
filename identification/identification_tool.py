@@ -1264,8 +1264,11 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         self._draw_current_rect(surface=False)
 
     def reset_binary(self):
-        self.binary_map=np.ones((self.data.shape[0],self.data.shape[1]))
-        self.show_binary_result()
+        try:
+            self.binary_map=np.ones((self.data.shape[0],self.data.shape[1]))
+            self.show_binary_result()
+        except:
+            pass
 
     def launch_binarization(self):
         if self.cube is None:

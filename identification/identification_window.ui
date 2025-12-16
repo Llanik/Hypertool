@@ -35,14 +35,17 @@
       <item>
        <widget class="QTabWidget" name="tabWidget_Process">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;the workflow is Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string/>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage2">
          <attribute name="title">
           <string>Binarization Substrate/Inks</string>
+         </attribute>
+         <attribute name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;the workflow is : Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
@@ -295,6 +298,9 @@ color: rgb(255, 255, 255);</string>
          <attribute name="title">
           <string>Classification</string>
          </attribute>
+         <attribute name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;the workflow is : Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -348,6 +354,9 @@ color: rgb(255, 255, 255);</string>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_clas_add_ink">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add the selected ink model to the job queue.&lt;/p&gt;&lt;p&gt;The job will appear in the classification list and will use:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;the current binarization settings (algorithm + parameters),&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;the current spectral range,&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;and the current substrate label (if already estimated).&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Note: depending on spectral range compatibility, the job may be marked &lt;span style=&quot; font-weight:600;&quot;&gt;To Train&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>Add Ink Classifier</string>
               </property>
@@ -438,6 +447,9 @@ If the model is not compatible with the current spectral range, the tool can pro
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_clas_classify_substrate">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Classify the substrate (background) using the selected substrate model.&lt;/p&gt;&lt;p&gt;Process in this tool:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Uses the current &lt;span style=&quot; font-weight:600;&quot;&gt;binary map&lt;/span&gt; and takes only pixels where &lt;span style=&quot; font-family:'Courier New';&quot;&gt;binary_map == 0&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;If a rectangle is selected, only that region is used.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Produces a substrate label &lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>Classify substrate</string>
               </property>
@@ -530,6 +542,9 @@ color: rgb(255, 255, 255);</string>
         <widget class="QWidget" name="tab_cleaning">
          <attribute name="title">
           <string>Cleaning</string>
+         </attribute>
+         <attribute name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;the workflow is : Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
@@ -700,7 +715,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
@@ -713,6 +728,9 @@ color: rgb(255, 255, 255);</string>
              <layout class="QVBoxLayout" name="verticalLayout_8">
               <item>
                <widget class="QRadioButton" name="radioButton_rgb_default">
+                <property name="toolTip">
+                 <string>Display the cube using the default RGB band mapping.</string>
+                </property>
                 <property name="text">
                  <string>RGB default</string>
                 </property>
@@ -726,6 +744,9 @@ color: rgb(255, 255, 255);</string>
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
+                <property name="toolTip">
+                 <string>Display the cube using user-selected RGB band indices.</string>
+                </property>
                 <property name="text">
                  <string>RGB user</string>
                 </property>
@@ -736,6 +757,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item>
                <widget class="QRadioButton" name="radioButton_grayscale">
+                <property name="toolTip">
+                 <string>Display a single band as a grayscale image.</string>
+                </property>
                 <property name="text">
                  <string>Grayscale</string>
                 </property>
@@ -747,6 +771,9 @@ color: rgb(255, 255, 255);</string>
              <layout class="QGridLayout" name="gridLayout_RGBchannels_4">
               <item row="1" column="1">
                <widget class="QSpinBox" name="spinBox_green_channel">
+                <property name="toolTip">
+                 <string>Green channel band index (for user RGB).</string>
+                </property>
                 <property name="maximum">
                  <number>149</number>
                 </property>
@@ -757,6 +784,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item row="2" column="3">
                <widget class="QSlider" name="horizontalSlider_blue_channel">
+                <property name="toolTip">
+                 <string>Blue channel band index (for user RGB).</string>
+                </property>
                 <property name="maximum">
                  <number>149</number>
                 </property>
@@ -770,6 +800,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item row="0" column="1">
                <widget class="QSpinBox" name="spinBox_red_channel">
+                <property name="toolTip">
+                 <string>Red channel band index (for user RGB).</string>
+                </property>
                 <property name="maximum">
                  <number>149</number>
                 </property>
@@ -803,6 +836,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item row="2" column="1">
                <widget class="QSpinBox" name="spinBox_blue_channel">
+                <property name="toolTip">
+                 <string>Blue channel band index (for user RGB).</string>
+                </property>
                 <property name="maximum">
                  <number>149</number>
                 </property>
@@ -813,6 +849,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item row="1" column="3">
                <widget class="QSlider" name="horizontalSlider_green_channel">
+                <property name="toolTip">
+                 <string>Green channel band index (for user RGB).</string>
+                </property>
                 <property name="maximum">
                  <number>149</number>
                 </property>
@@ -841,6 +880,9 @@ color: rgb(255, 255, 255);</string>
                   <width>60</width>
                   <height>0</height>
                  </size>
+                </property>
+                <property name="toolTip">
+                 <string>Red channel band index (for user RGB).</string>
                 </property>
                 <property name="maximum">
                  <number>149</number>
@@ -925,6 +967,10 @@ color: rgb(255, 255, 255);</string>
            <layout class="QGridLayout" name="gridLayout_2">
             <item row="1" column="3" colspan="2">
              <widget class="QPushButton" name="pushButton_show_all">
+              <property name="toolTip">
+               <string>Open a summary window showing all available classification results at once.
+Each row displays the model name, the raw map, and (when available) the cleaned map for quick visual comparison.</string>
+              </property>
               <property name="text">
                <string>Show All</string>
               </property>
@@ -933,7 +979,7 @@ color: rgb(255, 255, 255);</string>
             <item row="2" column="3" colspan="2">
              <widget class="QPushButton" name="pushButton_save_map">
               <property name="toolTip">
-               <string>Save segmented image and Ground Truth information in metadata of hypercube file</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open a summary window showing &lt;span style=&quot; font-weight:600;&quot;&gt;all available classification results&lt;/span&gt; at once.&lt;br/&gt;Each row displays the model name, the &lt;span style=&quot; font-weight:600;&quot;&gt;raw map&lt;/span&gt;, and (when available) the &lt;span style=&quot; font-weight:600;&quot;&gt;cleaned map&lt;/span&gt; for quick visual comparison.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>Save map(s)</string>
@@ -942,13 +988,26 @@ color: rgb(255, 255, 255);</string>
             </item>
             <item row="0" column="0">
              <widget class="QRadioButton" name="radioButton_overlay_binary">
+              <property name="toolTip">
+               <string>Show the Binary map results.
+
+Right view: binary map rendered in black/white.
+
+Left view: false RGB image with the binary map overlaid using the current transparency (alpha).
+The legend is updated to ‘Substrate / Ink’.</string>
+              </property>
               <property name="text">
                <string>Binary</string>
               </property>
              </widget>
             </item>
             <item row="0" column="3">
-             <widget class="QComboBox" name="comboBox_clas_show_model"/>
+             <widget class="QComboBox" name="comboBox_clas_show_model">
+              <property name="toolTip">
+               <string>Select which completed model result to display.
+This combo box is populated with jobs that already have a class_map. Changing the selection refreshes the displayed maps and the ROI rectangle linked to that job.</string>
+              </property>
+             </widget>
             </item>
             <item row="1" column="0" colspan="2">
              <widget class="QLabel" name="label_overlay_transparency">
@@ -968,6 +1027,9 @@ color: rgb(255, 255, 255);</string>
             </item>
             <item row="0" column="1">
              <widget class="QRadioButton" name="radioButton_overlay_identification">
+              <property name="toolTip">
+               <string>Show the Identification (classification) map for the currently selected model.</string>
+              </property>
               <property name="text">
                <string>Classification</string>
               </property>
@@ -985,7 +1047,7 @@ color: rgb(255, 255, 255);</string>
                </size>
               </property>
               <property name="toolTip">
-               <string>Choose transparency of GT image overlay on cube representation.</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overlay transparency (alpha).&lt;br/&gt;Controls the blending between the false RGB image and the current map overlay:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Courier New';&quot;&gt;0%&lt;/span&gt; = no map overlay,&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Courier New';&quot;&gt;100%&lt;/span&gt; = only the map.&lt;br/&gt;This affects both the binary overlay and the identification overlay modes.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="maximum">
                <number>100</number>
@@ -1009,6 +1071,13 @@ color: rgb(255, 255, 255);</string>
               <layout class="QVBoxLayout" name="verticalLayout_16">
                <item>
                 <widget class="QRadioButton" name="radioButton_clean_show_raw">
+                 <property name="toolTip">
+                  <string>Display the RAW classification map.
+
+Right view: raw class map.
+
+Left view: false RGB image with the selected map overlaid (alpha).</string>
+                 </property>
                  <property name="text">
                   <string>Raw</string>
                  </property>
@@ -1016,6 +1085,9 @@ color: rgb(255, 255, 255);</string>
                </item>
                <item>
                 <widget class="QRadioButton" name="radioButton_clean_show_cleaned">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display the CLEANED classification map (if available).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Right view&lt;/span&gt;: cleaned class map.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Left view&lt;/span&gt;: false RGB image with the selected map overlaid (alpha).&lt;/p&gt;&lt;p&gt;If a cleaned map does not exist yet, the raw map is shown and the UI indicates that cleaning has not been done.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Cleaned</string>
                  </property>
@@ -1026,6 +1098,14 @@ color: rgb(255, 255, 255);</string>
                </item>
                <item>
                 <widget class="QRadioButton" name="radioButton_clean_show_both">
+                 <property name="toolTip">
+                  <string>Compare RAW vs CLEANED maps side-by-side (no overlay).
+
+Left view: RAW map.
+
+Right view: CLEANED map (or RAW if no cleaned map exists).
+A warning style is shown if cleaning has not been computed yet.</string>
+                 </property>
                  <property name="text">
                   <string>Both</string>
                  </property>
@@ -1226,6 +1306,9 @@ color: rgb(255, 255, 255);</string>
               </item>
               <item>
                <widget class="QFrame" name="viewer_left">
+                <property name="toolTipDuration">
+                 <number>1</number>
+                </property>
                 <property name="frameShape">
                  <enum>QFrame::StyledPanel</enum>
                 </property>

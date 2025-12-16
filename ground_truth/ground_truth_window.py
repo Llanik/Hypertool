@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_GroundTruthWidget(object):
     def setupUi(self, GroundTruthWidget):
         GroundTruthWidget.setObjectName("GroundTruthWidget")
-        GroundTruthWidget.resize(1340, 1185)
+        GroundTruthWidget.resize(1340, 531)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -372,11 +372,14 @@ class Ui_GroundTruthWidget(object):
         self.splitter_2.setOrientation(QtCore.Qt.Vertical)
         self.splitter_2.setObjectName("splitter_2")
         self.viewer_left = QtWidgets.QWidget(self.splitter_2)
+        self.viewer_left.setToolTip("")
         self.viewer_left.setObjectName("viewer_left")
         self.viewer_right = QtWidgets.QWidget(self.splitter_2)
+        self.viewer_right.setToolTip("")
         self.viewer_right.setObjectName("viewer_right")
         self.verticalLayout_2.addWidget(self.splitter_2)
         self.spec_canvas = QtWidgets.QWidget(self.splitter)
+        self.spec_canvas.setToolTip("")
         self.spec_canvas.setAutoFillBackground(False)
         self.spec_canvas.setObjectName("spec_canvas")
         self.horizontalLayout_4.addWidget(self.splitter)
@@ -390,48 +393,88 @@ class Ui_GroundTruthWidget(object):
 
     def retranslateUi(self, GroundTruthWidget):
         _translate = QtCore.QCoreApplication.translate
+        self.load_btn.setToolTip(_translate("GroundTruthWidget", "Load a hyperspectral cube (.mat, .h5, .hdr).\n"
+"If a Ground Truth already exists in the cube metadata or as a matching *_GT.png, it can be auto-loaded."))
         self.load_btn.setText(_translate("GroundTruthWidget", "Load Cube"))
+        self.pushButton_load_GT.setToolTip(_translate("GroundTruthWidget", "Load Ground Truth (PNG)\n"
+"Load a GT indexed PNG (palette + labels) and rebuild internal class indices, class colors, and (if available) mean/std spectra from metadata."))
         self.pushButton_load_GT.setText(_translate("GroundTruthWidget", "Load GT image"))
+        self.pushButton_reset_transform.setToolTip(_translate("GroundTruthWidget", "Reset transforms applied to the cube"))
         self.pushButton_reset_transform.setText(_translate("GroundTruthWidget", "Reset transforms"))
-        self.pushButton_reset.setToolTip(_translate("GroundTruthWidget", "Reset all data loaded in the tool."))
+        self.pushButton_reset.setToolTip(_translate("GroundTruthWidget", "Clear the current cube and all Ground Truth work (segmentation map, manual selection, class colors, spectra prototypes, selected bands, and displays)."))
         self.pushButton_reset.setText(_translate("GroundTruthWidget", "Reset all"))
-        self.checkBox_enable_segment.setToolTip(_translate("GroundTruthWidget", "Check if you want to erase previous ground truth image by clicking Segmentation. Uncheck if you want to pretect it."))
+        self.checkBox_enable_segment.setToolTip(_translate("GroundTruthWidget", "When enabled, the Run button is allowed to compute a segmentation map.\n"
+"When disabled, Run is blocked to prevent overwriting existing work. "))
         self.checkBox_enable_segment.setText(_translate("GroundTruthWidget", "Enable auto segmentation"))
         self.label_metric.setText(_translate("GroundTruthWidget", "Spectral distance"))
-        self.pushButton_class_selection.setToolTip(_translate("GroundTruthWidget", "Start selection for supervised mode or manual correction using RIGHT CLICK."))
+        self.pushButton_class_selection.setToolTip(_translate("GroundTruthWidget", "Start / Stop selection\n"
+"Toggle manual selection mode to label reference pixels.\n"
+"Selection is started with Right click or Ctrl + Left click in the left viewer, using the current selection shape (pixel / rectangle / ellipse)"))
         self.pushButton_class_selection.setText(_translate("GroundTruthWidget", "Start selection"))
-        self.run_btn.setToolTip(_translate("GroundTruthWidget", "Lauch segmentation with parameters"))
+        self.run_btn.setToolTip(_translate("GroundTruthWidget", "Run the current segmentation mode (Unsupervised or Supervised).\n"
+"If band selection is active, segmentation is computed only on the selected bands. "))
         self.run_btn.setText(_translate("GroundTruthWidget", "Segmentation"))
-        self.pushButton_erase_selected_pix.setToolTip(_translate("GroundTruthWidget", "To erase a previous selection. Only useful if you have assigned piel to a class that you want to be determined by segmentation."))
+        self.pushButton_erase_selected_pix.setToolTip(_translate("GroundTruthWidget", "Erase pixels (Stop Erasing)\n"
+"Toggle erase mode: selected pixels are removed from the manual selection and associated class structures are updated accordingly."))
         self.pushButton_erase_selected_pix.setText(_translate("GroundTruthWidget", "Erase Selected"))
-        self.comboBox_ClassifMode.setToolTip(_translate("GroundTruthWidget", "Choose between supervised segmentation (need selection first) or Unsupervised (Clusterisation)"))
+        self.comboBox_ClassifMode.setToolTip(_translate("GroundTruthWidget", "Choose how the segmentation map is computed:\n"
+"\n"
+"Unsupervised: clustering-based segmentation (KMeans).\n"
+"\n"
+"Supervised: classify pixels using manually selected class prototypes (mean spectra) and a spectral distance."))
         self.comboBox_ClassifMode.setItemText(0, _translate("GroundTruthWidget", "Supervised"))
         self.comboBox_ClassifMode.setItemText(1, _translate("GroundTruthWidget", "Unsupervised"))
         self.label_class_type.setText(_translate("GroundTruthWidget", "Classification type"))
         self.label_selec_mode.setText(_translate("GroundTruthWidget", "Select mode"))
         self.nclass_label.setText(_translate("GroundTruthWidget", "# Classes:"))
-        self.slider_class_thr.setToolTip(_translate("GroundTruthWidget", "Add a new classe if classified point is to far from a class. The slider fixed how far we consider the point too far. If at the top, no effect."))
-        self.comboBox_distance.setToolTip(_translate("GroundTruthWidget", "Choose distance for supervised classification"))
+        self.slider_class_thr.setToolTip(_translate("GroundTruthWidget", "Classification threshold (%)\n"
+"Only used in Supervised mode.\n"
+"\n"
+"100%: always assign the closest class.\n"
+"\n"
+"<100%: pixels too far from all prototypes are assigned to an “other” label."))
+        self.comboBox_distance.setToolTip(_translate("GroundTruthWidget", "Spectral distance (Supervised)\n"
+"Distance used to compare each pixel to class prototypes (mean spectra).\n"
+"Available options include: sqeuclidean, cosine, correlation."))
         self.comboBox_distance.setItemText(0, _translate("GroundTruthWidget", "cosine"))
         self.comboBox_distance.setItemText(1, _translate("GroundTruthWidget", "sqeuclidean"))
         self.comboBox_distance.setItemText(2, _translate("GroundTruthWidget", "correlation"))
-        self.comboBox_normalized.setToolTip(_translate("GroundTruthWidget", "Normalized spectra or not (Raw)"))
+        self.comboBox_normalized.setToolTip(_translate("GroundTruthWidget", "Spectral normalization (Unsupervised)\n"
+"If set to Normalize, each pixel spectrum is normalized by its own maximum before clustering."))
         self.comboBox_normalized.setItemText(0, _translate("GroundTruthWidget", "Raw"))
         self.comboBox_normalized.setItemText(1, _translate("GroundTruthWidget", "Normalize"))
-        self.comboBox_pixel_selection_mode.setToolTip(_translate("GroundTruthWidget", "Shape used for pixel selection."))
+        self.comboBox_pixel_selection_mode.setToolTip(_translate("GroundTruthWidget", "Selection shape\n"
+"Select how reference pixels are collected:\n"
+"\n"
+"pixel: freehand path by dragging; on release you can optionally close the path to fill the polygon.\n"
+"\n"
+"rectangle: rubber band rectangle.\n"
+"\n"
+"ellipse: ellipse ROI."))
         self.comboBox_pixel_selection_mode.setItemText(0, _translate("GroundTruthWidget", "rectangle"))
         self.comboBox_pixel_selection_mode.setItemText(1, _translate("GroundTruthWidget", "ellipse"))
         self.comboBox_pixel_selection_mode.setItemText(2, _translate("GroundTruthWidget", "pixel"))
-        self.nclass_box.setToolTip(_translate("GroundTruthWidget", "Number of class to segment. Another class will be added in supervised mode if threashold not at maximum."))
+        self.nclass_box.setToolTip(_translate("GroundTruthWidget", "Number of classes\n"
+"Defines the valid class index range 0 .. (N−1).\n"
+"If you reduce N while higher labels already exist, the tool prompts you to erase or reassign those classes."))
         self.label_thr.setText(_translate("GroundTruthWidget", "thr"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("GroundTruthWidget", "Segment"))
         self.groupBox_image_type.setTitle(_translate("GroundTruthWidget", "Image Choice"))
+        self.radioButton_rgb_default.setToolTip(_translate("GroundTruthWidget", "Display the cube using the default RGB band mapping."))
         self.radioButton_rgb_default.setText(_translate("GroundTruthWidget", "RGB default"))
+        self.radioButton_rgb_user.setToolTip(_translate("GroundTruthWidget", "Display the cube using user-selected RGB band indices."))
         self.radioButton_rgb_user.setText(_translate("GroundTruthWidget", "RGB user"))
+        self.radioButton_grayscale.setToolTip(_translate("GroundTruthWidget", "Display a single band as a grayscale image."))
         self.radioButton_grayscale.setText(_translate("GroundTruthWidget", "Grayscale"))
+        self.horizontalSlider_blue_channel.setToolTip(_translate("GroundTruthWidget", "Blue channel band index (for user RGB)."))
         self.label_green_channel.setText(_translate("GroundTruthWidget", "Green"))
+        self.spinBox_green_channel.setToolTip(_translate("GroundTruthWidget", "Green channel band index (for user RGB)."))
         self.label_red_channel.setText(_translate("GroundTruthWidget", "Red"))
+        self.horizontalSlider_red_channel.setToolTip(_translate("GroundTruthWidget", "Red channel band index (for user RGB)."))
+        self.horizontalSlider_green_channel.setToolTip(_translate("GroundTruthWidget", "Green channel band index (for user RGB)."))
+        self.spinBox_blue_channel.setToolTip(_translate("GroundTruthWidget", "Blue channel band index (for user RGB)."))
         self.label_blue_channel.setText(_translate("GroundTruthWidget", "Blue"))
+        self.spinBox_red_channel.setToolTip(_translate("GroundTruthWidget", "Red channel band index (for user RGB)."))
         self.groupBox_3.setTitle(_translate("GroundTruthWidget", "Transform"))
         self.pushButton_rotate.setToolTip(_translate("GroundTruthWidget", "Rotate cube"))
         self.pushButton_flip_v.setToolTip(_translate("GroundTruthWidget", "Flip cube verticaly"))
@@ -441,25 +484,33 @@ class Ui_GroundTruthWidget(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("GroundTruthWidget", "Img Adjust"))
         self.groupBox.setTitle(_translate("GroundTruthWidget", "Image Overlays"))
         self.label_GT_3.setText(_translate("GroundTruthWidget", "GT transparency"))
-        self.horizontalSlider_transparency_GT.setToolTip(_translate("GroundTruthWidget", "Choose transparency of GT image overlay on cube representation."))
-        self.checkBox_see_selection_overlay.setToolTip(_translate("GroundTruthWidget", "See manually selected pixels."))
+        self.horizontalSlider_transparency_GT.setToolTip(_translate("GroundTruthWidget", "GT overlay transparency (alpha)\n"
+"Controls blending between the hyperspectral RGB display and the GT class-color overlay:\n"
+"\n"
+"0% = only the hyperspectral RGB,\n"
+"\n"
+"100% = only the GT overlay."))
+        self.checkBox_see_selection_overlay.setToolTip(_translate("GroundTruthWidget", "Show / hide the manual selection mask over the current display (independent from the segmentation map)."))
         self.checkBox_see_selection_overlay.setText(_translate("GroundTruthWidget", "See selection"))
         self.groupBox_2.setTitle(_translate("GroundTruthWidget", "Spectra"))
-        self.checkBox_live_spectra.setToolTip(_translate("GroundTruthWidget", "Check to active live spectrum visualization (will disabled drag mode on cube representation)"))
+        self.checkBox_live_spectra.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Live spectrum tracking</span><br/>When enabled, moving the mouse over the left image updates the pixel spectrum in real time (will disabled drag mode on cube representation).</p><p><br/>Tip: middle-click toggles this checkbox when not in selection mode.</p><p><br/></p></body></html>"))
         self.checkBox_live_spectra.setText(_translate("GroundTruthWidget", "Live"))
-        self.checkBox_seeGTspectra.setToolTip(_translate("GroundTruthWidget", "Check to see mean spectra of the segmented classes."))
+        self.checkBox_seeGTspectra.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Show GT class spectra</p><p>Overlay class mean spectra with ±1 std envelope on the spectra plot.</p></body></html>"))
         self.checkBox_seeGTspectra.setText(_translate("GroundTruthWidget", "See GT spectra"))
-        self.pushButton_band_selection.setToolTip(_translate("GroundTruthWidget", "If you want to perform segmentation only using some bands of the whole spectrum."))
+        self.pushButton_band_selection.setToolTip(_translate("GroundTruthWidget", "Band selection (SpanSelector)\n"
+"Enable wavelength range selection on the spectra plot.\n"
+"You will be prompted to Add, Suppress, or Clear bands. Selected bands constrain the data used for segmentation/classification."))
         self.pushButton_band_selection.setText(_translate("GroundTruthWidget", "Band selection"))
-        self.pushButton_merge.setToolTip(_translate("GroundTruthWidget", "Will merge automatic GT image with you manual selection."))
+        self.pushButton_merge.setToolTip(_translate("GroundTruthWidget", "Merge manual selection into segmentation\n"
+"Overwrite the segmentation labels with the manual selection where available, then recompute class mean/std spectra from the updated map."))
         self.pushButton_merge.setText(_translate("GroundTruthWidget", "Merge GT and select"))
-        self.pushButton_class_name_assign.setToolTip(_translate("GroundTruthWidget", "To assign the good labels and index to the classes."))
+        self.pushButton_class_name_assign.setToolTip(_translate("GroundTruthWidget", "Assign material names / colors\n"
+"Open the class table to assign a material label and palette color to each class (used for display and for saving GT)."))
         self.pushButton_class_name_assign.setText(_translate("GroundTruthWidget", "Class name assign"))
-        self.pushButton_save_GT.setToolTip(_translate("GroundTruthWidget", "Save segmented image and Ground Truth information in metadata of hypercube file"))
+        self.pushButton_save_GT.setToolTip(_translate("GroundTruthWidget", "Save Ground Truth\n"
+"Export the GT as an indexed PNG (*_GT.png) and store GT information into the cube metadata (gt_index_map, GTLabels, GT_cmap, spectra_mean, spectra_std, etc.).\n"
+"After saving the PNG, the tool can also save the updated cube file."))
         self.pushButton_save_GT.setText(_translate("GroundTruthWidget", "Save GT work"))
-        self.viewer_left.setToolTip(_translate("GroundTruthWidget", "Promote to ZoomableGraphicsView"))
-        self.viewer_right.setToolTip(_translate("GroundTruthWidget", "Promote to ZoomableGraphicsView"))
-        self.spec_canvas.setToolTip(_translate("GroundTruthWidget", "Promote to FigureCanvas"))
 
 
 if __name__ == "__main__":
