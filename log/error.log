@@ -349,3 +349,10 @@ Traceback (most recent call last):
                              ^^^^^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'shape'
 
+2025-12-16 22:16:35,643 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 424, in _on_show_tooltips_toggled
+    QToolTip.setEnabled(checked)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'QToolTip' has no attribute 'setEnabled'
+

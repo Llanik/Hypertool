@@ -9,7 +9,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QFont,QIcon, QPalette
 from PyQt5.QtWidgets import (QStyleFactory, QAction, QSizePolicy,QPushButton,
-                             QTextEdit)
+                             QTextEdit,QToolTip, QCheckBox, QWidgetAction,)
 
 ## Python import
 import traceback
@@ -259,6 +259,16 @@ class CubeDestinationDialog(QtWidgets.QDialog):
         self.choice = choice_key
         self.accept()
 
+class GlobalToolTipFilter(QtCore.QObject):
+    def __init__(self, enabled=True):
+        super().__init__()
+        self.enabled = enabled
+
+    def eventFilter(self, obj, event):
+        if event.type() == QtCore.QEvent.ToolTip and not self.enabled:
+            return True  # on bloque l'affichage du tooltip
+        return False
+
 class MainApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -382,6 +392,18 @@ class MainApp(QtWidgets.QMainWindow):
         act_suggestion.triggered.connect(self.open_suggestion_box)
         self.toolbar.addAction(act_suggestion)
 
+        # Checkbox "Show tooltips" dans la toolbar (à droite, près de SUGGESTIONS)
+        self.checkBox_show_tooltips = QCheckBox("Show Tooltips")
+        self.checkBox_show_tooltips.setToolTip("Enable/disable all tooltips in the application")
+
+        tooltips_action = QWidgetAction(self)
+        tooltips_action.setDefaultWidget(self.checkBox_show_tooltips)
+        self.toolbar.addAction(tooltips_action)
+
+        # Connexion + état initial
+        self.checkBox_show_tooltips.toggled.connect(self._on_show_tooltips_toggled)
+        self.checkBox_show_tooltips.setChecked(True)
+
         #### connect tools with hypercube manager for managing changes in cubeInfoTemp
         self.meta_dock.widget().metadataChanged.connect(self.hypercube_manager.update_metadata)
 
@@ -402,6 +424,15 @@ class MainApp(QtWidgets.QMainWindow):
 
         self.centralWidget().hide()
         # self.showMaximized()
+
+        self.checkBox_show_tooltips.toggled.connect(self._on_show_tooltips_toggled)
+        self.checkBox_show_tooltips.setChecked(True)  # ou valeur depuis QSettings
+
+    def _on_show_tooltips_toggled(self, checked: bool):
+        # tooltip_filter est global (défini dans __main__), on y accède via QApplication
+        app = QtWidgets.QApplication.instance()
+        # on l’a stocké comme attribut pour pouvoir le retrouver
+        app._global_tooltip_filter.enabled = checked
 
     def _connect_tool_cube_saved_signals(self):
         """
@@ -1057,9 +1088,13 @@ def check_resolution_change():
 
 if __name__ == "__main__":
 
-    sys.excepthook = excepthook #set the exception handler
+    # sys.excepthook = excepthook #set the exception handler
 
     app = QtWidgets.QApplication(sys.argv)
+
+    tooltip_filter = GlobalToolTipFilter(enabled=True)
+    app.installEventFilter(tooltip_filter)
+    app._global_tooltip_filter = tooltip_filter
 
     update_font(app)
     apply_fusion_border_highlight(app)

@@ -4,20 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[IDENTIFICATION] : &#10;- tool_tips added&#10;[GT] : &#10;- tab coherent&#10;[UNMIX] : &#10;- tab coherent">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GNL] : &#10;- tool_tips &#10;[REGISTRATION] : &#10;- fixed interferences rectangle_move keypoint">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/some_widget_for_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/register_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,14 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00115" summary="[unmixing] : implementing unmixing jobs">
-      <option name="closed" value="true" />
-      <created>1762521941719</created>
-      <option name="number" value="00115" />
-      <option name="presentableId" value="LOCAL-00115" />
-      <option name="project" value="LOCAL" />
-      <updated>1762521941719</updated>
     </task>
     <task id="LOCAL-00116" summary="[unmixing] : implementing unmixing jobs&#10;- run one and all from queue&#10;- check if already in queue">
       <option name="closed" value="true" />
@@ -539,7 +521,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765799928458</updated>
     </task>
-    <option name="localTasksCounter" value="164" />
+    <task id="LOCAL-00164" summary="[GNL] : &#10;- tool_tips &#10;[REGISTRATION] : &#10;- fixed interferences rectangle_move keypoint">
+      <option name="closed" value="true" />
+      <created>1765919521929</created>
+      <option name="number" value="00164" />
+      <option name="presentableId" value="LOCAL-00164" />
+      <option name="project" value="LOCAL" />
+      <updated>1765919521931</updated>
+    </task>
+    <option name="localTasksCounter" value="165" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -591,7 +581,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark" />
     <MESSAGE value="[HYPERCUBE] : &#10;- Modif in dark (for line flat field)" />
     <MESSAGE value="[MINI CUBE] : &#10;- Bugg fixed with non classic spectral range for false rgb channels (float to int)" />
     <MESSAGE value="[MINI CUBE] : &#10;- Bugg fixed for clip R to 0..1" />
@@ -616,6 +605,7 @@
     <MESSAGE value="[UNMIX] : &#10;- fixing buggs and ui details" />
     <MESSAGE value="[UNMIX] : &#10;- tool_tips added" />
     <MESSAGE value="[IDENTIFICATION] : &#10;- tool_tips added&#10;[GT] : &#10;- tab coherent&#10;[UNMIX] : &#10;- tab coherent" />
-    <option name="LAST_COMMIT_MESSAGE" value="[IDENTIFICATION] : &#10;- tool_tips added&#10;[GT] : &#10;- tab coherent&#10;[UNMIX] : &#10;- tab coherent" />
+    <MESSAGE value="[GNL] : &#10;- tool_tips &#10;[REGISTRATION] : &#10;- fixed interferences rectangle_move keypoint" />
+    <option name="LAST_COMMIT_MESSAGE" value="[GNL] : &#10;- tool_tips &#10;[REGISTRATION] : &#10;- fixed interferences rectangle_move keypoint" />
   </component>
 </project>
