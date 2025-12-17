@@ -819,6 +819,11 @@ class MainApp(QtWidgets.QMainWindow):
         self._send_to_illumination(filepath,show_tab=False)
         self._send_to_minicube(filepath,show_tab=False)
 
+        kind=(min(hc.wl)>600)
+        self._send_to_identification(filepath, kind, show_tab=False)
+        self._send_to_unmix(filepath, kind, show_tab=False)
+
+
     def _on_tool_loaded_cube(self, hc: Hypercube, tool_widget):
         # Chemin résolu du cube
         path = hc.filepath
@@ -1099,7 +1104,7 @@ def check_resolution_change():
 
 if __name__ == "__main__":
 
-    sys.excepthook = excepthook #set the exception handler
+    # sys.excepthook = excepthook #set the exception handler
 
     app = QtWidgets.QApplication(sys.argv)
 
@@ -1113,10 +1118,10 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    # folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
-    # fname = '00189-VNIR-mock-up.h5'
-    # filepath = os.path.join(folder, fname)
-    # main._on_add_cube([filepath,filepath.replace('189','191')])
+    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
+    fname = '00189-VNIR-mock-up.h5'
+    filepath = os.path.join(folder, fname)
+    main._on_add_cube([filepath,filepath.replace('189','191')])
 
     try:
         import matlab.engine

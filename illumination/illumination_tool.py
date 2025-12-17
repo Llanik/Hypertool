@@ -184,7 +184,7 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
         if self.cube is None:
             return
         if self.wl[0] > 400 or self.wl[-1] < 780:
-            QMessageBox.warning(self, "Error", "The reflectance range must include 400–780 nm")
+            QMessageBox.warning(self, "Problem with illumination tool", "The loaded cube can not be used in illumination tool.\nThe reflectance range must include 400–780 nm to be used in illumination tool.")
             self.cube = None
             self.image_rgb = None
             return

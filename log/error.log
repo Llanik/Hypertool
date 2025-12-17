@@ -356,3 +356,12 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^
 AttributeError: type object 'QToolTip' has no attribute 'setEnabled'
 
+2025-12-17 10:32:27,565 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 858, in <lambda>
+    act_all.triggered.connect(lambda checked, p=path: self._send_to_all(p))
+                                                      ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\MainWindow.py", line 823, in _send_to_all
+    self._send_to_identification(self, filepath, kind, show_tab=False)
+TypeError: MainApp._send_to_identification() got multiple values for argument 'show_tab'
+
