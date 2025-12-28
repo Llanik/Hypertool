@@ -201,7 +201,7 @@ class LoadCubeDialog(QDialog):
             message=f"Loading {kind} cube…",
             filename=path,
             parent=self,
-            cancellable=True
+            cancellable=False
         )
         self._loading_dialog = dlg
 
@@ -3331,7 +3331,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             message="Loading cube…",
             filename=filepath,
             parent=self,
-            cancellable=True
+            cancellable=False
         )
         self._loading_dialog = dlg
 
@@ -4092,13 +4092,13 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         dlg = LoadingDialog(
             message=f"Extracting endmembers ({job.method})…",
             parent=self,
-            cancel_text="Cancel"
+            cancel_text="Cancel",
+            cancellable=True
         )
         self._em_progress_dialog = dlg
 
         dlg.cancel_requested.connect(self._on_cancel_endmember_extraction)
         worker.signals.em_ready.connect(self._on_em_ready)
-        worker.signals.canceled.connect(lambda: dlg.setWindowTitle("Canceled"))
         worker.signals.error.connect(lambda msg: dlg.setWindowTitle("Error"))
         worker.signals.finished.connect(self._close_em_progress_dialog)
 
@@ -7126,10 +7126,18 @@ if __name__ == "__main__":
     filepath1 = os.path.join(folder, fname1)
     filepath2 = os.path.join(folder, fname2)
     cube=fused_cube(Hypercube(filepath1,load_init=True),Hypercube(filepath2,load_init=True))
-    w.load_cube(cube=cube)
 
-    w.active_source='auto'
-    w._on_extract_endmembers()
-    w.comboBox_endmembers_use_for_unmixing.setCurrentText('Auto')
+    from PyQt5.QtCore import QTimer
+    def wait_for_cube():
+        if getattr(w, "cube", None) is None:
+            QTimer.singleShot(100, wait_for_cube)
+        else:
+            w.active_source = 'auto'
+            w.comboBox_endmembers_use_for_unmixing.setCurrentText('Auto')
+            w._on_extract_endmembers()
+
+    w.load_cube(cube=cube)
+    wait_for_cube()
+
 
     sys.exit(app.exec_())

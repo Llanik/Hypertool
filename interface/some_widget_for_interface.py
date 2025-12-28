@@ -289,18 +289,18 @@ class ZoomableGraphicsView(QGraphicsView):
         sc.addItem(v)
         self._overlay_items.extend([h, v])
 
-
 class LoadingDialog(QDialog):
     cancel_requested = pyqtSignal()
 
     def __init__(
         self,
-        message="Loading.",
+        message="Loading…",
         filename=None,
         parent=None,
         cancellable: bool = False,
         cancel_text: str = "Cancel",
         block_close: bool = True,
+        busy_text: str = "In progress…",
     ):
         super().__init__(parent)
         self.setWindowTitle("Please wait")
@@ -313,24 +313,22 @@ class LoadingDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        self.label = QLabel(message)
+        self.label = QLabel(message, self)
         self.label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.label)
 
+        self.label_file = None
         if filename:
-            self.label_file = QLabel(f"<i>{os.path.basename(filename)}</i>")
+            self.label_file = QLabel(f"<i>{os.path.basename(filename)}</i>", self)
             self.label_file.setAlignment(Qt.AlignCenter)
             layout.addWidget(self.label_file)
-        else:
-            self.label_file = None
 
-        self.progress = QProgressBar()
-        self.progress.setRange(0, 0)  # indeterminate (animated)
+        self.progress = QProgressBar(self)
+        self.progress.setRange(0, 0)              # ALWAYS indeterminate
         self.progress.setTextVisible(True)
-        self.progress.setFormat("In progress…")  # “dynamic” busy style, not 0%
+        self.progress.setFormat(busy_text)        # show "In progress…" instead of 0%
         layout.addWidget(self.progress)
 
-        # Optional cancel button row
         self.btn_cancel = None
         if self._cancellable:
             row = QHBoxLayout()
@@ -349,10 +347,8 @@ class LoadingDialog(QDialog):
         if self.btn_cancel is not None:
             self.btn_cancel.setEnabled(False)
 
-        # UX feedback
         self.label.setText("Cancel requested…")
         self.progress.setFormat("Stopping…")
-
         self.cancel_requested.emit()
 
     def was_cancel_requested(self) -> bool:
@@ -362,34 +358,13 @@ class LoadingDialog(QDialog):
         self.label.setText(message)
 
     def set_busy_text(self, text: str):
-        # changes the text displayed inside the progress bar
         self.progress.setFormat(text)
 
-    def set_indeterminate(self, on: bool):
-        if on:
-            self.progress.setRange(0, 0)
-        else:
-            self.progress.setRange(0, 100)
-            # Optionnel: si tu veux éviter le 0% affiché
-            if self.progress.value() == 0:
-                self.progress.setValue(100)
-
-    def set_progress(self, value: int):
-        # Si on reçoit un progrès déterminé, on bascule automatiquement
-        if self.progress.maximum() == 0:
-            self.set_indeterminate(False)
-        self.progress.setValue(int(value))
-
     def closeEvent(self, event):
-        # Optionally block user from closing via the window [X] while cancellable & not canceled
         if self._cancellable and self._block_close and not self._cancel_requested:
             event.ignore()
             return
         super().closeEvent(event)
-
-# ======================================================================
-# Cube loading worker (generic, cancellable)
-# ======================================================================
 
 class LoadCubeSignals(QObject):
     started = pyqtSignal()
