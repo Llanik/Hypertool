@@ -4,10 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="Implementing multiple progress bar for some task :&#10;-&gt; EM extrat&#10;-&gt; Unmixing loading cube">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="-&gt; Unmixing loading cube with progress bar OK">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/some_widget_for_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,14 +139,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00121" summary="[unmixing] : implementing unmixing jobs&#10;- ROI bugg fixed">
-      <option name="closed" value="true" />
-      <created>1762870489924</created>
-      <option name="number" value="00121" />
-      <option name="presentableId" value="LOCAL-00121" />
-      <option name="project" value="LOCAL" />
-      <updated>1762870489924</updated>
     </task>
     <task id="LOCAL-00122" summary="[unmixing] : implementing unmixing jobs&#10;- ROI bugg fixed">
       <option name="closed" value="true" />
@@ -529,7 +524,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766909803097</updated>
     </task>
-    <option name="localTasksCounter" value="170" />
+    <task id="LOCAL-00170" summary="-&gt; Unmixing loading cube with progress bar OK">
+      <option name="closed" value="true" />
+      <created>1766911375159</created>
+      <option name="number" value="00170" />
+      <option name="presentableId" value="LOCAL-00170" />
+      <option name="project" value="LOCAL" />
+      <updated>1766911375159</updated>
+    </task>
+    <option name="localTasksCounter" value="171" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -581,7 +584,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[MAIN-CALIB-UNMIX] : &#10;- one tool dialog after adding cube&#10;- savgol filters adusted to order 4 and window 43" />
     <MESSAGE value="[UNMIX] : &#10;- ADD one FTIR spectrum to an hypercube OK&#10;- Select good sample if csv with multiple samples" />
     <MESSAGE value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm" />
     <MESSAGE value="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM" />
@@ -606,6 +608,7 @@
     <MESSAGE value="[GNL] : &#10;- tool_tips" />
     <MESSAGE value="[Main] : &#10;- added send to ident and unmix if send to all&#10;[Illum]:&#10;- error message plus precis" />
     <MESSAGE value="Implementing multiple progress bar for some task :&#10;-&gt; EM extrat&#10;-&gt; Unmixing loading cube" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implementing multiple progress bar for some task :&#10;-&gt; EM extrat&#10;-&gt; Unmixing loading cube" />
+    <MESSAGE value="-&gt; Unmixing loading cube with progress bar OK" />
+    <option name="LAST_COMMIT_MESSAGE" value="-&gt; Unmixing loading cube with progress bar OK" />
   </component>
 </project>

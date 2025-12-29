@@ -823,7 +823,6 @@ class MainApp(QtWidgets.QMainWindow):
         self._send_to_identification(filepath, kind, show_tab=False)
         self._send_to_unmix(filepath, kind, show_tab=False)
 
-
     def _on_tool_loaded_cube(self, hc: Hypercube, tool_widget):
         # Chemin résolu du cube
         path = hc.filepath

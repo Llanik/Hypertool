@@ -2758,7 +2758,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             form.addRow(QLabel("No endmembers yet"))
             return
 
-        spectral_range=f'{int(wl[0])} - {int(wl[-1])}'
+        if wl is not None :
+            spectral_range=f'{int(wl[0])} - {int(wl[-1])}'
+
         form.addRow(QLabel("wavelength :"), QLabel(spectral_range))
 
         for key,item in param.items():
@@ -3166,7 +3168,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         # Si coché : on redessine en utilisant le job courant
         self._update_job_wl_patch()
-
 
     # </editor-fold>
 

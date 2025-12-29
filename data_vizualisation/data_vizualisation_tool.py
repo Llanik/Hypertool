@@ -129,6 +129,134 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
 
         self.minicube_association_table = pd.read_csv(table_path)
 
+        # Tooltips
+        self.pushButton_open_hypercube.setToolTip(
+            "Load hypercube(s)\n"
+            "Open a hyperspectral cube. The tool automatically looks for a complementary cube (VNIR/SWIR) "
+            "and an associated Ground Truth (*_GT.png) if available."
+        )
+
+        self.pushButton_next_cube.setToolTip(
+            "Next cube (same folder)\n"
+            "Load the next hyperspectral cube in the same folder."
+        )
+
+        self.pushButton_prev_cube.setToolTip(
+            "Previous cube (same folder)\n"
+            "Load the previous hyperspectral cube in the same folder."
+        )
+
+        self.radioButton_visible_active_hyp.setToolTip(
+            "Show active cube only\n"
+            "Display only the currently active spectral range."
+        )
+
+        self.radioButton_visible_all.setToolTip(
+            "Show all available images\n"
+            "Display all loaded images simultaneously (VNIR, SWIR, and Ground Truth)."
+        )
+
+        self.radioButton_rgb_default.setToolTip(
+            "RGB default\n"
+            "Display the cube using a predefined RGB band mapping adapted to the spectral range.\n"
+            "Manual band selection is disabled."
+        )
+
+        self.radioButton_rgb_user.setToolTip(
+            "RGB user\n"
+            "Display the cube using user-selected band indices for the Red, Green, and Blue channels."
+        )
+
+        self.radioButton_grayscale.setToolTip(
+            "Grayscale\n"
+            "Display a single spectral band as a grayscale image.\n"
+            "The Blue/Gray band control is used."
+        )
+
+        self.horizontalSlider_red_channel.setToolTip(
+            "Red channel band index\n"
+            "Select the spectral band index used for the Red channel (RGB user mode only)."
+        )
+        self.spinBox_red_channel.setToolTip(
+            "Red channel band index\n"
+            "Select the spectral band index used for the Red channel (RGB user mode only)."
+        )
+
+        self.horizontalSlider_green_channel.setToolTip(
+            "Green channel band index\n"
+            "Select the spectral band index used for the Green channel (RGB user mode only)."
+        )
+        self.spinBox_green_channel.setToolTip(
+            "Green channel band index\n"
+            "Select the spectral band index used for the Green channel (RGB user mode only)."
+        )
+
+        self.horizontalSlider_blue_channel.setToolTip(
+            "Blue / Gray channel band index\n"
+            "Select the spectral band index used for the Blue channel (RGB user mode)\n"
+            "or for grayscale display."
+        )
+        self.spinBox_blue_channel.setToolTip(
+            "Blue / Gray channel band index\n"
+            "Select the spectral band index used for the Blue channel (RGB user mode)\n"
+            "or for grayscale display."
+        )
+
+        self.horizontalSlider_transparency_GT.setToolTip(
+            "GT overlay transparency\n"
+            "Control the transparency of the Ground Truth overlay."
+        )
+
+        self.pushButton_search_GT_files.setToolTip(
+            "Load Ground Truth manually\n"
+            "Manually select a Ground Truth PNG file if it was not found automatically."
+        )
+
+        self.pushButton_rotate.setToolTip("Rotate 90°\nRotate all loaded cubes and GT maps by 90 degrees.")
+        self.pushButton_flip_h.setToolTip("Flip horizontally\nFlip all loaded cubes and GT maps left–right.")
+        self.pushButton_flip_v.setToolTip("Flip vertically\nFlip all loaded cubes and GT maps top–bottom.")
+
+        self.comboBox_metadata.setToolTip(
+            "Metadata key\n"
+            "Select which metadata entry to display for the active cube."
+        )
+
+        self.pushButton_see_all_metadata.setToolTip(
+            "Show all metadata\n"
+            "Open a window displaying all metadata entries of the active cube."
+        )
+
+        self.checkBox_std.setToolTip(
+            "Show standard deviation\n"
+            "Display ±1 standard deviation around mean Ground Truth spectra."
+        )
+
+        self.pushButton_save_spectra.setToolTip(
+            "Save spectra\n"
+            "Export Ground Truth spectra as images or numeric files."
+        )
+
+        self.pushButton_save_image.setToolTip(
+            "Save image(s)\n"
+            "Save the currently displayed images as PNG or JPEG."
+        )
+
+        self.canvas_image.setToolTip(
+            "Image viewer\n"
+            "Mouse wheel: zoom • Left drag: pan • Move mouse to update live spectrum."
+        )
+
+        self.canvas_spectra.setToolTip(
+            "Spectra viewer\n"
+            "Shows mean reflectance spectra of GT materials. Click legend entries to show/hide them."
+        )
+
+        self.checkBox_live_spectrum.setToolTip(
+            "Live spectrum\n"
+            "When enabled, the spectrum plot is updated in real time with the pixel under the mouse cursor.\n"
+            "No computation is triggered; this only affects visualization."
+        )
+
     def on_cube_active_radiobutton_toggled(self):
         self.modif_sliders()
         self.update_metadata_label()
