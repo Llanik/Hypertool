@@ -23,10 +23,8 @@ import traceback
 
 from identification.identification_window import Ui_IdentificationWidget
 from hypercubes.hypercube import Hypercube
-from interface.some_widget_for_interface  import ZoomableGraphicsView
+from interface.some_widget_for_interface  import ZoomableGraphicsView, LoadingDialog, LoadCubeWorker
 from identification.load_cube_dialog import Ui_Dialog
-
-#todo : load map !!!!
 
 def _safe_name_from(cube) -> str:
     md = getattr(cube, "metadata", {}) or {}
@@ -421,6 +419,11 @@ class LoadCubeDialog(QDialog):
         self.cubes = {"VNIR": None, "SWIR": None}
         self._wl_ranges = {"VNIR": None, "SWIR": None}
 
+        # Async loading state
+        self._load_dialog = None
+        self._load_worker = {"VNIR": None, "SWIR": None}
+
+
         # Prefill from provided cubes (if any)
         def _set(kind, cube):
             if cube is None:
@@ -451,8 +454,11 @@ class LoadCubeDialog(QDialog):
     # ---------------------- internals -----------------------
     def _load(self, kind: str):
         """
-        Load VNIR or SWIR cube. On error, cleans state and UI.
+        Load VNIR or SWIR cube asynchronously (non-blocking UI), with a LoadingDialog.
         """
+        if self._load_dialog is not None:
+            return
+
         start_dir = ""
         path, _ = QFileDialog.getOpenFileName(
             self,
@@ -463,21 +469,85 @@ class LoadCubeDialog(QDialog):
         if not path:
             return
 
-        cube = Hypercube()
-        try:
+        # UI: disable buttons to avoid concurrent loads
+        self._set_load_buttons_enabled(False)
+        self._load_dialog = LoadingDialog(
+            message=f"Loading {kind} cube…",
+            filename=path,
+            parent=self,
+            cancellable=False,
+        )
+
+        self._load_dialog.cancel_requested.connect(lambda: self._on_load_canceled(kind))
+
+        self._load_dialog.show()
+
+        def _do_load():
+            cube = Hypercube()
             cube.open_hyp(default_path=path, open_dialog=False)
-            # WL can be None for some sources; we tolerate that
-            wl = cube.wl if cube.wl is not None else np.array([])
-            self.cubes[kind] = cube
-            self._wl_ranges[kind] = (float(wl.min()), float(wl.max())) if wl.size > 0 else None
-        except Exception as e:
-            # Robustness: clear state on failure
-            QMessageBox.warning(self, "Load error",
-                                f"Could not load {kind} cube:\n{e}")
-            self.cubes[kind] = None
+            return cube
+
+        worker = LoadCubeWorker(load_fn=_do_load)
+        self._load_worker[kind] = worker
+
+        self._load_dialog.cancel_requested.connect(worker.cancel)
+
+        worker.signals.finished.connect(lambda cube: self._on_load_result(kind, cube))
+        worker.signals.error.connect(lambda err: self._on_load_error(kind, err))
+        worker.signals.canceled.connect(lambda: self._on_load_canceled(kind))
+
+        # Always finalize UI state
+        worker.signals.finished.connect(lambda _: self._on_load_finished(kind))
+        worker.signals.canceled.connect(lambda: self._on_load_finished(kind))
+        worker.signals.error.connect(lambda _: self._on_load_finished(kind))
+
+        QThreadPool.globalInstance().start(worker)
+
+    def _set_load_buttons_enabled(self, enabled: bool):
+        self.ui.pushButton_load_cube_1.setEnabled(enabled)
+        self.ui.pushButton_load_cube_2.setEnabled(enabled)
+        self.ui.pushButton_valid.setEnabled(enabled)
+
+    def _on_load_result(self, kind: str, cube):
+        # Save cube
+        self.cubes[kind] = cube
+
+        # WL can be None for some sources; tolerate that
+        wl = getattr(cube, "wl", None)
+        if isinstance(wl, np.ndarray) and wl.size > 0:
+            self._wl_ranges[kind] = (float(wl.min()), float(wl.max()))
+        else:
             self._wl_ranges[kind] = None
 
+        # Update labels in the dialog
         self._update_labels()
+
+    def _on_load_error(self, kind: str, err):
+        # Robustness: clear state on failure
+        self.cubes[kind] = None
+        self._wl_ranges[kind] = None
+        self._update_labels()
+
+        msg = str(err) if err is not None else "Unknown error"
+        QMessageBox.warning(self, "Load error", f"Failed to load {kind} cube.\n\n{msg}")
+
+    def _on_load_canceled(self, kind: str):
+        # If canceled before completion, keep previous state as-is.
+        # (We do not forcibly clear cubes[kind] here.)
+        pass
+
+    def _on_load_finished(self, kind: str):
+        # Close dialog and restore UI
+        if self._load_dialog is not None:
+            try:
+                self._load_dialog.close()
+            except Exception:
+                pass
+            self._load_dialog = None
+
+        self._load_worker[kind] = None
+        self._set_load_buttons_enabled(True)
+
 
     def _update_labels(self):
         """
@@ -792,6 +862,8 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
         # Queue structures
         self.job_order: List[str] = []  # only job names in execution order
         self.jobs: Dict[str, ClassificationJob] = {}  # name -> job
+        self._cube_load_dialog = None
+        self._cube_load_worker = None
 
         # Table init
         self._init_classification_table(self.tableWidget_classificationList)
@@ -1140,97 +1212,177 @@ class IdentificationWidget(QWidget, Ui_IdentificationWidget):
             self.update_rgb_controls()
             self.update_overlay()
 
-    def load_cube(self,filepath=None,cube=None,cube_info=None,range=None):
+    def _apply_loaded_cube_to_ui(self, payload):
+        """
+        UI-thread: apply cube + refresh views.
+        payload = (cube_out, loaded_cube, range)
+        """
+        cube_out, loaded_cube, cube_range = payload
 
-        if self.no_reset_jobs_on_new_cube():
-            return
+        # Update last VNIR / SWIR if relevant
+        if loaded_cube is not None:
+            if cube_range == "VNIR":
+                self._last_vnir = loaded_cube
+            elif cube_range == "SWIR":
+                self._last_swir = loaded_cube
 
-        flag_loaded=False
-        if cube is not None:
-            try:
-                if cube_info is not None:
-                    cube.metadata=cube.cube_info.metadata_temp
+        # Apply final cube
+        self.cube = cube_out
+        self.data = cube_out.data
+        self.wl = cube_out.wl
 
-                if range is None:
-                    self.cube = cube
-                    flag_loaded=True
-                else:
-                    print('Range : ',range)
-                    if range=='VNIR':
-                        self._last_vnir=cube
-                        self.cube = fused_cube(self._last_vnir, self._last_swir)
-
-                        flag_loaded=True
-
-                    elif range=='SWIR':
-                        self._last_swir=cube
-                        self.cube = fused_cube(self._last_vnir, self._last_swir)
-
-                        flag_loaded = True
-
-                    else :
-                        print('Problem with cube range in parameter')
-
-            except:
-                print('Problem with cube in parameter')
-
-        if not flag_loaded:
-            if not filepath:
-                filepath, _ = QFileDialog.getOpenFileName(
-                    self, "Open Hypercube", "", "Hypercube files (*.mat *.h5 *.hdr)"
-                )
-                if not filepath:
-                    return
-            try:
-                cube = Hypercube(filepath=filepath, load_init=True)
-
-                try:
-                    if cube_info is not None:
-                        cube.metadata = cube.cube_info.metadata_temp
-
-                    if range is None:
-                        self.cube = cube
-                    else:
-                        if range == 'VNIR':
-                            self._last_vnir = cube
-                            if self._last_swir is not None:
-                                self.cube = fused_cube(self._last_vnir, self._last_swir)
-                            else:
-                                self.cube = cube
-
-                        elif range == 'SWIR':
-                            self._last_swir = cube
-                            if self._last_vnir is not None:
-                                self.cube = fused_cube(self._last_vnir, self._last_swir)
-                            else:
-                                self.cube = cube
-
-                        else:
-                            print('Problem with cube range in parameter')
-
-                except:
-                    print('Problem with cube in parameter')
-
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to load cube: {e}")
-                return
-
-        # test spectral range
-
-        try:
-            self.cube.normalize_spectral(
-                self.TRAIN_WL, min_wl=400, max_wl=1700,
-                interp_kind="linear", in_place=True
-            )
-        except ValueError as e:
-            QMessageBox.warning(self, "Spectral error", str(e))
-            return
-
-        self.data = self.cube.data
-        self.wl = self.cube.wl
+        # Refresh UI
         self.update_rgb_controls()
         self.show_rgb_image()
         self.update_overlay()
+
+    def _finish_cube_load_ui(self):
+        """UI-thread: close dialog and release state."""
+        if self._cube_load_dialog is not None:
+            try:
+                self._cube_load_dialog.close()
+            except Exception:
+                pass
+            self._cube_load_dialog = None
+        self._cube_load_worker = None
+
+    def _start_cube_load_worker(self, message: str, filename: str, load_fn):
+        """Start LoadCubeWorker with a non-cancellable LoadingDialog (like unmixing)."""
+        # Prevent concurrent loads
+        if self._cube_load_dialog is not None:
+            return
+
+        self._cube_load_dialog = LoadingDialog(
+            message=message,
+            filename=filename,
+            parent=self,
+            cancellable=False,  # IMPORTANT: so close() always works
+        )
+        self._cube_load_dialog.show()
+
+        worker = LoadCubeWorker(load_fn=load_fn)
+        self._cube_load_worker = worker
+
+        worker.signals.finished.connect(self._apply_loaded_cube_to_ui)
+        worker.signals.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to load cube:\n\n{err}"))
+        worker.signals.finished.connect(lambda _: self._finish_cube_load_ui())
+        worker.signals.error.connect(lambda _: self._finish_cube_load_ui())
+        worker.signals.canceled.connect(lambda: self._finish_cube_load_ui())
+
+        # Use existing pool if you want; otherwise globalInstance is fine too
+        self.threadpool.start(worker)
+
+    def load_cube(self, filepath=None, cube=None, cube_info=None, range=None):
+        if self.no_reset_jobs_on_new_cube():
+            return
+
+        # Resolve filepath if needed (UI thread)
+        if cube is None and not filepath:
+            filepath, _ = QFileDialog.getOpenFileName(
+                self, "Open Hypercube", "", "Hypercube files (*.mat *.h5 *.hdr)"
+            )
+            if not filepath:
+                return
+
+        # Snapshot inputs for the worker
+        vnir_in = None
+        swir_in = None
+        single_cube_in = None
+        filepath_in = filepath
+        range_in = range
+        cube_info_in = cube_info
+
+        # Decide inputs
+        if cube is not None:
+            # Cube already provided
+            if range_in is None:
+                single_cube_in = cube
+            elif range_in == "VNIR":
+                vnir_in = cube
+                swir_in = self._last_swir
+            elif range_in == "SWIR":
+                swir_in = cube
+                vnir_in = self._last_vnir
+            else:
+                QMessageBox.warning(self, "Error", "Problem with cube range parameter.")
+                return
+        else:
+            # Need to load from filepath
+            pass
+
+        def _do_load_build():
+            loaded_cube = None
+
+            # 1) Load cube if needed
+            if cube is None:
+                loaded_cube = Hypercube(filepath=filepath_in, load_init=True)
+                if cube_info_in is not None:
+                    loaded_cube.metadata = loaded_cube.cube_info.metadata_temp
+
+                if range_in is None:
+                    _single = loaded_cube
+                    _vnir = None
+                    _swir = None
+                elif range_in == "VNIR":
+                    _vnir = loaded_cube
+                    _swir = self._last_swir
+                    _single = None
+                elif range_in == "SWIR":
+                    _swir = loaded_cube
+                    _vnir = self._last_vnir
+                    _single = None
+                else:
+                    raise ValueError("Problem with cube range parameter.")
+            else:
+                # Cube already provided
+                if range_in is None:
+                    _single = cube
+                    _vnir = None
+                    _swir = None
+                elif range_in == "VNIR":
+                    _vnir = cube
+                    _swir = self._last_swir
+                    _single = None
+                elif range_in == "SWIR":
+                    _swir = cube
+                    _vnir = self._last_vnir
+                    _single = None
+                else:
+                    raise ValueError("Problem with cube range parameter.")
+
+            # 2) Fuse (or passthrough)
+            if _single is not None:
+                out = _single
+            else:
+                out = fused_cube(_vnir, _swir)
+
+            # 3) Normalize spectral axis
+            out.normalize_spectral(
+                self.TRAIN_WL,
+                min_wl=400,
+                max_wl=1700,
+                interp_kind="linear",
+                in_place=True
+            )
+
+            return out, loaded_cube, range_in
+
+        # UI: update last VNIR/SWIR references *before* worker if cube provided;
+        # if loaded from file, we'll update them after load by re-calling load_cube(range=...) if needed.
+        # Here, keep it simple: update only for provided cubes; for filepath loads, update in a follow-up if you want.
+        if cube is not None:
+            if range_in == "VNIR":
+                self._last_vnir = cube
+            elif range_in == "SWIR":
+                self._last_swir = cube
+
+        # Start worker + dialog (like unmixing)
+        label = "Loading cube…"
+        fn = filepath_in if filepath_in else (range_in or "cube")
+        if range_in in ("VNIR", "SWIR"):
+            label = f"Loading {range_in} cube…"
+
+        self._start_cube_load_worker(message=label, filename=str(fn), load_fn=_do_load_build)
 
     def show_rgb_image(self):
 
