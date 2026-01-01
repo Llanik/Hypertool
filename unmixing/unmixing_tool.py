@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (QApplication, QSizePolicy, QSplitter,QHeaderView,QP
                              QComboBox,QSpinBox
                              )
 
-from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem,QColor
+from PyQt5.QtGui import QPixmap, QImage,QGuiApplication,QStandardItemModel, QStandardItem,QColor,QFontMetrics
 from PyQt5.QtCore import Qt,QObject, pyqtSignal, QRunnable, QThreadPool, pyqtSlot, QRectF,QEvent,QRect, QPoint, QSize
 
 # Graphs
@@ -459,9 +459,19 @@ class SyncedAbundanceView(ZoomableGraphicsView):
     syncRequested = pyqtSignal(object)
 
     def wheelEvent(self, event):
-        super().wheelEvent(event)
-        self.syncRequested.emit(self)
+        if event.angleDelta().y() == 0 or not self.pixmap_item:
+            return
 
+        zoom = self.zoom_step if event.angleDelta().y() > 0 else 1 / self.zoom_step
+
+        # échelle courante réelle (pas une variable interne)
+        current_scale = self.transform().m11()
+        new_scale = current_scale * zoom
+
+        if new_scale < self.min_scale or new_scale > self.max_scale:
+            return
+
+        self.scale(zoom, zoom)
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
         if event.buttons() & Qt.LeftButton:
@@ -964,7 +974,7 @@ def fused_cube(cube1, cube2, *, copy_common_meta: bool = True):
     elif cube1.wl[0] > 800 and cube2.wl[0] < 500:
         VNIR, SWIR = cube2, cube1
     else:
-        raise ValueError("fused_cube: could not infer VNIR/SWIR from wavelength ranges")
+        VNIR, SWIR = cube1, cube2
 
     target = {'VNIR': (400, 950), 'SWIR': (955, 20000)}
 
@@ -1814,6 +1824,19 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         except Exception:
             pass
 
+    def set_label_elided(self, label, full_text: str, intro ='', max_px: int = 150):
+        """
+        Limite visuellement un QLabel à une largeur max (px), affiche une version ellipsée,
+        et met le texte complet dans le tooltip.
+        """
+        label.setMaximumWidth(max_px)
+        tooltip=intro+' '+full_text
+        label.setToolTip(tooltip)
+
+        fm = QFontMetrics(label.font())
+        elided = fm.elidedText(full_text, Qt.ElideMiddle, max_px - 8)  # -8 pour marge
+        label.setText(elided)
+
     def toggle_spectra(self):
         if self.checkBox_showGraph.isChecked():
             self.splitter.setSizes(self.mem_sizes)
@@ -2526,8 +2549,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         try:
             # Lignes verticales montrant les limites du cube (self.wl)
             if self.wl is not None and len(self.wl) > 0:
-                wl_min = float(self.wl[0])
-                wl_max = float(self.wl[-1])
+                wl_min = float(np.min(self.wl))
+                wl_max = float(np.max(self.wl))
                 self.spec_ax.axvline(wl_min, linestyle='--', linewidth=1, color='k')
                 self.spec_ax.axvline(wl_max, linestyle='--', linewidth=1, color='k')
         except Exception as e:
@@ -2538,14 +2561,75 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             # On le remet dans l’axe courant :
             self.spec_ax.add_patch(patch)
 
+        if self.wl is not None and len(self.wl) > 0:
+            x0 = float(np.min(self.wl))
+            x1 = float(np.max(self.wl))
+            self.spec_ax.set_xlim(x0, x1)
+        else:
+            self.spec_ax.set_xlim(x_graph[0], x_graph[-1])
+
             # 4) On rafraîchit le canvas
 
         self._update_job_wl_patch()
         self.spec_canvas.draw_idle()
 
+    def _mpl_toolbar_deactivate_interactions(self, toolbar):
+        """
+        Stoppe proprement les modes interactifs matplotlib (pan/zoom)
+        et décoche les actions correspondantes.
+        """
+        if toolbar is None:
+            return
+
+        # Matplotlib garde un état "mode" (ex: 'pan/zoom', 'zoom rect', '')
+        mode = (getattr(toolbar, "mode", "") or "").lower()
+
+        # La manière la plus fiable : rappeler la méthode -> toggle OFF
+        # (pan()/zoom() sont des toggles)
+        try:
+            if "pan" in mode:
+                toolbar.pan()
+            elif "zoom" in mode:
+                toolbar.zoom()
+        except Exception:
+            pass
+
+        # En plus : s'assurer que les actions checkables ne restent pas cochées
+        try:
+            for act in toolbar.actions():
+                if act.isCheckable() and act.isChecked():
+                    txt = (act.text() or "").lower()
+                    if "pan" in txt or "zoom" in txt:
+                        act.setChecked(False)
+        except Exception:
+            pass
+
+    def _mpl_toolbar_set_enabled(self, toolbar, enabled: bool, keep_non_conflicting=True):
+        """
+        Active/désactive la toolbar. Option keep_non_conflicting=True :
+        ne désactive que pan/zoom (recommandé).
+        """
+        if toolbar is None:
+            return
+
+        for act in toolbar.actions():
+            if not act.isVisible():
+                continue
+
+            if keep_non_conflicting:
+                txt = (act.text() or "").lower()
+                # On vise les actions qui capturent la souris
+                if ("pan" in txt) or ("zoom" in txt):
+                    act.setEnabled(enabled)
+            else:
+                act.setEnabled(enabled)
+
     def band_selection(self,checked):
 
         if checked:
+
+            self._mpl_toolbar_deactivate_interactions(self.spec_toolbar)
+            self._mpl_toolbar_set_enabled(self.spec_toolbar, enabled=False, keep_non_conflicting=True)
 
             try:
                 msg = QMessageBox(self)
@@ -2622,6 +2706,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 return
 
         else:
+            self._mpl_toolbar_set_enabled(self.spec_toolbar, enabled=True, keep_non_conflicting=True)
             self.span_selector.set_active(False)
             self.pushButton_band_selection.setText('Band selection')
 
@@ -3266,6 +3351,12 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self.param_auto = {}
             self.wl_auto = None
 
+            path = self.cube.cube_info.filepath
+            name=os.path.basename(path).split('.')[0]
+            self.label_cube_file.setText(name)
+            self.set_label_elided(self.label_cube_file, name,intro='Active cube filename :', max_px=150)
+            self.update_spectra()
+
     def load_cube(self, filepath=None, cube=None, cube_info=None, range=None):
 
         if self.no_reset_jobs_on_new_cube():
@@ -3832,8 +3923,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._last_ftir_sample = str(sample)
         self._last_ftir_file = path
 
-        self.label_ftir_file.setText(os.path.basename(path).split('.')[0])
-        self.label_ftir_sample.setText(sample)
+        name=os.path.basename(path).split('.')[0]
+        self.set_label_elided(self.label_ftir_file, name,intro='FTIR spectrum filename :')
+        self.set_label_elided(self.label_ftir_sample, sample,intro='FTIR sample name:')
 
     def load_one_spectrum(self):
         """
@@ -4021,7 +4113,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.load_cube(cube=cube_one, range=None)
 
         # Mettre à jour le label dédié
-        self.label_one_spectrum.setText(sample)
+        self.set_label_elided(self.label_one_spectrum, sample,intro='Sample name:')
 
     def _on_cube_loaded(self):
         # test spectral range
@@ -4040,10 +4132,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.show_rgb_image()
         self.update_overlay()
 
-        for viewer in [self.viewer_left, self.viewer_right]:
-            rect = viewer.pixmap_item.boundingRect()
-            viewer.fitInView(rect, Qt.KeepAspectRatio)
-            viewer.scale(0.7, 0.7)  # zoom avant (1.0 = cadre exact, 0.7 = ~70% de l'écran)
+        self.viewer_left.fitImage(scale_factor=0.7)
+        self.viewer_right.fitImage(scale_factor=0.7)
 
         self.regions = {}
 
@@ -4058,7 +4148,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.wl_auto = None
 
         path = self.cube.cube_info.filepath
-        self.label_cube_file.setText(os.path.basename(path).split('.')[0])
+        name = os.path.basename(path).split('.')[0]
+        self.label_cube_file.setText(name)
+        self.set_label_elided(self.label_cube_file, name,intro='Active cube filename:')
+        self.update_spectra()
 
     # </editor-fold>
 

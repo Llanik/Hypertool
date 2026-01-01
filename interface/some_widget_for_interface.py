@@ -67,12 +67,23 @@ class ZoomableGraphicsView(QGraphicsView):
         self.last_rect_item = None
         self.pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene().addItem(self.pixmap_item)
-        self.setSceneRect(QRectF(pixmap.rect()))
+        self.scene().setSceneRect(self.pixmap_item.boundingRect())
+
+        self.resetTransform()
+        # bornes par défaut (safe)
+        self._scale_factor = 1.0
+        self.min_scale = self._scale_factor*0.02
+        self.max_scale = self._scale_factor*200
 
     def fitImage(self, scale_factor=0.8):
         if self.pixmap_item:
+            self.resetTransform()
+            self._scale_factor = 1.0
             self.fitInView(self.pixmap_item, Qt.KeepAspectRatio)
             self.scale(scale_factor, scale_factor)
+            self._scale_factor = self.transform().m11()
+            self.min_scale = self._scale_factor * 0.2
+            self.max_scale = self._scale_factor * 200
 
     def wheelEvent(self, event):
         if event.angleDelta().y() == 0:
