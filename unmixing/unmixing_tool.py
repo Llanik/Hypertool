@@ -1588,10 +1588,25 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self.pushButton_clas_down.clicked.connect(lambda: self._move_job(+1))
         self.pushButton_clas_reinit.clicked.connect(self._on_reinit_selected_job)
 
-        mem_strech_factors={0:5,2:5,1:2}
-        for key,val in mem_strech_factors.items():
-            self.splitter.setStretchFactor(key,val)
-        self.mem_sizes=self.splitter.sizes()
+        # init splitter sizes
+
+        self.splitter.setStretchFactor(0, 1)  # left
+        self.splitter.setStretchFactor(1, 1)  # right
+        self.splitter.setStretchFactor(2, 1)  # spectrum canvas
+
+        def _apply_initial_splitter_sizes():
+            total = max(1, self.splitter.width())
+            sizes = [total * 1 // 3, total * 1 // 3, total * 1 // 3]
+            self.splitter.setSizes(sizes)
+            self.mem_sizes = self.splitter.sizes()  # mémoriser une valeur réaliste
+
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(0, _apply_initial_splitter_sizes)
+
+        # total = max(1, self.splitter.width())
+        # sizes = [total * 1 // 3, total * 1 // 3, total * 1 // 3]
+        # self.splitter.setSizes(sizes)
+        # self.mem_sizes = self.splitter.sizes()
 
         self.fill_form_em('manual')
         self.fill_form_em('auto')
@@ -2336,7 +2351,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
                 self.viewer_right.add_cross_overlay(x0, y0, half_size=cross_half_size, color=qcol, width=2)
         self._draw_current_rect(surface=False)
-
 
     def update_alpha(self, value):
         self.alpha = value / 100.0
@@ -4758,7 +4772,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 pass
         # fallback neutral gray
         return (180, 180, 180)
-
 
     # </editor-fold>
 

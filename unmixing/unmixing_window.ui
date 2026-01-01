@@ -2049,8 +2049,40 @@ If enabled, the spectrum plot highlights the currently active wavelength band ma
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <widget class="QWidget" name="viewer_left" native="true"/>
-        <widget class="QWidget" name="viewer_right" native="true"/>
+        <widget class="QWidget" name="viewer_left_frame" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_viewer_left">
+            <property name="text">
+             <string>Cube False RGB</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="viewer_left" native="true"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="viewer_right_frame" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_17">
+          <item>
+           <widget class="QLabel" name="label_viewer_right">
+            <property name="text">
+             <string>Results Vizualisation</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="viewer_right" native="true"/>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="spec_canvas" native="true"/>
        </widget>
       </item>
