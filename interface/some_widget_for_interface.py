@@ -60,20 +60,48 @@ class ZoomableGraphicsView(QGraphicsView):
         self.max_scale = 100.0
         self.zoom_step = 1.25
 
-    def setImage(self, pixmap):
-        # self.clear_rectangle()
-        self.scene().clear()
-        self._selection_overlay = None
-        self.last_rect_item = None
-        self.pixmap_item = QGraphicsPixmapItem(pixmap)
-        self.scene().addItem(self.pixmap_item)
-        self.scene().setSceneRect(self.pixmap_item.boundingRect())
+    def setImage(self, pixmap, *, reset_view: bool = False, fit: bool = False, fit_margin: float = 0.8):
+        """
+        Update displayed pixmap.
+        - reset_view=True : reset zoom/pan (nouveau cube, etc.)
+        - fit=True        : fitInView après mise à jour (souvent avec reset_view)
+        Par défaut: on CONSERVE le zoom/pan existant.
+        """
+        if pixmap is None:
+            return
 
-        self.resetTransform()
-        # bornes par défaut (safe)
-        self._scale_factor = 1.0
-        self.min_scale = self._scale_factor*0.02
-        self.max_scale = self._scale_factor*200
+        # --- sauver état vue courant ---
+        saved_t = self.transform()
+        saved_center = self.mapToScene(self.viewport().rect().center())
+
+        if self.pixmap_item is None:
+            # première image: on crée
+            self.scene().clear()
+            self._selection_overlay = None
+            self.last_rect_item = None
+            self.pixmap_item = QGraphicsPixmapItem(pixmap)
+            self.scene().addItem(self.pixmap_item)
+        else:
+            # update pixmap sans casser la scène
+            self.pixmap_item.setPixmap(pixmap)
+
+        # scene rect doit suivre la taille du pixmap
+        self.setSceneRect(QRectF(self.pixmap_item.boundingRect()))
+
+        if reset_view:
+            self.resetTransform()
+            self._scale_factor = 1.0
+            if fit:
+                self.fitInView(self.pixmap_item, Qt.KeepAspectRatio)
+                self.scale(fit_margin, fit_margin)
+                # mettre à jour _scale_factor après fit/scale
+                self._scale_factor = self.transform().m11()
+        else:
+            # restaurer transform + centre
+            self.setTransform(saved_t)
+            self.centerOn(saved_center)
+            # garder cohérent ton tracking interne
+            self._scale_factor = self.transform().m11()
 
     def fitImage(self, scale_factor=0.8):
         if self.pixmap_item:

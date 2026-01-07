@@ -34,6 +34,9 @@ class Ui_Dialog(object):
         self.label_filepaths.setMaximumSize(QtCore.QSize(16777215, 20))
         self.label_filepaths.setObjectName("label_filepaths")
         self.gridLayout.addWidget(self.label_filepaths, 1, 0, 1, 1)
+        self.pushButton_remove_cube_1 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_remove_cube_1.setObjectName("pushButton_remove_cube_1")
+        self.gridLayout.addWidget(self.pushButton_remove_cube_1, 2, 3, 1, 1)
         self.label_spec_range_cube_1 = QtWidgets.QLabel(self.frame)
         self.label_spec_range_cube_1.setMaximumSize(QtCore.QSize(16777215, 20))
         self.label_spec_range_cube_1.setAlignment(QtCore.Qt.AlignCenter)
@@ -51,28 +54,25 @@ class Ui_Dialog(object):
         self.pushButton_load_cube_1 = QtWidgets.QPushButton(self.frame)
         self.pushButton_load_cube_1.setObjectName("pushButton_load_cube_1")
         self.gridLayout.addWidget(self.pushButton_load_cube_1, 2, 2, 1, 1)
+        self.label_info = QtWidgets.QLabel(self.frame)
+        self.label_info.setTextFormat(QtCore.Qt.PlainText)
+        self.label_info.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_info.setObjectName("label_info")
+        self.gridLayout.addWidget(self.label_info, 0, 0, 1, 4)
         self.label_spectral_range = QtWidgets.QLabel(self.frame)
         self.label_spectral_range.setMaximumSize(QtCore.QSize(16777215, 20))
         self.label_spectral_range.setObjectName("label_spectral_range")
         self.gridLayout.addWidget(self.label_spectral_range, 1, 1, 1, 1)
-        self.pushButton_remove_cube_1 = QtWidgets.QPushButton(self.frame)
-        self.pushButton_remove_cube_1.setObjectName("pushButton_remove_cube_1")
-        self.gridLayout.addWidget(self.pushButton_remove_cube_1, 2, 3, 1, 1)
+        self.label_instructions = QtWidgets.QLabel(self.frame)
+        self.label_instructions.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_instructions.setObjectName("label_instructions")
+        self.gridLayout.addWidget(self.label_instructions, 5, 0, 1, 4)
         self.pushButton_remove_cube_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_remove_cube_2.setObjectName("pushButton_remove_cube_2")
         self.gridLayout.addWidget(self.pushButton_remove_cube_2, 3, 3, 1, 1)
         self.pushButton_valid = QtWidgets.QPushButton(self.frame)
         self.pushButton_valid.setObjectName("pushButton_valid")
-        self.gridLayout.addWidget(self.pushButton_valid, 6, 0, 1, 4)
-        self.label_instructions = QtWidgets.QLabel(self.frame)
-        self.label_instructions.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_instructions.setObjectName("label_instructions")
-        self.gridLayout.addWidget(self.label_instructions, 5, 0, 1, 4)
-        self.label_info = QtWidgets.QLabel(self.frame)
-        self.label_info.setTextFormat(QtCore.Qt.PlainText)
-        self.label_info.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_info.setObjectName("label_info")
-        self.gridLayout.addWidget(self.label_info, 0, 0, 1, 4)
+        self.gridLayout.addWidget(self.pushButton_valid, 6, 0, 1, 1)
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 6)
         self.gridLayout.setColumnStretch(2, 1)
@@ -88,19 +88,22 @@ class Ui_Dialog(object):
         self.label_filepath_cube_2.setText(_translate("Dialog", "path cube"))
         self.pushButton_load_cube_2.setText(_translate("Dialog", "Load second cube"))
         self.label_filepaths.setText(_translate("Dialog", "<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Filepath of cube</span></p></body></html>"))
+        self.pushButton_remove_cube_1.setText(_translate("Dialog", "Remove first cube"))
         self.label_spec_range_cube_1.setText(_translate("Dialog", "range"))
         self.label_spec_range_cube_2.setText(_translate("Dialog", "range"))
         self.label_filepath_cube_1.setText(_translate("Dialog", "path cube"))
         self.pushButton_load_cube_1.setText(_translate("Dialog", "Load first cube"))
+        self.label_info.setText(_translate("Dialog", "You can select one or two cubes.\n"
+"\n"
+"• If you select two cubes, they must be spatially registered together.\n"
+"  After clicking “Validate cubes”, the application will load a single cube obtained by spectral fusion of the selected cubes.\n"
+"\n"
+"• If you select only one cube, no spectral fusion is performed and the cube is loaded as-is.\n"
+""))
         self.label_spectral_range.setText(_translate("Dialog", "<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">Spectral range</span></p></body></html>"))
-        self.pushButton_remove_cube_1.setText(_translate("Dialog", "Remove first cube"))
+        self.label_instructions.setText(_translate("Dialog", "Instructions"))
         self.pushButton_remove_cube_2.setText(_translate("Dialog", "Remove second cube"))
         self.pushButton_valid.setText(_translate("Dialog", "Valid cubes"))
-        self.label_instructions.setText(_translate("Dialog", "Instructions"))
-        self.label_info.setText(_translate("Dialog", "You can chosse two cubes (that must be registered together).\n"
-"In that case, the cube loaded in the app after pressing the button \"Valid cubes\"\n"
-"will be a single cube resulting in the spectral fusion of these cubes.\n"
-"You can also just select one cube if no fusion of data is needed. "))
 
 
 if __name__ == "__main__":

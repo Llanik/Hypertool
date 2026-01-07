@@ -266,7 +266,7 @@ Tip: settings are read from the currently active tab/controls when you add a job
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_endmembers">
          <attribute name="title">
@@ -379,7 +379,7 @@ Export the current endmembers (Manual/Auto/Library) to disk for reuse. The saved
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="From_Library">
              <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -435,7 +435,7 @@ Convert the loaded FTIR spectrum axis for display:
 This is only a visualization aid; it does not change the cube.</string>
                   </property>
                   <property name="text">
-                   <string>From wavenumber to wavelenth</string>
+                   <string>Convert FTIR file</string>
                   </property>
                  </widget>
                 </item>
@@ -451,8 +451,8 @@ This is only a visualization aid; it does not change the cube.</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>80</width>
-                   <height>20</height>
+                   <width>408</width>
+                   <height>103</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_2">

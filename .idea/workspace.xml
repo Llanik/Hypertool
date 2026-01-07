@@ -4,10 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIXING]&#10;- Spectra axis updated if wl different on loading new cube&#10;- added exepction for vnir swir classif if not in classical range&#10;- interference between matplotlib widgets and band selection killed&#10;- ellipsed text if too long for label_file_name + in tooltips&#10;- zoom problem on loading new cube of differente size fixed">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[UNMIXING]&#10;- Added info in LoadDialogWindow and possibility to remove one cube.">
+      <change afterPath="$PROJECT_DIR$/interface/icons/unmixing_icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interface/icons/unmixing_icon.svg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identification/load_cube_dialog.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/load_cube_dialog.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identification/load_cube_dialog.ui" beforeDir="false" afterPath="$PROJECT_DIR$/identification/load_cube_dialog.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interface/some_widget_for_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,14 +142,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00127" summary="[unmixing] : &#10;- derivative added&#10;- live viz of abundance value of pixels">
-      <option name="closed" value="true" />
-      <created>1763446297281</created>
-      <option name="number" value="00127" />
-      <option name="presentableId" value="LOCAL-00127" />
-      <option name="project" value="LOCAL" />
-      <updated>1763446297281</updated>
     </task>
     <task id="LOCAL-00128" summary="[unmixing] : &#10;- savitzky-golay added">
       <option name="closed" value="true" />
@@ -529,7 +527,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767259706899</updated>
     </task>
-    <option name="localTasksCounter" value="176" />
+    <task id="LOCAL-00176" summary="[UNMIXING]&#10;- Added info in LoadDialogWindow and possibility to remove one cube.">
+      <option name="closed" value="true" />
+      <created>1767778419213</created>
+      <option name="number" value="00176" />
+      <option name="presentableId" value="LOCAL-00176" />
+      <option name="project" value="LOCAL" />
+      <updated>1767778419215</updated>
+    </task>
+    <option name="localTasksCounter" value="177" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -581,7 +587,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[UNMIX] : &#10;- ctrl+clic gauche OK pour selectionner&#10;[GROUND TRUTH] : &#10;- IDEM avec ctrl+clic gauche" />
     <MESSAGE value="[GROUND TRUTH] : &#10;- CANCEL for ctrl+left clic -&gt; probelems" />
     <MESSAGE value="[GROUND TRUTH] : &#10;- ctrl+left clic OK" />
     <MESSAGE value="[UNMIX] : &#10;- added variable row height in show all&#10;- separate scroll action in show all&#10;- autosize viewer on loading (interesting for one pixel)&#10;- reset all&#10;[MAIN WINDOW]&#10;- Unmix_tool added and connected&#10;- icons of unmix done" />
@@ -606,6 +611,7 @@
     <MESSAGE value="Added busy bar for different substrate classification mode" />
     <MESSAGE value="[UNMIXING] Title addes to viewers and splitter correct initialisation" />
     <MESSAGE value="[UNMIXING]&#10;- Spectra axis updated if wl different on loading new cube&#10;- added exepction for vnir swir classif if not in classical range&#10;- interference between matplotlib widgets and band selection killed&#10;- ellipsed text if too long for label_file_name + in tooltips&#10;- zoom problem on loading new cube of differente size fixed" />
-    <option name="LAST_COMMIT_MESSAGE" value="[UNMIXING]&#10;- Spectra axis updated if wl different on loading new cube&#10;- added exepction for vnir swir classif if not in classical range&#10;- interference between matplotlib widgets and band selection killed&#10;- ellipsed text if too long for label_file_name + in tooltips&#10;- zoom problem on loading new cube of differente size fixed" />
+    <MESSAGE value="[UNMIXING]&#10;- Added info in LoadDialogWindow and possibility to remove one cube." />
+    <option name="LAST_COMMIT_MESSAGE" value="[UNMIXING]&#10;- Added info in LoadDialogWindow and possibility to remove one cube." />
   </component>
 </project>

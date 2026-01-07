@@ -468,32 +468,63 @@ class SyncedAbundanceView(ZoomableGraphicsView):
     """
     syncRequested = pyqtSignal(object)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._sync_lock = False
+
+        try:
+            self.horizontalScrollBar().valueChanged.connect(lambda _=None: self._request_sync())
+            self.verticalScrollBar().valueChanged.connect(lambda _=None: self._request_sync())
+        except Exception:
+            pass
+
+    def _request_sync(self):
+        if self._sync_lock:
+            return
+        self.syncRequested.emit(self)
+
+    def apply_sync(self, transform, center_scene):
+        self._sync_lock = True
+        try:
+            self.setTransform(transform)
+            self.centerOn(center_scene)
+            if hasattr(self, "_scale_factor"):
+                self._scale_factor = float(self.transform().m11())
+        finally:
+            self._sync_lock = False
+
     def wheelEvent(self, event):
         if event.angleDelta().y() == 0 or not self.pixmap_item:
             return
 
         zoom = self.zoom_step if event.angleDelta().y() > 0 else 1 / self.zoom_step
 
-        # échelle courante réelle (pas une variable interne)
-        current_scale = self.transform().m11()
-        new_scale = current_scale * zoom
+        current_scale = float(self.transform().m11())
+        target_scale = current_scale * zoom
 
-        if new_scale < self.min_scale or new_scale > self.max_scale:
+        # Clamp "doux" : on ajuste zoom pour atteindre exactement min/max,
+        # au lieu de return (sinon pas de sync).
+        if target_scale < self.min_scale:
+            zoom = self.min_scale / current_scale
+        elif target_scale > self.max_scale:
+            zoom = self.max_scale / current_scale
+
+        # Si on est déjà au min/max et que zoom ne change rien, on sync quand même
+        if abs(zoom - 1.0) < 1e-12:
+            self._request_sync()
             return
 
         self.scale(zoom, zoom)
-    def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
-        if event.buttons() & Qt.LeftButton:
-            self.syncRequested.emit(self)
+
+        if hasattr(self, "_scale_factor"):
+            self._scale_factor = float(self.transform().m11())
+
+        self._request_sync()
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        self.syncRequested.emit(self)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.syncRequested.emit(self)
+        self._request_sync()
 
 class AbundanceGalleryWindow(QDialog):
     """
@@ -634,12 +665,36 @@ class AbundanceGalleryWindow(QDialog):
     def _clear_gallery(self):
         self._views = []
         lay = self.inner_layout
+
         while lay.count():
             item = lay.takeAt(0)
+
+            # 1) Widget
             w = item.widget()
             if w is not None:
+                w.hide()  # important: stop painting immediately
+                w.setParent(None)  # important: detach from inner widget
                 w.deleteLater()
+                continue
 
+            # 2) Layout imbriqué (rare mais possible)
+            sub = item.layout()
+            if sub is not None:
+                while sub.count():
+                    sub_item = sub.takeAt(0)
+                    sw = sub_item.widget()
+                    if sw is not None:
+                        sw.hide()
+                        sw.setParent(None)
+                        sw.deleteLater()
+                # pas de deleteLater sur QLayout: Python GC suffit
+                continue
+
+            # 3) SpacerItem : rien à faire (juste le retirer du layout suffit)
+
+        # Force une mise à jour du layout/viewport
+        self.inner.updateGeometry()
+        self.scroll.viewport().update()
     def _em_index_for_job(self, job, em_name):
         """
         Trouve l'index d'endmember pour un job à partir du nom 'base'
@@ -660,16 +715,24 @@ class AbundanceGalleryWindow(QDialog):
     def _sync_from(self, source):
         if not self._views or source not in self._views:
             return
+
         try:
             t = source.transform()
             center_scene = source.mapToScene(source.viewport().rect().center())
+
             for v in self._views:
                 if v is source:
                     continue
-                v.blockSignals(True)
-                v.setTransform(t)
-                v.centerOn(center_scene)
-                v.blockSignals(False)
+
+                if hasattr(v, "apply_sync"):
+                    v.apply_sync(t, center_scene)
+                else:
+                    # fallback (au cas où)
+                    v.setTransform(t)
+                    v.centerOn(center_scene)
+                    if hasattr(v, "_scale_factor"):
+                        v._scale_factor = float(v.transform().m11())
+
         except Exception as e:
             print("[GALLERY SYNC] error:", e)
 
@@ -2942,7 +3005,14 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             if self.data is None:
                 return None, None
 
-            H, W = self.data.shape[:2]
+            hw = getattr(job, "hw", None)
+            if hw is not None:
+                H, W = hw
+            else:
+                if self.data is None:
+                    return None, None
+                H, W = self.data.shape[:2]
+
             A = getattr(job, "A", None)
             if A is None:
                 return None, None
@@ -3033,7 +3103,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             if img is None:
                 return
 
-            self.viewer_right.setImage(self._np2pixmap(img))
+            self.viewer_right.setImage(self._np2pixmap(img), reset_view=False)
             self.current_unmix_job_name = job_name
             self._draw_current_rect(use_job=True, surface=False)
 
@@ -5803,6 +5873,10 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 except Exception:
                     pass
 
+                H, W = self.data.shape[:2]
+                g_job.attrs["H"] = int(H)
+                g_job.attrs["W"] = int(W)
+
                 # --- Matrices principales ---
                 A = np.asarray(job.A, dtype=np.float32)
                 g_job.create_dataset("A", data=A)
@@ -5855,6 +5929,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
         print("[LOAD UNMIX JOB] path : ",path)
 
+
         # 2) Lecture HDF5
         try:
             with h5py.File(path, "r") as f:
@@ -5867,6 +5942,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                     print(f"[Unmixing] Warning: HDF5 type='{t}' (expected 'unmixing_result').")
 
                 g_job = f["Job"]
+
 
                 # attrs
                 base_name = g_job.attrs.get("name", "Loaded job")
@@ -5882,6 +5958,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
                 if isinstance(norm, bytes):
                     norm = norm.decode("utf-8", errors="ignore")
 
+                H = int(g_job.attrs.get("H", 0))
+                W = int(g_job.attrs.get("W", 0))
                 lam = float(g_job.attrs.get("lam", 1e-3))
                 rho = float(g_job.attrs.get("rho", 1.0))
                 anc = bool(g_job.attrs.get("anc", True))
@@ -5972,6 +6050,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         )
 
         # Attacher les données de résultat
+        job.hw = (H, W) if H > 0 and W > 0 else None
         job.A = A
         job.E_used = E_used
         job.labels = labels

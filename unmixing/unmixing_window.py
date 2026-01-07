@@ -171,7 +171,7 @@ class Ui_GroundTruthWidget(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 80, 20))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 408, 103))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -770,8 +770,8 @@ class Ui_GroundTruthWidget(object):
         self.verticalLayout.setStretch(1, 6)
 
         self.retranslateUi(GroundTruthWidget)
-        self.tabWidget.setCurrentIndex(1)
-        self.stackedWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(0)
         self.stackedWidget_3.setCurrentIndex(0)
         self.stackedWidget_4.setCurrentIndex(0)
         self.tabWidget_Image.setCurrentIndex(0)
@@ -866,7 +866,7 @@ class Ui_GroundTruthWidget(object):
 "Convert the loaded FTIR spectrum axis for display:\n"
 "- Wavenumber (cm⁻¹) → Wavelength (nm), or the reverse.\n"
 "This is only a visualization aid; it does not change the cube."))
-        self.pushButton_wavenumber_to_wavelength.setText(_translate("GroundTruthWidget", "From wavenumber to wavelenth"))
+        self.pushButton_wavenumber_to_wavelength.setText(_translate("GroundTruthWidget", "Convert FTIR file"))
         self.label_selec_mode.setText(_translate("GroundTruthWidget", "Select mode"))
         self.pushButton_erase_selected_pix.setToolTip(_translate("GroundTruthWidget", "Erase selection\n"
 "\n"
