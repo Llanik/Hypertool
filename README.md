@@ -191,7 +191,7 @@ Endmembers can originate from hyperspectral data (**VNIR / SWIR**), spectral lib
 The tool is designed for exploratory analysis, material mapping, and comparison of different unmixing strategies on hyperspectral cubes.
 
 ### Key Features
-- Unmixing of VNIR, SWIR, or fused VNIR+SWIR hyperspectral cubes
+- Unmixing of VNIR, SWIR, or fused VNIR+SWIR hyperspectral cubes and FTIR specra.
 - Flexible endmember sources:
   - **Spectral libraries (CSV)**
   - **Manual selection** from image pixels or regions
@@ -202,9 +202,9 @@ The tool is designed for exploratory analysis, material mapping, and comparison 
   - Interpolation of reference spectra onto cube wavelengths when required
 - Multiple unmixing strategies:
   - Least-squares based methods
-  - Constrained / iterative solvers
+  - Constrained / iterative solvers with cost function. 
 - Spectral preprocessing options:
-  - RAW spectra
+  - Savgol filtered spectra
   - First or second spectral derivatives
   - L1 / L2 normalization
 - Job queue system:
@@ -213,44 +213,34 @@ The tool is designed for exploratory analysis, material mapping, and comparison 
 - Interactive visualization of abundance maps
 - Save and reload unmixing jobs (`.h5`) for later inspection
 
-### Typical Workflow
+### Steps
 1. **Load a hyperspectral cube**  
-   Open a VNIR, SWIR, or fused cube from the main application.
+   Open a VNIR y/o a SWIR cube and fused them (if two cubes selected) to use in the tool.
 
 2. **Define endmembers**  
    Choose one or more of the following:
-   - Load a spectral library (CSV)
-   - Import **FTIR spectra** as external reference endmembers
+   - Load a spectral library (if reflectance + FTIR spectra, they have to be merge already in a csv file and in nm) (CSV)
    - Select endmembers manually from the image
    - Extract endmembers automatically
 
 3. **Handle spectral domains**  
    When mixing hyperspectral and FTIR spectra:
    - The tool automatically aligns spectra on the **common wavelength range**
-   - Reference spectra are interpolated to match cube wavelengths
+   - Reference spectra are interpolated to match cube wavelengths if needed.
 
 4. **Configure unmixing parameters**  
-   Select preprocessing, normalization, wavelength handling, and the unmixing algorithm.
+   Select preprocessing, normalization, wavelength handling (with the "Band selection" button in Spectra tab), and the unmixing algorithm.
 
 5. **Add job to queue and run**  
    Launch one or several unmixing jobs and monitor their execution.
 
 6. **Visualize abundance maps**  
-   Inspect spatial distributions of estimated abundances directly in the viewer.
+   Inspect spatial distributions of estimated abundances directly in the viewer. 
 
 7. **Save or reload results**  
    Export unmixing jobs to `.h5` files or reload previous results for comparison.
 
-### Tips & Notes
-- FTIR spectra are treated as **reference endmembers** and must be provided with wavelength information.
-- Only the **overlapping spectral range** between cube and FTIR spectra is used for unmixing.
-- Interpolation may smooth narrow FTIR features; prefer appropriate preprocessing if needed.
-- Mixing hyperspectral and FTIR endmembers is intended for **qualitative or semi-quantitative analysis**.
-- Testing multiple preprocessing and normalization settings is recommended when using heterogeneous spectral sources.
-- Saved unmixing jobs can be reloaded later without recomputing abundances.
-
 ---
-
 
 ## <img src="/interface/icons/illumination_icon.png" width="32" /> 8. Illumination Tool
 
