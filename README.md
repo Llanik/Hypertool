@@ -65,6 +65,13 @@ Upon launching the app (`python MainWindow.py` or via the packaged executable):
 - A **menu bar** lists all dockable tool windows under **Tools**.
 - Each tool is shown in a **dockable panel**, which can be undocked, resized, or made fullscreen.
 
+💡 **Getting started – Tooltips**
+
+Most tools in Hyperdoc provide **detailed tooltips** describing parameters, algorithms, and expected behavior.  
+Tooltips can be **enabled or disabled globally** using the **“Show tooltips” button in the main toolbar**.
+This option is especially useful when discovering a new tool or unfamiliar parameters, and can be turned off at any time for a cleaner interface.
+
+
 ### Main Tools
 | Tool | Description |
 |------|--------------|
