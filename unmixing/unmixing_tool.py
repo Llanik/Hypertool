@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import sys
 import os
 import numpy as np
@@ -51,7 +50,7 @@ class SelectEMDialog(QDialog):
     Table with 3 columns: Name | Color | Select
     + a 'Select all/none' checkbox, Cancel, and Add Selected.
     """
-    def __init__(self, parent, rows, get_name, get_rgb,checked=True):
+    def __init__(self, parent, rows, get_name, get_rgb,checked=False):
         super().__init__(parent)
         self.setWindowTitle("Add Endmembers to Library")
         self.resize(520, 420)
@@ -695,6 +694,7 @@ class AbundanceGalleryWindow(QDialog):
         # Force une mise à jour du layout/viewport
         self.inner.updateGeometry()
         self.scroll.viewport().update()
+
     def _em_index_for_job(self, job, em_name):
         """
         Trouve l'index d'endmember pour un job à partir du nom 'base'
@@ -1455,10 +1455,10 @@ class UnmixWorker(QRunnable):
             for lab in self.job.labels:
                 print(lab)
 
-
         except Exception as e:
             tb = traceback.format_exc()
             self.signals.error.emit(f"Unmixing failed: {e}\n{tb}")
+
 # ------------------------------- Main Widget ----------------------------------
 class UnmixingTool(QWidget,Ui_GroundTruthWidget):
 
@@ -3130,7 +3130,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             # Recuperar handles y labels actuales
             handles, labels = self.spec_ax.get_legend_handles_labels()
             if not labels:
-                print('No Labels')
+                print('No Labels in the spectral graph')
                 return
 
             # Siempre limpiamos cualquier " | a=..." previo
@@ -4826,7 +4826,7 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             em_to_add = self._as_LxK(Aligned, L)
 
             # --- Merge by CLASS NAME (not by integer key!) ----------------------
-            name_manual = self.class_info_manual[key][1]
+            name_manual = self.get_class_name(key, src="manual")
             color_manual = self.class_info_manual[key][2]
 
             # find existing class id in library by NAME
@@ -6486,130 +6486,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         finally:
             cb.blockSignals(was_blocked)
 
-    def _maybe_adjust_preprocess_for_irregular_grid(self, job, wl_job, band_mask):
-        """
-        Si le job est en dérivée Savitzky–Golay et que wl_job est très irrégulier
-        (cas typique VNIR+SWIR+FTIR fusionné sur toute la plage),
-        proposer 3 options :
-          1) désactiver Savitzky–Golay (raw),
-          2) garder la dérivée,
-          3) rééchantillonner cube + EM sur une grille régulière et garder Savitzky–Golay.
-        """
-        import numpy as _np
-        from PyQt5.QtWidgets import QMessageBox
-
-        pre = (getattr(job, "preprocess", "raw") or "raw").lower()
-        if pre not in ("deriv1", "deriv2"):
-            return
-
-        # On ne se préoccupe que du cas "tout le spectre"
-        full_range = (band_mask is None)
-        if (band_mask is not None) and _np.all(band_mask):
-            full_range = True
-
-        # Indice simple : on a fusionné du FTIR ?
-        has_ftir = getattr(self, "_last_ftir_wl", None) is not None
-
-        if not (full_range and has_ftir):
-            # L'utilisateur a déjà restreint à une sous-plage, ou pas de FTIR
-            return
-
-        wl = _np.asarray(wl_job, dtype=float)
-        if wl.size < 3:
-            return
-
-        diffs = _np.diff(wl)
-        diffs = diffs[_np.isfinite(diffs)]
-        if diffs.size < 2:
-            return
-
-        dmin = float(_np.min(diffs))
-        dmax = float(_np.max(diffs))
-        if dmin <= 0:
-            return
-
-        ratio = dmax / dmin
-        if ratio < 2.0:
-            # grille "assez régulière" -> on laisse Savitzky–Golay tranquille
-            return
-
-        # --- Grille très irrégulière sur toute la plage VNIR+SWIR+FTIR ---
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Warning)
-        msg.setWindowTitle("Savitzky–Golay sur VNIR+SWIR+FTIR irrégulier")
-        msg.setText(
-            "Tu as choisi une dérivée Savitzky–Golay (1ᵉ ou 2ᵉ) sur un spectre "
-            "VNIR+SWIR+FTIR fusionné dont les longueurs d’onde sont très irrégulières.\n\n"
-            "Dans ce cas, la dérivée peut être physiquement trompeuse."
-        )
-        msg.setInformativeText(
-            "Que veux-tu faire pour CE job ?\n\n"
-            " • Désactiver Savitzky–Golay et utiliser les spectres bruts (recommandé),\n"
-            " • Garder la dérivée telle quelle,\n"
-            " • Rééchantillonner cube + EM sur une grille régulière (5 nm)\n"
-            "   et garder Savitzky–Golay."
-        )
-
-        btn_disable = msg.addButton("Désactiver Savitzky–Golay (raw)", QMessageBox.AcceptRole)
-        btn_keep = msg.addButton("Garder la dérivée telle quelle", QMessageBox.DestructiveRole)
-        btn_resample = msg.addButton("Rééchantillonner (5 nm) + garder SG", QMessageBox.ActionRole)
-        msg.setDefaultButton(btn_disable)
-
-        msg.exec_()
-        clicked = msg.clickedButton()
-
-        if clicked is btn_disable:
-            # 1) On force ce job en 'raw'
-            job.preprocess = "raw"
-            if isinstance(getattr(job, "params", None), dict):
-                job.params["preprocess"] = "raw"
-            # (éventuellement mettre à jour la table)
-            self._refresh_table()
-            return
-
-        if clicked is btn_keep:
-            # 2) Ne rien changer : grille irrégulière + Savitzky–Golay => l'utilisateur assume
-            return
-
-        if clicked is btn_resample:
-            # 3) Rééchantillonner cube + EM sur une grille régulière (5 nm) pour CE job
-
-            try:
-                # On travaille sur job.cube (H, W, L_job) et job.E (L_job, p)
-                cube = job.cube
-                E = job.E
-                wl = wl_job
-
-                # 3.a) Rééchantillonnage du cube sur une grille régulière
-                cube_rs, wl_reg = resample_spectra_to_regular_grid(
-                    cube,
-                    wl,
-                    step_nm=5.0,
-                    axis=2,  # axe spectral du cube
-                )
-
-                # 3.b) Rééchantillonnage des endmembers sur la même grille
-                E_rs, _ = resample_spectra_to_regular_grid(
-                    E,
-                    wl,
-                    step_nm=5.0,
-                    axis=0,  # axe spectral des EM
-                )
-
-                job.cube = cube_rs
-                job.E = E_rs
-                job.wl_job = wl_reg
-                # wl_cube reste la grille originale du cube, pour métadonnées
-                # On peut garder job.preprocess = 'deriv1'/'deriv2'
-
-                # Optionnel : garder une trace
-                job.regular_grid_step_nm = 5.0
-
-            except Exception as e:
-                print("[UNMIXING] Rééchantillonnage en grille régulière a échoué :", e)
-                # En cas de problème, on ne change rien d'autre
-                return
-
     def _on_start_all(self):
         if not self.job_order: return
         self._stop_all = False
@@ -7099,6 +6975,9 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             self._refresh_abundance_view()
 
     # -- Job error UI ----------------------------------------------------
+    def _raise_in_gui_thread(exc: Exception):
+        raise exc
+
     def _on_unmix_error(self, name: str, message: str):
         job = self.jobs.get(name)
         print(f'[UNMIXING ERROR] with {name}')
@@ -7114,6 +6993,8 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
             except Exception:
                 job.duration_s = None
             self._update_row_from_job(name)
+            full_msg = f"Unmixing failed for job '{name}':\n{message}"
+            QTimer.singleShot(0, lambda: self._raise_in_gui_thread(RuntimeError(full_msg)))
 
         # >>> Libère et enchaîne
         self._current_worker = None

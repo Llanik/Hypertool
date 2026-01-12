@@ -72,7 +72,7 @@ class Ui_Dialog(object):
         self.gridLayout.addWidget(self.pushButton_remove_cube_2, 3, 3, 1, 1)
         self.pushButton_valid = QtWidgets.QPushButton(self.frame)
         self.pushButton_valid.setObjectName("pushButton_valid")
-        self.gridLayout.addWidget(self.pushButton_valid, 6, 0, 1, 1)
+        self.gridLayout.addWidget(self.pushButton_valid, 6, 0, 1, 4)
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 6)
         self.gridLayout.setColumnStretch(2, 1)

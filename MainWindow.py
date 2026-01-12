@@ -1103,7 +1103,7 @@ def check_resolution_change():
 
 if __name__ == "__main__":
 
-    # sys.excepthook = excepthook #set the exception handler
+    sys.excepthook = excepthook #set the exception handler
 
     app = QtWidgets.QApplication(sys.argv)
 
@@ -1117,10 +1117,13 @@ if __name__ == "__main__":
     main = MainApp()
     main.show()
 
-    folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
-    fname = '00189-VNIR-mock-up.h5'
-    filepath = os.path.join(folder, fname)
-    main._on_add_cube([filepath,filepath.replace('189','191')])
+    try :
+        folder = r'C:\Users\Usuario\Documents\DOC_Yannick\HYPERDOC Database_TEST\Samples\minicubes/'
+        fname = '00189-VNIR-mock-up.h5'
+        filepath = os.path.join(folder, fname)
+        main._on_add_cube([filepath,filepath.replace('189','191')])
+    except:
+        pass
 
     try:
         import matlab.engine
