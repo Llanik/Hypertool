@@ -6,7 +6,7 @@
 
 ## 📚 Table of Contents
 [Overview](#-overview)  
-[Key Features](#-key-features)  
+[Key Features and formats](#-key-features)  
 [1. Metadata Tool](#-1-metadata-tool)  
 [2. Data Visualization Tool](#-2-data-visualization-tool)  
 [3. Registration Tool](#-3-registration-tool)  
