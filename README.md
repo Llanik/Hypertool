@@ -69,11 +69,11 @@ Hyperdoc can load hyperspectral cubes from **.h5 / .hdf5**, **.mat**, and **ENVI
 
 - **MATLAB (.mat)**  
  Hyperdoc can load `.mat` files containing standard numeric arrays with the following names:
-- **`DataCube`**  
+  - **`DataCube`**  
   Hyperspectral cube, typically stored as `(bands, lines, samples)`
-- **`wl`**  
+  - **`wl`**  
   Wavelength vector (nm)
-- **`metadata`** *(optional)*  
+  - **`metadata`** *(optional)*  
   MATLAB struct containing acquisition or experimental metadata
 
 Files saved as serialized MATLAB **`hypercube` objects** (Hyperspectral Imaging Toolbox)
