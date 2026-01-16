@@ -4,11 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="update suggestions to google form">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[Register] : change method for savename generation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/register_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/register_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/illumination_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interface/some_widget_for_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,14 +138,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00133" summary="[IDENTIFICATION] : &#10;- load_map added">
-      <option name="closed" value="true" />
-      <created>1763643301067</created>
-      <option name="number" value="00133" />
-      <option name="presentableId" value="LOCAL-00133" />
-      <option name="project" value="LOCAL" />
-      <updated>1763643301067</updated>
     </task>
     <task id="LOCAL-00134" summary="[UNMIXING] : &#10;- One spectrum IR.&#10;- check if cm-1 o nm">
       <option name="closed" value="true" />
@@ -530,7 +523,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768408085712</updated>
     </task>
-    <option name="localTasksCounter" value="182" />
+    <task id="LOCAL-00182" summary="[Register] : change method for savename generation">
+      <option name="closed" value="true" />
+      <created>1768542488343</created>
+      <option name="number" value="00182" />
+      <option name="presentableId" value="LOCAL-00182" />
+      <option name="project" value="LOCAL" />
+      <updated>1768542488343</updated>
+    </task>
+    <option name="localTasksCounter" value="183" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -582,7 +583,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[UNMIX] : &#10;- show all zoom memory&#10;- selected_band realy active in job ! &#10;- visualisation et sauvegarde des bandes selectionnées pour le job&#10;-" />
     <MESSAGE value="[UNMIX] : &#10;- added possibility to duplicate jobs (to change bands)" />
     <MESSAGE value="[UNMIX] : &#10;- added possibility to duplicate jobs (to change bands)&#10;- checkbox for job bands&#10;- bugg fixed for lauch selected&#10;- added job reinit" />
     <MESSAGE value="[UNMIX] : &#10;- small changes in ui&#10;- added save pixel abudances map on write clic" />
@@ -607,6 +607,7 @@
     <MESSAGE value="[UNMIXING]&#10;- Label problem on add manual fixed (it seems to)&#10;- added traceback sended to gui in job error" />
     <MESSAGE value="update" />
     <MESSAGE value="update suggestions to google form" />
-    <option name="LAST_COMMIT_MESSAGE" value="update suggestions to google form" />
+    <MESSAGE value="[Register] : change method for savename generation" />
+    <option name="LAST_COMMIT_MESSAGE" value="[Register] : change method for savename generation" />
   </component>
 </project>

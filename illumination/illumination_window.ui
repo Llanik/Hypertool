@@ -151,13 +151,10 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_Illuminant">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select illuminant.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
+            <item row="5" column="0" colspan="2">
+             <widget class="QPushButton" name="pushButton_Compute">
               <property name="text">
-               <string>Illuminant</string>
+               <string>Compute RGB Image</string>
               </property>
              </widget>
             </item>
@@ -168,6 +165,16 @@
               </property>
               <property name="text">
                <string>D</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_Illuminant">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select illuminant.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Illuminant</string>
               </property>
              </widget>
             </item>

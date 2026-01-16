@@ -141,9 +141,10 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
         self.comboBox_Illuminant.addItems(self.illuminants_dict.keys())
         self.comboBox_Illuminant.setCurrentText("D65")
 
-        self.comboBox_Illuminant.currentIndexChanged.connect(self.update_image)
-        self.doubleSpinBox_Gamma.valueChanged.connect(self.update_image)
-        self.doubleSpinBox_D.valueChanged.connect(self.update_image)
+        # self.comboBox_Illuminant.currentIndexChanged.connect(self.update_image)
+        # self.doubleSpinBox_Gamma.valueChanged.connect(self.update_image)
+        # self.doubleSpinBox_D.valueChanged.connect(self.update_image)
+        self.pushButton_Compute.clicked.connect(self.update_image)
 
         # Connect widget signals
         self.load_btn.clicked.connect(lambda : self.on_load_cube())
@@ -183,12 +184,26 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
         self.load_cube(cube_info,filepath,cube)
         if self.cube is None:
             return
+
         if self.wl[0] > 400 or self.wl[-1] < 780:
             QMessageBox.warning(self, "Problem with illumination tool", "The loaded cube can not be used in illumination tool.\nThe reflectance range must include 400–780 nm to be used in illumination tool.")
             self.cube = None
             self.image_rgb = None
             return
-        self.rgb_from_illuminant()
+        dlg = LoadingDialog(
+            message="Computing illumination adaptation. This may take up to one minute. Please wait.",
+            parent=self,
+            cancellable=False,
+            busy_text="Please wait…",
+        )
+        dlg.show()
+        QApplication.processEvents()
+
+        try:
+            self.rgb_from_illuminant()
+        finally:
+            dlg.close()
+
         self.show_image()
 
     def show_image(self):
@@ -198,7 +213,21 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
     def update_image(self):
         if self.cube is None:
             return
-        self.rgb_from_illuminant()
+        dlg = LoadingDialog(
+            message="Computing illumination adaptation. This may take up to one minute. Please wait.",
+            parent=self,
+            cancellable=False,
+            busy_text="Please wait…",
+        )
+        dlg.show()
+
+        QApplication.processEvents()
+
+        try:
+            self.rgb_from_illuminant()
+        finally:
+            dlg.close()
+
         self.show_image()
 
     def rgb_from_illuminant(self):
@@ -360,7 +389,30 @@ class IlluminationWidget(QWidget, Ui_IlluminationWidget):
 
         self.cube = cube
         self.data = self.cube.data
-        self.wl = self.cube.wl
+        self.wl =  np.squeeze(self.cube.wl)
+        self.wl = self.wl.ravel()
+
+        H, W, B = self.data.shape
+        n_pixels = H * W
+
+        PIX_WARN = 300*300
+
+        if n_pixels >= PIX_WARN:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)
+            msg.setWindowTitle("Large cube detected")
+            msg.setText("This cube is large.")
+            msg.setInformativeText(
+                f"Size: {W} x {H} pixels ({n_pixels:,} pixels), {B} bands.\n\n"
+                "Illumination adaptation can be very slow on large cubes, especially if you adjust parameters.\n\n"
+                "Tip: consider using the Minicube tool to extract a smaller region before running illumination.\n\n"
+                "Do you want to continue?"
+            )
+            msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            msg.setDefaultButton(QMessageBox.Cancel)
+
+            if msg.exec_() != QMessageBox.Ok:
+                return
 
         if self.wl[-1] < 1100 and self.wl[0] > 350:
             self.hyps_rgb_chan_DEFAULT = [610, 540, 435]

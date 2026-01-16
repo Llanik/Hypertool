@@ -405,6 +405,7 @@ class LoadingDialog(QDialog):
             return
         super().closeEvent(event)
 
+
 class LoadCubeSignals(QObject):
     started = pyqtSignal()
     finished = pyqtSignal(object)   # Hypercube
