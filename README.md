@@ -5,55 +5,65 @@
 ---
 
 ## 📚 Table of Contents
-[Overview](#-overview)  
-[Key Features and formats](#-key-features)  
-[1. Metadata Tool](#-1-metadata-tool)  
+[Launching the Application and Overview](#launching)  
+[1. Minicube Extract Tool](#-1-minicube-extract-tool)  
 [2. Data Visualization Tool](#-2-data-visualization-tool)  
 [3. Registration Tool](#-3-registration-tool)  
 [4. Ground Truth Tool](#-4-ground-truth-tool)  
-[5. Minicube Extract Tool](#-5-minicube-extract-tool)  
+[5. Metadata Tool](#-5-metadata-tool)  
 [6. Identification Tool](#-6-identification-tool)  
 [7. Unmixing Tool](#-7-unmixing-tool)  
 [8. Illumination Tool](#-8-illumination-tool)  
 [9. HDF5 / File Browser](#-9-hdf5--file-browser)  
 [10. White Calibration Window](#-10-white-calibration-window)  
-[Cube Management and Synchronization](#-cube-management-and-synchronization)  
-[Tips & Tricks](#-tips--tricks)  
-[Launching the Application](#-launching-the-application)
 [Authors & Credits](#-authors--credits)  
 [License](#-license)
 
-## 🧭 Overview
 
-Hypertool integrates multiple processing modules ("tools") into a single workspace. Each tool is accessible through dockable panels and shares a common cube and metadata manager.
+<a id="launching"></a>
+## 🧑‍💻 Launching the Application and Overview
 
-Supported formats include **MATLAB (.mat)**, **HDF5 (.h5)**, and **ENVI (.hdr)**.
+**(Add link to video)**
 
----
+The simplest way for windows : 
+- Dowload the .zip file at this adress : **(Add link to formulario de descarga)**
+- Extract it on your disk
+- Lauch the .exe file
 
-## ✨ Key Features
 
-Load and manage multiple hyperspectral cubes simultaneously
+```bash
+# From your project root
+git clone https://github.com/yourusername/Hypertool.git
+cd Hypertool
+python install_requirements.py
+python MainWindow.py
+```
 
-Advanced visualization (RGB, grayscale, spectra, GT overlay)
+Upon launching the app (`python MainWindow.py` or via the packaged executable):
 
-Precise VNIR–SWIR registration
+- A **toolbar** provides quick access to all tools.
+- Each tool is shown in a **dockable panel**, which can be undocked, resized, or made fullscreen (⛶ button).
+- Ctrl+scroll or drag to zoom/pan viewers
 
-Ground truth creation & class labelling
+Most tools in Hyperdoc provide **detailed tooltips** describing parameters, algorithms, and expected behavior.  
+Tooltips can be **enabled or disabled globally** using the **“Show tooltips” button in the main toolbar**.
+This option is especially useful when discovering a new tool or unfamiliar parameters, and can be turned off at any time for a cleaner interface.
 
-Minicube extraction with editable metadata
 
-Endmember extraction & spectral 
+### Main Tools
+| Tool | Description |
+|------|--------------|
+| <img src="/interface/icons/minicube_icon.svg" width="32" /> **Minicube Extract** | Select and extract subcubes from a larger hyperspectral cube. |
+| <img src="/interface/icons/icon_data_viz.svg" width="32" /> **Data Visualization** | Display RGB composites, spectra, and Ground Truth overlays. |
+| <img src="/interface/icons/registration_icon.svg" width="32" /> **Registration** | Align VNIR and SWIR cubes spatially. |
+| <img src="/interface/icons/GT_icon_1.png" width="32" /> **Ground Truth** | Create and manage labeled maps for supervised learning. |
+| <img src="/interface/icons/metadata_icon.svg" width="26" /> **Metadata** | View and edit metadata associated with hyperspectral cubes. |
+| <img src="/interface/icons/illumination_icon.png" width="32" /> **Illumination** | Visualize reflectance under different light sources. |
+| <img src="/interface/icons/Ident_icon.png" width="32" /> **Identification** | Classify pixels using ML models (KNN, SVM, CNN, etc.). |
+| <img src="/interface/icons/unmixing_icon.png" width="32" /> **Unmixing** | Get relative abundance of each selected endmembers at each pixel of your hypercube. |
 
-Synchronized abundance map gallery
+All modules interact through the shared **HypercubeManager**, ensuring synchronization of loaded cubes and metadata updates.
 
-Machine learning classification (KNN, SVM, LDA, CNN, RF…)
-
-Illumination modeling (render RGB under D65, A, F2, etc.)
-
-Full HDF5 explorer to load unknown file structures
-
-White calibration (flat-field and reference panel workflows)
 
 ### Supported Hypercube File Formats (MATLAB / HDF5 / ENVI)
 
@@ -87,48 +97,16 @@ and `metadata` as standard MATLAB variables before saving.
 
 ---
 
-## 🖥️ Interface Overview
+## <img src="/interface/icons/minicube_icon.svg" width="32" /> 1. Minicube Extract Tool
 
-Upon launching the app (`python MainWindow.py` or via the packaged executable):
+**Purpose:** Select and extract smaller subcubes (regions of interest) from a full hyperspectral cube.
 
-- A **toolbar** provides quick access to all tools.
-- A **menu bar** lists all dockable tool windows under **Tools**.
-- Each tool is shown in a **dockable panel**, which can be undocked, resized, or made fullscreen.
-
-💡 **Getting started – Tooltips**
-
-Most tools in Hyperdoc provide **detailed tooltips** describing parameters, algorithms, and expected behavior.  
-Tooltips can be **enabled or disabled globally** using the **“Show tooltips” button in the main toolbar**.
-This option is especially useful when discovering a new tool or unfamiliar parameters, and can be turned off at any time for a cleaner interface.
-
-
-### Main Tools
-| Tool | Description |
-|------|--------------|
-| <img src="/interface/icons/metadata_icon.svg" width="26" /> **Metadata** | View and edit metadata associated with hyperspectral cubes. |
-| <img src="/interface/icons/icon_data_viz.svg" width="32" /> **Data Visualization** | Display RGB composites, spectra, and Ground Truth overlays. |
-| <img src="/interface/icons/registration_icon.svg" width="32" /> **Registration** | Align VNIR and SWIR cubes spatially. |
-| <img src="/interface/icons/GT_icon_1.png" width="32" /> **Ground Truth** | Create and manage labeled maps for supervised learning. |
-| <img src="/interface/icons/minicube_icon.svg" width="32" /> **Minicube Extract** | Select and extract subcubes from a larger hyperspectral cube. |
-| <img src="/interface/icons/illumination_icon.png" width="32" /> **Illumination** | Visualize reflectance under different light sources. |
-| <img src="/interface/icons/Ident_icon.png" width="32" /> **Identification** | Classify pixels using ML models (KNN, SVM, CNN, etc.). |
-| <img src="/interface/icons/unmixing_icon.png" width="32" /> **Unmixing** | Get relative abundance of each selected endmembers at each pixel of your hypercube. |
-
-
-All modules interact through the shared **HypercubeManager**, ensuring synchronization of loaded cubes and metadata updates.
-
----
-
- ## <img src="/interface/icons/metadata_icon.svg" width="26" /> 1. Metadata Tool
-
-**Purpose:** Inspect, edit, and generate metadata for a loaded cube.
-
-### Main Actions
-- Browse cube metadata via dropdown.
-- Enable **Edit Mode** to modify values.
-- Validate changes with **Validate** or **Validate All**.
-- Generate new metadata or copy from another cube.
-- Add or remove fields dynamically.
+### Steps
+1. Load a cube.
+2. Adjust RGB or grayscale visualization.
+3. Draw a rectangular region with the **right click** of the mouse.
+4. Click **Save Minicube**.
+5. Edit metadata before saving if needed.
 
 ---
 
@@ -139,33 +117,26 @@ All modules interact through the shared **HypercubeManager**, ensuring synchroni
 ### Features
 - Load VNIR/SWIR cubes (auto-detect pairs).
 - Display RGB composites or grayscale.
-- Overlay Ground Truth (GT) masks.
+- Overlay Ground Truth (GT) masks if exists.
 - Show spectra (mean and standard deviation) interactively.
-- Flip or rotate images for alignment.
-
-### Workflow
-1. Click **Open Hypercube** to load a `.mat`, `.h5`, or `.hdr` cube.
-2. If both VNIR & SWIR are present, they are auto-paired.
-3. Adjust RGB channels via sliders or presets.
-4. Load a Ground Truth PNG (`_GT.png`) if available.
-5. Modify transparency to compare GT overlay.
-
+- Visualize metadata.
 ---
 
 ## <img src="/interface/icons/registration_icon.svg" width="32" /> 3. Registration Tool
 
 **Purpose:** Align two hyperspectral cubes (e.g., VNIR and SWIR) spatially.
 
-### Workflow
+### Steps
 1. Load a **Fixed Cube** and a **Moving Cube**.
-2. Choose the registration method: ORB, AKAZE, or SIFT.
-3. Optionally crop regions for feature matching.
+2. Choose the registration method: ORB or AKAZE.
+3. Optionally crop regions for feature matching (only for images that have local big differences).
 4. Detect features and compute transformation.
 5. Inspect overlays (color blend or checkerboard).
-6. Save the aligned cube for future processing.
+6. If needed : modify/suppres/select features to keep and launch re-register. 
+7. Save the aligned cube (or both cubes) for future processing.
 
 ### Tips
-- Enable *Auto-load complementary cube* to automatically find the VNIR/SWIR pair.
+- Enable *Auto-load complementary cube* to automatically find the VNIR/SWIR pair if exist (_VNIR of _SWIR suffix in filename is needed).
 - The aligned cube can serve as the parent for further minicube extraction.
 
 ---
@@ -181,43 +152,32 @@ All modules interact through the shared **HypercubeManager**, ensuring synchroni
 - Save Ground Truth as PNG or matrix.
 - Compute average spectra per class.
 
-### Tips
-- Toggle transparency to inspect GT overlay.
-- Merge or reassign classes interactively.
-- Use **Live Spectra** mode to preview pixel spectrum.
+---
+
+ ## <img src="/interface/icons/metadata_icon.svg" width="26" /> 5. Metadata Tool
+
+**Purpose:** Inspect, edit, and generate metadata for a loaded cube.
+
+### Main Actions
+- Enable **Edit Mode** to modify values.
+- Validate changes with **Validate** or **Validate All**.
+- Generate new metadata or copy from another cube.
+- Add or remove fields dynamically.
 
 ---
 
-## <img src="/interface/icons/minicube_icon.svg" width="32" /> 5. Minicube Extract Tool
-
-**Purpose:** Select and extract smaller subcubes (regions of interest) from a full hyperspectral cube.
-
-### Steps
-1. Load a cube.
-2. Adjust RGB or grayscale visualization.
-3. Draw a rectangular region with the mouse.
-4. Click **Save Minicube**.
-5. Edit metadata before saving.
-
----
 
 ## <img src="/interface/icons/Ident_icon.png" width="32" /> 6. Identification Tool
 
 **Purpose:** Perform spectral classification using trained machine learning models.
 
-### Features
-- Load VNIR + SWIR cubes (fused).
-- Run multiple classifiers (KNN, SVM, LDA, CNN, RDF, etc.).
+### Steps
+- Load VNIR + SWIR cubes (fused) using the VNIR/SWIR dialog.
+- Launch the ink/substrate binarization with the chosen algorithm and parameters.
+- Run multiple classifiers (KNN, SVM, LDA, CNN, RDF, etc.) by adding model to the job queue. If spectral range between the loaded cube and our database is different, a training step will be added.
 - Display classification maps per model.
 - Clean and post-process classification maps.
 - Save outputs as HDF5 or PNG with palette.
-
-### Workflow
-1. Load cubes using the VNIR/SWIR dialog.
-2. Add models to the job queue.
-3. Start classification or train new models.
-4. Review maps and performance.
-5. Save final results and metadata.
 
 ---
 
@@ -235,14 +195,13 @@ The tool is designed for exploratory analysis, material mapping, and comparison 
   - **Spectral libraries (CSV)**
   - **Manual selection** from image pixels or regions
   - **Automatic extraction** (e.g. ATGP, N-FINDR)
-  - **External spectra (FTIR)** imported as reference endmembers
 - Support for heterogeneous spectral domains:
   - Automatic wavelength range intersection
   - Interpolation of reference spectra onto cube wavelengths when required
 - Multiple unmixing strategies:
   - Least-squares based methods
-  - Constrained / iterative solvers with cost function. 
-- Spectral preprocessing options:
+  - Constrained / iterative solvers with cost function.
+- Spectral preprocessing :
   - Savgol filtered spectra
   - First or second spectral derivatives
   - L1 / L2 normalization
@@ -318,51 +277,6 @@ The tool is designed for exploratory analysis, material mapping, and comparison 
 
 ---
 
-## 💾 Cube Management and Synchronization
-
-- Every saved cube is tracked by the **Hypercube Manager**.
-- Metadata changes are propagated automatically to all tools.
-- The toolbar cube list updates dynamically.
-- Multiple cubes can be loaded simultaneously and switched via the cube dropdown.
-
----
-
-## 🧰 Tips & Tricks
-
-- Use the **toolbar icons** for one-click access to tools.
-- Docks can be detached, resized, or made fullscreen (⛶ button).
-- Ctrl+scroll or drag to zoom/pan viewers
-
----
-
-## 🧑‍💻 Launching the Application
-
-the simplest way for windows : 
-- Dowload the .zip file
-- Extract it on your disk
-- Lauch the .exe file
-
-
-```bash
-# From your project root
-git clone https://github.com/yourusername/Hypertool.git
-cd Hypertool
-python install_requirements.py
-python MainWindow.py
-```
-
-To build an executable:
-```bash
-pyinstaller --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch \
-  --icon="interface/icons/hyperdoc_logo_transparente.ico" \
-  --add-data "interface/icons:Hypertool/interface/icons" \
-  --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" \
-  --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth" \
-  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" \
-  MainWindow.py
-```
-
----
 
 ## 🧩 Authors & Credits
 
