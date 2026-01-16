@@ -118,7 +118,7 @@ and `metadata` as standard MATLAB variables before saving.
 
 **Purpose:** Display hyperspectral cubes and explore their spectral or spatial properties.
 
-### Features
+### Key Functions
 - Load VNIR/SWIR cubes (auto-detect pairs).
 - Display RGB composites or grayscale.
 - Overlay Ground Truth (GT) masks if exists.
@@ -162,7 +162,7 @@ and `metadata` as standard MATLAB variables before saving.
 
 **Purpose:** Inspect, edit, and generate metadata for a loaded cube.
 
-### Main Actions
+### Key Functions
 - Enable **Edit Mode** to modify values.
 - Validate changes with **Validate** or **Validate All**.
 - Generate new metadata or copy from another cube.
@@ -261,7 +261,7 @@ The tool is designed for exploratory analysis, material mapping, and comparison 
 
 **Purpose:** Inspect unknown HDF5 or MATLAB files and manually select the paths for data, wavelengths, and metadata.
 
-### Usage
+### Steps
 1. Open the **File Browser** dock.
 2. Explore file tree structure.
 3. Assign dataset paths to the cube, wavelength, and metadata.
