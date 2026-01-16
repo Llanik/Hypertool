@@ -1,6 +1,6 @@
 # Hyperdoc App — Hyperspectral Image Processing Suite
 
-<img src="/interface/icons/hyperdoc_logo_transparente.ico" width="32" /> **Hyperdoc App** is a modular PyQt5-based application designed for loading, visualizing, registering, segmenting, and classifying hyperspectral cubes (VNIR, SWIR, or combined). It provides a unified graphical interface to handle all stages of hyperspectral data analysis.
+<img src="/interface/icons/hyperdoc_logo_transparente.ico" width="32" /> **Hyperdoc App** is a modular PyQt5-based application designed for loading, visualizing, registering, segmenting, classifying and unmixing hyperspectral cubes (VNIR, SWIR, or combined). It provides a unified graphical interface to handle all stages of hyperspectral data analysis with or without the Hyperdoc database.
 
 ---
 
@@ -54,6 +54,36 @@ Illumination modeling (render RGB under D65, A, F2, etc.)
 Full HDF5 explorer to load unknown file structures
 
 White calibration (flat-field and reference panel workflows)
+
+### Supported Hypercube File Formats (MATLAB / HDF5 / ENVI)
+
+Hyperdoc can load hyperspectral cubes from **.h5 / .hdf5**, **.mat**, and **ENVI** files:
+
+- **HDF5 (.h5 / .hdf5)**  
+  Default Hyperdoc/HDF5 layout uses:
+  - Dataset: **`DataCube`** stored as *(bands, lines, samples)* and internally displayed as *(height, width, bands)*. In this convention, **lines** correspond to the image height (rows, Y axis) and **samples** correspond to the image width (columns, X axis).
+  - Metadata stored primarily in **HDF5 attributes** (file-level attributes).
+  - Wavelengths are stored as an attribute **`wl`** (when available and consistent with the cube band count).
+  - If some metadata fields cannot be stored as attributes, they may be written under **`meta/`** as datasets.  
+  If the file structure is non-standard, Hyperdoc opens the **HDF5 / File Browser** so you can manually select the data, wavelength, and metadata paths.
+
+- **MATLAB (.mat)**  
+ Hyperdoc can load `.mat` files containing standard numeric arrays with the following names:
+- **`DataCube`**  
+  Hyperspectral cube, typically stored as `(bands, lines, samples)`
+- **`wl`**  
+  Wavelength vector (nm)
+- **`metadata`** *(optional)*  
+  MATLAB struct containing acquisition or experimental metadata
+
+Files saved as serialized MATLAB **`hypercube` objects** (Hyperspectral Imaging Toolbox)
+may not expose these variables directly and therefore **may not be readable**.
+For maximum compatibility, users are encouraged to export `DataCube`, `wl`,
+and `metadata` as standard MATLAB variables before saving.
+
+- **ENVI (.hdr + binary data)**  
+  ENVI cubes are supported in the standard form: a **`.hdr` header** file associated with a binary file (`.img`, `.dat`, etc.).  
+  Wavelengths are read from the ENVI metadata fields **`wavelength`** (or **`wl`** if present). Saving in ENVI format produces a standard ENVI header and its associated binary data.
 
 ---
 
