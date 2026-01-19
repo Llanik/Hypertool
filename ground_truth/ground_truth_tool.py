@@ -221,15 +221,22 @@ class ZoomableGraphicsView (QGraphicsView):
             self.min_scale = self._scale_factor * 0.2
             self.max_scale = self._scale_factor * 200
 
-    def setImage(self, pixmap):
+    def setImage(self, pixmap, reset_view=False):
+        # Sauver la transform actuelle (si on veut la conserver)
+        old_transform = self.transform()
+
         self.scene().clear()
         self.pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene().addItem(self.pixmap_item)
         self.setSceneRect(QRectF(pixmap.rect()))
 
-        # reset zoom state
-        self.resetTransform()
-        self._scale_factor = 1.0
+        if reset_view:
+            self.resetTransform()
+            self._scale_factor = 1.0
+        else:
+            # Restaurer le zoom/pan courant
+            self.setTransform(old_transform)
+            self._scale_factor = self.transform().m11()
 
     def wheelEvent(self, event):
         if event.angleDelta().y() == 0:
@@ -1637,7 +1644,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
                 except:
                     print(cube.metadata["GTLabels"])
 
-        self.show_image(self.cube.cube_info.filepath)
+        self.show_image(self.cube.cube_info.filepath,first_show=True)
 
     def load_cube_info(self, ci: CubeInfoTemp):
         if not self.cube:
@@ -1686,7 +1693,7 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
 
         self.show_image()
 
-    def show_image(self, preview=False):
+    def show_image(self, preview=False,first_show=False):
         if self.data is None:
             return
 
@@ -1786,7 +1793,11 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
             self.viewer_left.setImage(self._np2pixmap(result))
             return
 
-        self.viewer_left.setImage(self._np2pixmap(self.current_composite))
+        if first_show:
+            self.viewer_left.setImage(self._np2pixmap(self.current_composite), reset_view=True)
+        else:
+            self.viewer_left.setImage(self._np2pixmap(self.current_composite), reset_view=False)
+
 
     def update_legend(self):
 
@@ -2159,7 +2170,6 @@ class GroundTruthWidget(QWidget, Ui_GroundTruthWidget):
         self.pushButton_erase_selected_pix.setChecked(False)
         self.checkBox_see_selection_overlay.setChecked(True)
         self.checkBox_seeGTspectra.setChecked(True)
-        self.live_cb.setChecked(True)
 
         # Clear legend layout
         while self.frame_legend.layout().count():

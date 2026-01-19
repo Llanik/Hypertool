@@ -374,3 +374,139 @@ NameError: name 'QDesktopServices' is not defined
 
 2026-01-14 12:04:07,498 - ERROR - User comment: Ole 
 
+2026-01-19 01:02:52,769 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1959, in run
+    self.update_spectra()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1496, in update_spectra
+    self.spec_ax.fill_between(
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\__init__.py", line 1521, in inner
+    return func(
+           ^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5716, in fill_between
+    return self._fill_between_x_or_y(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5701, in _fill_between_x_or_y
+    collection = mcoll.FillBetweenPolyCollection(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1340, in __init__
+    verts = self._make_verts(t, f1, f2, where)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1404, in _make_verts
+    self._validate_shapes(self.t_direction, self._f_direction, t, f1, f2)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1442, in _validate_shapes
+    raise ValueError(f"{name!r} is not 1-dimensional")
+ValueError: 'x' is not 1-dimensional
+
+2026-01-19 01:03:26,125 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 755, in eventFilter
+    self.update_spectra(x, y)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1496, in update_spectra
+    self.spec_ax.fill_between(
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\__init__.py", line 1521, in inner
+    return func(
+           ^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5716, in fill_between
+    return self._fill_between_x_or_y(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5701, in _fill_between_x_or_y
+    collection = mcoll.FillBetweenPolyCollection(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1340, in __init__
+    verts = self._make_verts(t, f1, f2, where)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1404, in _make_verts
+    self._validate_shapes(self.t_direction, self._f_direction, t, f1, f2)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1442, in _validate_shapes
+    raise ValueError(f"{name!r} is not 1-dimensional")
+ValueError: 'x' is not 1-dimensional
+
+2026-01-19 01:03:34,881 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 755, in eventFilter
+    self.update_spectra(x, y)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1496, in update_spectra
+    self.spec_ax.fill_between(
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\__init__.py", line 1521, in inner
+    return func(
+           ^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5716, in fill_between
+    return self._fill_between_x_or_y(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5701, in _fill_between_x_or_y
+    collection = mcoll.FillBetweenPolyCollection(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1340, in __init__
+    verts = self._make_verts(t, f1, f2, where)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1404, in _make_verts
+    self._validate_shapes(self.t_direction, self._f_direction, t, f1, f2)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1442, in _validate_shapes
+    raise ValueError(f"{name!r} is not 1-dimensional")
+ValueError: 'x' is not 1-dimensional
+
+2026-01-19 01:07:33,625 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 755, in eventFilter
+    self.update_spectra(x, y)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1496, in update_spectra
+    self.spec_ax.fill_between(
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\__init__.py", line 1521, in inner
+    return func(
+           ^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5716, in fill_between
+    return self._fill_between_x_or_y(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\axes\_axes.py", line 5701, in _fill_between_x_or_y
+    collection = mcoll.FillBetweenPolyCollection(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1340, in __init__
+    verts = self._make_verts(t, f1, f2, where)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1404, in _make_verts
+    self._validate_shapes(self.t_direction, self._f_direction, t, f1, f2)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\collections.py", line 1442, in _validate_shapes
+    raise ValueError(f"{name!r} is not 1-dimensional")
+ValueError: 'x' is not 1-dimensional
+
+2026-01-19 02:00:54,943 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 2000, in run
+    self.update_spectra()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1531, in update_spectra
+    b, g, r = self.class_colors[c]
+              ~~~~~~~~~~~~~~~~~^^^
+KeyError: 0
+
+2026-01-19 02:13:45,135 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1123, in open_label_table
+    self.class_win = LabelWidget(csv_path,self.class_info)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\GT_table_viz.py", line 189, in __init__
+    self.fill_label_box()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\GT_table_viz.py", line 251, in fill_label_box
+    gt_idx, gt_name, gt_color=dic[key]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 3)
+
+2026-01-19 02:15:39,758 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 1123, in open_label_table
+    self.class_win = LabelWidget(csv_path,self.class_info)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\GT_table_viz.py", line 189, in __init__
+    self.fill_label_box()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\GT_table_viz.py", line 251, in fill_label_box
+    gt_idx, gt_name, gt_color=dic[key]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 3)
+
+2026-01-19 11:21:02,601 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\ground_truth\ground_truth_tool.py", line 2173, in reset_all
+    self.live_cb.setChecked(True)
+    ^^^^^^^^^^^^
+AttributeError: 'GroundTruthWidget' object has no attribute 'live_cb'
+

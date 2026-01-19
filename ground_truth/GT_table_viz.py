@@ -248,8 +248,18 @@ class LabelWidget(QWidget):
 
         # Remplissage des lignes
         for key in dic:
-            gt_idx, gt_name, gt_color=dic[key]
-            # Col 0 : classe idx
+
+            val = dic[key]
+
+            if isinstance(val, dict):
+                gt_idx = val.get("idx", key)
+                gt_name = val.get("name", str(key))
+                gt_color = val.get("color", "#ffffff")
+            else:
+                val = list(val)
+                gt_idx = val[0] if len(val) > 0 else key
+                gt_name = val[1] if len(val) > 1 else str(key)
+                gt_color = val[2] if len(val) > 2 else "#ffffff"            # Col 0 : classe idx
             lbl = QLabel(str(key))
             lbl.setAlignment(Qt.AlignCenter)
             lbl.setFixedHeight(20)

@@ -391,6 +391,8 @@ class Hypercube:
                     with h5py.File(filepath, "r") as f:
 
                         self.wl = f["#refs#/d"][:].flatten()
+                        if self.wl.ndim > 1:
+                            self.wl = self.wl.squeeze()
                         raw = f["#refs#/c"][:]
                         self.data = np.transpose(raw, (2, 1, 0))
                         # rebuild metadata if any
@@ -434,6 +436,8 @@ class Hypercube:
                     mat_dict = loadmat(filepath)
                     self.data=mat_dict['DataCube']
                     self.wl=mat_dict['wl']
+                    if self.wl.ndim > 1:
+                        self.wl = self.wl.squeeze()
                     try :
                         metadata_struct=mat_dict['metadata'][0]
                         self.metadata={name: metadata_struct[name][0] for name in metadata_struct.dtype.names}
@@ -475,6 +479,8 @@ class Hypercube:
                             if self.cube_info.wl_path:
                                 wl_arr = mat_dict[self.cube_info.wl_path]
                                 self.wl = np.array(wl_arr).flatten() if wl_arr is not None else None
+                                if self.wl.ndim > 1:
+                                    self.wl = self.wl.squeeze()
                             else:
                                 self.wl = None
 
@@ -523,6 +529,8 @@ class Hypercube:
                         data, wl, meta = load_mat_file_with_matlab_obj(filepath)
                         self.data = data
                         self.wl = wl
+                        if self.wl.ndim > 1:
+                            self.wl = self.wl.squeeze()
                         self.metadata = meta
 
                         flag_loaded = True
@@ -539,6 +547,8 @@ class Hypercube:
                     self.data = np.transpose(raw, (2, 1, 0))
                     self.metadata = dict(f.attrs)
                     self.wl = self.metadata.get("wl")
+                    if self.wl.ndim > 1:
+                        self.wl = self.wl.squeeze()
 
                     self.cube_info.data_path = "DataCube"
                     self.cube_info.wl_path = "@wl"
@@ -575,6 +585,8 @@ class Hypercube:
                                 else:
                                     vals = f[wl_sel][:]
                                 self.wl = np.array(vals).flatten()
+                                if self.wl.ndim > 1:
+                                    self.wl = self.wl.squeeze()
                             else:
                                 self.wl = None
 
@@ -616,6 +628,7 @@ class Hypercube:
                 self.data = img.load().astype(np.float32)
 
                 wl = self.metadata.get('wavelength')
+
                 if wl is None:
                     wl=self.metadata.get('wl')
 
@@ -624,6 +637,9 @@ class Hypercube:
                     self.wl = np.array(wl_list, dtype=np.float32)
                 else:
                     self.wl = np.array(wl, dtype=np.float32) if wl is not None else None
+
+                if self.wl.ndim > 1:
+                    self.wl = self.wl.squeeze()
 
                 try:
                     self.metadata['reflectance_data_from']
@@ -678,6 +694,8 @@ class Hypercube:
             data, wl, meta = load_mat_file_with_engine(filepath)
             self.data = data
             self.wl = wl
+            if self.wl.ndim > 1:
+                self.wl = self.wl.squeeze()
             self.metadata = meta
             self.cube_info.data_shape = self.data.shape
             self.cube_info.filepath = filepath
@@ -815,6 +833,12 @@ class Hypercube:
                                 val=self.wl
                                 f.attrs[key] = val
                                 filtered_meta[key] = val
+
+                        if key == "GTLabels" and isinstance(val, (list, tuple)) and len(val) == 2:
+                            arr = np.array(val, dtype=object)  # shape (2, N)
+                            f.attrs.create(key, arr, dtype=str_dt)
+                            filtered_meta[key] = arr
+                            continue
 
                         else:
                             if isinstance(val, str):

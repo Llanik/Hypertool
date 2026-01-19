@@ -515,7 +515,6 @@ class MainApp(QtWidgets.QMainWindow):
         """
         Called when HDF5BrowserWidget OK is pressed.
         """
-
         self.hypercube_manager.metadata_updated.emit(updated_ci)
 
     def _add_dock(self, title, WidgetClass, area):

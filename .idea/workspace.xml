@@ -4,12 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[Register] : change method for savename generation">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GT] :&#10;- Clamp Zoom in local zoomable graphics view&#10;[Hypercube]&#10;- squeeze wl to have ndim=1 on loading">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/illumination/illumination_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/interface/some_widget_for_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/interface/some_widget_for_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ground_truth/GT_table_viz.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/GT_table_viz.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,22 +139,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00134" summary="[UNMIXING] : &#10;- One spectrum IR.&#10;- check if cm-1 o nm">
-      <option name="closed" value="true" />
-      <created>1763706364159</created>
-      <option name="number" value="00134" />
-      <option name="presentableId" value="LOCAL-00134" />
-      <option name="project" value="LOCAL" />
-      <updated>1763706364159</updated>
-    </task>
-    <task id="LOCAL-00135" summary="[HYPERCUBE] : &#10;- Added crop refletance to calibration&#10;- Added possibility of calibration without white in image&#10;- Checked for IQ camera (results, REFLECTANCE.hdr)">
-      <option name="closed" value="true" />
-      <created>1763721773797</created>
-      <option name="number" value="00135" />
-      <option name="presentableId" value="LOCAL-00135" />
-      <option name="project" value="LOCAL" />
-      <updated>1763721773797</updated>
     </task>
     <task id="LOCAL-00136" summary="[HYPERCUBE] : &#10;- Added loading other white file&#10;- Adde dark">
       <option name="closed" value="true" />
@@ -531,7 +516,23 @@
       <option name="project" value="LOCAL" />
       <updated>1768542488343</updated>
     </task>
-    <option name="localTasksCounter" value="183" />
+    <task id="LOCAL-00183" summary="[Ilumination] :&#10;Added message when processing&#10;added message on large cube&#10;added button to process">
+      <option name="closed" value="true" />
+      <created>1768568694232</created>
+      <option name="number" value="00183" />
+      <option name="presentableId" value="LOCAL-00183" />
+      <option name="project" value="LOCAL" />
+      <updated>1768568694233</updated>
+    </task>
+    <task id="LOCAL-00184" summary="[GT] :&#10;- Clamp Zoom in local zoomable graphics view&#10;[Hypercube]&#10;- squeeze wl to have ndim=1 on loading">
+      <option name="closed" value="true" />
+      <created>1768782275009</created>
+      <option name="number" value="00184" />
+      <option name="presentableId" value="LOCAL-00184" />
+      <option name="project" value="LOCAL" />
+      <updated>1768782275010</updated>
+    </task>
+    <option name="localTasksCounter" value="185" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -583,8 +584,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[UNMIX] : &#10;- added possibility to duplicate jobs (to change bands)" />
-    <MESSAGE value="[UNMIX] : &#10;- added possibility to duplicate jobs (to change bands)&#10;- checkbox for job bands&#10;- bugg fixed for lauch selected&#10;- added job reinit" />
     <MESSAGE value="[UNMIX] : &#10;- small changes in ui&#10;- added save pixel abudances map on write clic" />
     <MESSAGE value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update" />
     <MESSAGE value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update&#10;- modif matplotlib_toolbar and margen" />
@@ -608,6 +607,8 @@
     <MESSAGE value="update" />
     <MESSAGE value="update suggestions to google form" />
     <MESSAGE value="[Register] : change method for savename generation" />
-    <option name="LAST_COMMIT_MESSAGE" value="[Register] : change method for savename generation" />
+    <MESSAGE value="[Ilumination] :&#10;Added message when processing&#10;added message on large cube&#10;added button to process" />
+    <MESSAGE value="[GT] :&#10;- Clamp Zoom in local zoomable graphics view&#10;[Hypercube]&#10;- squeeze wl to have ndim=1 on loading" />
+    <option name="LAST_COMMIT_MESSAGE" value="[GT] :&#10;- Clamp Zoom in local zoomable graphics view&#10;[Hypercube]&#10;- squeeze wl to have ndim=1 on loading" />
   </component>
 </project>
