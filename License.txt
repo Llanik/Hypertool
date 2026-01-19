@@ -1,0 +1,25 @@
+Hyperdoc / HyperdocApp — Non-Commercial Academic License
+
+Copyright © 2025
+CIMLab / Hyperdoc Project Team
+
+Permission is hereby granted to access, use, modify, and redistribute
+this software and its source code solely for academic, research, and
+educational purposes.
+
+Commercial use of this software is strictly prohibited. This includes,
+but is not limited to, use within commercial companies or industrial
+environments, integration into commercial products or services, paid
+consulting, contract research, or redistribution as part of a
+commercial offering.
+
+There is no commercial license available for this software.
+
+Redistribution for non-commercial purposes is permitted, provided that
+this license notice and proper attribution to the authors are retained.
+
+This software is provided "as is", without warranty of any kind, express
+or implied, including but not limited to the warranties of
+merchantability, fitness for a particular purpose, and non-infringement.
+In no event shall the authors be liable for any claim, damages, or other
+liability arising from the use of the software.

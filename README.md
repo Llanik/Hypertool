@@ -2,6 +2,10 @@
 
 <img src="/interface/icons/hyperdoc_logo_transparente.ico" width="32" /> **Hyperdoc App** is a modular PyQt5-based application designed for loading, visualizing, registering, segmenting, classifying and unmixing hyperspectral cubes (VNIR, SWIR, or combined). It provides a unified graphical interface to handle all stages of hyperspectral data analysis with or without the Hyperdoc database.
 
+> **Open science notice**  
+> This project is source-available for academic, research, and educational use only.  
+> Commercial use is strictly prohibited.
+
 ---
 
 ## 📚 Table of Contents
@@ -33,7 +37,7 @@ The simplest way for windows :
 
 ```bash
 # From your project root
-git clone https://github.com/yourusername/Hypertool.git
+git clone https://github.com/llanick/Hypertool.git
 cd Hypertool
 python install_requirements.py
 python MainWindow.py
@@ -114,7 +118,7 @@ and `metadata` as standard MATLAB variables before saving.
 
 **Purpose:** Display hyperspectral cubes and explore their spectral or spatial properties.
 
-### Features
+### Key Functions
 - Load VNIR/SWIR cubes (auto-detect pairs).
 - Display RGB composites or grayscale.
 - Overlay Ground Truth (GT) masks if exists.
@@ -158,7 +162,7 @@ and `metadata` as standard MATLAB variables before saving.
 
 **Purpose:** Inspect, edit, and generate metadata for a loaded cube.
 
-### Main Actions
+### Key Functions
 - Enable **Edit Mode** to modify values.
 - Validate changes with **Validate** or **Validate All**.
 - Generate new metadata or copy from another cube.
@@ -257,7 +261,7 @@ The tool is designed for exploratory analysis, material mapping, and comparison 
 
 **Purpose:** Inspect unknown HDF5 or MATLAB files and manually select the paths for data, wavelengths, and metadata.
 
-### Usage
+### Steps
 1. Open the **File Browser** dock.
 2. Explore file tree structure.
 3. Assign dataset paths to the cube, wavelength, and metadata.
@@ -286,5 +290,9 @@ Developed by **CIMLab / Hyperdoc Project Team**.
 
 ## 📄 License
 
-MIT License © 2025 — CIMLab Hyperdoc Project.
+This project is released as **source-available software for academic, research, and educational use only**.
+
+Commercial use is strictly prohibited.
+
+See the `LICENSE.txt` file for full license terms.
 
