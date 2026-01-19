@@ -205,17 +205,47 @@ class ZoomableGraphicsView (QGraphicsView):
             self.setCursor(Qt.CrossCursor)
             self.viewport().setCursor(Qt.CrossCursor)
 
+        # zoom clamp
+        self._scale_factor = 1.0
+        self.min_scale = 0.2
+        self.max_scale = 100.0
+        self.zoom_step = 1.25
+
+    def fitImage(self, scale_factor=0.8):
+        if self.pixmap_item:
+            self.resetTransform()
+            self._scale_factor = 1.0
+            self.fitInView(self.pixmap_item, Qt.KeepAspectRatio)
+            self.scale(scale_factor, scale_factor)
+            self._scale_factor = self.transform().m11()
+            self.min_scale = self._scale_factor * 0.2
+            self.max_scale = self._scale_factor * 200
+
     def setImage(self, pixmap):
         self.scene().clear()
         self.pixmap_item = QGraphicsPixmapItem(pixmap)
         self.scene().addItem(self.pixmap_item)
         self.setSceneRect(QRectF(pixmap.rect()))
 
+        # reset zoom state
+        self.resetTransform()
+        self._scale_factor = 1.0
+
     def wheelEvent(self, event):
-        zoom_in_factor = 1.25
-        zoom_out_factor = 1 / zoom_in_factor
-        zoom = zoom_in_factor if event.angleDelta().y() > 0 else zoom_out_factor
+        if event.angleDelta().y() == 0:
+            return
+
+        zoom = self.zoom_step if event.angleDelta().y() > 0 else 1 / self.zoom_step
+        new_scale = self._scale_factor * zoom
+
+        if new_scale < self.min_scale:
+            return
+        if new_scale > self.max_scale:
+            return
+
         self.scale(zoom, zoom)
+        self._scale_factor = new_scale
+
 
     def enterEvent(self, event):
         super().enterEvent(event)
