@@ -1616,7 +1616,6 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         self._em_worker = None
         self._em_progress_dialog = None
 
-
         # Spectra window
         self.comboBox_endmembers_spectra.currentIndexChanged.connect(self.on_changes_EM_spectra_viz)
         self.checkBox_showLegend.toggled.connect(self.update_spectra)
@@ -2218,15 +2217,25 @@ class UnmixingTool(QWidget,Ui_GroundTruthWidget):
         """
         Renvoie (y, x, h, w) en indices numpy si un rectangle est sélectionné
         dans viewer_left, sinon None.
+
+        Important: si l'overlay affiché provient de saved_rec (fallback UI),
+        on l'utilise aussi ici.
         """
+        # 1) tentative : lire le rect réellement stocké par la ZoomableGraphicsView
         rc = getattr(self.viewer_left, "get_rect_coords", None)
-        if not callable(rc):
-            return None
-        coords = rc()
-        if coords is None:
-            return None
-        x_min, y_min, w, h = coords
-        return (y_min, x_min, h, w)
+        if callable(rc):
+            coords = rc()
+            if coords:
+                x_min, y_min, w, h = coords
+                return (int(y_min), int(x_min), int(h), int(w))
+
+        # 2) fallback : utiliser saved_rec si présent (même structure: (y,x,h,w))
+        rect_tuple = getattr(self, "saved_rec", None)
+        if rect_tuple:
+            y, x, h, w = rect_tuple
+            return (int(y), int(x), int(h), int(w))
+
+        return None
 
     def _current_roi_mask(self):
         """Construit un masque bool (H,W) à partir du rectangle sélectionné dans viewer_left.
