@@ -265,7 +265,7 @@ class Ui_GroundTruthWidget(object):
         self.scrollArea_3.setWidgetResizable(True)
         self.scrollArea_3.setObjectName("scrollArea_3")
         self.scrollAreaWidgetContents_3 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 198, 143))
+        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 198, 28))
         self.scrollAreaWidgetContents_3.setObjectName("scrollAreaWidgetContents_3")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_3)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
@@ -861,11 +861,7 @@ class Ui_GroundTruthWidget(object):
 "\n"
 "Remove the currently selected endmember spectrum from the active class/source."))
         self.pushButton_remove_EM.setText(_translate("GroundTruthWidget", "Remove endmembers"))
-        self.pushButton_wavenumber_to_wavelength.setToolTip(_translate("GroundTruthWidget", "Convert axis (FTIR)\n"
-"\n"
-"Convert the loaded FTIR spectrum axis for display:\n"
-"- Wavenumber (cm⁻¹) → Wavelength (nm), or the reverse.\n"
-"This is only a visualization aid; it does not change the cube."))
+        self.pushButton_wavenumber_to_wavelength.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Convert axis (FTIR)</p><p><br/></p><p>Convert FTIR spectra of a csv file from </p><p>Wavenumber (cm⁻¹) to Wavelength (nm).</p></body></html>"))
         self.pushButton_wavenumber_to_wavelength.setText(_translate("GroundTruthWidget", "Convert FTIR file"))
         self.label_selec_mode.setText(_translate("GroundTruthWidget", "Select mode"))
         self.pushButton_erase_selected_pix.setToolTip(_translate("GroundTruthWidget", "Erase selection\n"

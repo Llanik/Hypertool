@@ -428,11 +428,7 @@ Remove the currently selected endmember spectrum from the active class/source.</
                 <item>
                  <widget class="QPushButton" name="pushButton_wavenumber_to_wavelength">
                   <property name="toolTip">
-                   <string>Convert axis (FTIR)
-
-Convert the loaded FTIR spectrum axis for display:
-- Wavenumber (cm⁻¹) → Wavelength (nm), or the reverse.
-This is only a visualization aid; it does not change the cube.</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Convert axis (FTIR)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Convert FTIR spectra of a csv file from &lt;/p&gt;&lt;p&gt;Wavenumber (cm⁻¹) to Wavelength (nm).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="text">
                    <string>Convert FTIR file</string>
@@ -701,7 +697,7 @@ Normalization changes the relative scale of spectra, which can affect extraction
                    <x>0</x>
                    <y>0</y>
                    <width>198</width>
-                   <height>143</height>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_6">

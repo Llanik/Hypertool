@@ -592,3 +592,37 @@ Traceback (most recent call last):
     ~~~~~~~~~~~^^^^^^^^^^^^^
 TypeError: 'NoneType' object does not support item assignment
 
+2026-01-19 23:07:29,199 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 2554, in start_selected_job
+    self._launch_next_job()
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 2731, in _launch_next_job
+    self.load_classifier(job.trained_path)
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\identification\identification_tool.py", line 1744, in load_classifier
+    model=joblib.load(path)
+          ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\site-packages\joblib\numpy_pickle.py", line 650, in load
+    with open(filename, 'rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: "C:\\Users\\Usuario\\Documents\\GitHub\\Hypertool\\identification\\data\\model_['ink 3 classes']_3classes.joblib"
+
+2026-01-20 21:36:28,177 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\unmixing\unmixing_tool.py", line 6765, in <lambda>
+    worker.signals.error.connect(lambda msg, n=next_name: self._on_unmix_error(n, msg))
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\unmixing\unmixing_tool.py", line 6997, in _on_unmix_error
+    QTimer.singleShot(0, lambda: self._raise_in_gui_thread(RuntimeError(full_msg)))
+    ^^^^^^
+NameError: name 'QTimer' is not defined
+
+2026-01-21 10:37:55,387 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\unmixing\unmixing_tool.py", line 6765, in <lambda>
+    worker.signals.error.connect(lambda msg, n=next_name: self._on_unmix_error(n, msg))
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\unmixing\unmixing_tool.py", line 6997, in _on_unmix_error
+    QTimer.singleShot(0, lambda: self._raise_in_gui_thread(RuntimeError(full_msg)))
+    ^^^^^^
+NameError: name 'QTimer' is not defined
+

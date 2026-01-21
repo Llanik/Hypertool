@@ -4,12 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[GT] :&#10;- small buggs">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[identification] :&#10;- small buggs fixed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_tool.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_tool.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,14 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00137" summary="[HYPERCUBE] : &#10;- Modif in dark (for line flat field)">
-      <option name="closed" value="true" />
-      <created>1763962739208</created>
-      <option name="number" value="00137" />
-      <option name="presentableId" value="LOCAL-00137" />
-      <option name="project" value="LOCAL" />
-      <updated>1763962739208</updated>
     </task>
     <task id="LOCAL-00138" summary="[MINI CUBE] : &#10;- Bugg fixed with non classic spectral range for false rgb channels (float to int)">
       <option name="closed" value="true" />
@@ -531,7 +521,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768818169218</updated>
     </task>
-    <option name="localTasksCounter" value="186" />
+    <task id="LOCAL-00186" summary="[identification] :&#10;- small buggs fixed">
+      <option name="closed" value="true" />
+      <created>1768859154077</created>
+      <option name="number" value="00186" />
+      <option name="presentableId" value="LOCAL-00186" />
+      <option name="project" value="LOCAL" />
+      <updated>1768859154078</updated>
+    </task>
+    <option name="localTasksCounter" value="187" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -583,7 +581,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update" />
     <MESSAGE value="[UNMIX] : &#10;- cursor change to cross&#10;- save on pixel abundaces + metadata update&#10;- modif matplotlib_toolbar and margen" />
     <MESSAGE value="[UNMIX] : &#10;- fixing buggs and ui details" />
     <MESSAGE value="[UNMIX] : &#10;- tool_tips added" />
@@ -608,6 +605,7 @@
     <MESSAGE value="[Ilumination] :&#10;Added message when processing&#10;added message on large cube&#10;added button to process" />
     <MESSAGE value="[GT] :&#10;- Clamp Zoom in local zoomable graphics view&#10;[Hypercube]&#10;- squeeze wl to have ndim=1 on loading" />
     <MESSAGE value="[GT] :&#10;- small buggs" />
-    <option name="LAST_COMMIT_MESSAGE" value="[GT] :&#10;- small buggs" />
+    <MESSAGE value="[identification] :&#10;- small buggs fixed" />
+    <option name="LAST_COMMIT_MESSAGE" value="[identification] :&#10;- small buggs fixed" />
   </component>
 </project>
