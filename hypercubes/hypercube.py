@@ -43,27 +43,30 @@ class CubeInfoTemp:
     wl_trans:Optional[str]= None # if need to transpose wl dim from dim 1 to dim 3
 
     @property
-    def filepath(self):
+    def filepath(self) -> Optional[str]:
         return self._filepath
 
-    # protect filepath modification
-    def filepath(self, val):
-        # Normalise pour éviter que deux bouts de chaîne écrites différemment soient considérées différentes
+    @filepath.setter
+    def filepath(self, val: str):
+        if val is None:
+            self._filepath = None
+            return
+
+        # Normalize to avoid mismatches between equivalent paths
         old = Path(self._filepath).resolve() if self._filepath else None
         new = Path(val).resolve()
         if old != new:
-            # print(f"[DEBUG] Changing filepath from {self._filepath} to {val}")
-            self._filepath = val
+            self._filepath = str(new)
 
-    # because only one filepath for one cube...and one cube for one filepath, let's define the cubeInfo equality
     def __eq__(self, other):
         if not isinstance(other, CubeInfoTemp):
             return NotImplemented
+        if not self.filepath or not other.filepath:
+            return False
         return Path(self.filepath).resolve() == Path(other.filepath).resolve()
 
     def __hash__(self):
-        # if in dic or set
-        return hash(Path(self.filepath).resolve())
+        return hash(Path(self.filepath).resolve()) if self.filepath else hash(None)
 
 import numpy as np
 

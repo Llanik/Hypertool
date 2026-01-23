@@ -620,11 +620,27 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
                 st = f"The reference white used for reflectance measurement is : <br> <b>{raw}</b>"
 
             elif key == 'restored':
+
+
                 try:
+
                     txt = raw[0]
-                except:
+
+                except Exception:
+
                     txt = raw
-                    st = f"The sample has been restored ?  <br> <b> {['NO','YES'][txt]}</b>"
+
+                try:
+
+                    txt = int(txt)
+
+                except Exception:
+
+                    txt = 0
+
+                txt = 1 if txt != 0 else 0  # clamp binaire
+
+                st = f"The sample has been restored ?<br><b>{['NO', 'YES'][txt]}</b>"
 
             elif key == 'stage':
                 st = f"The capture was made with a  <b>{raw}</b> stage"
