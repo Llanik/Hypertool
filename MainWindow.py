@@ -691,11 +691,15 @@ class MainApp(QtWidgets.QMainWindow):
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
         hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
 
-        if show_tab:
-            self.meta_dock.raise_()
+        print("[SEND META] asked :", Path(filepath).resolve())
+        print("[SEND META] got ci:", Path(ci.filepath).resolve() if getattr(ci, "filepath", None) else None)
 
         widget.set_cube_info(ci)
         widget.update_combo_meta(init=True)
+
+        if show_tab:
+            self.meta_dock.raise_()
+
 
     def _send_to_gt(self,filepath,show_tab=True):
         widget = self.gt_dock.widget()

@@ -832,3 +832,17 @@ Traceback (most recent call last):
           ^^^^^^^^^^^^^
 AttributeError: 'MetadataTool' object has no attribute 'metadata'
 
+2026-01-25 07:37:16,964 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 221, in reset_metadatum
+    self.cube_info.metadata_temp[key] = self.meta_load[key]
+                                        ~~~~~~~~~~~~~~^^^^^
+KeyError: 'cubeinfo'
+
+2026-01-25 07:37:23,036 - ERROR - Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\GitHub\Hypertool\metadata\metadata_tool.py", line 221, in reset_metadatum
+    self.cube_info.metadata_temp[key] = self.meta_load[key]
+                                        ~~~~~~~~~~~~~~^^^^^
+KeyError: 'cubeinfo'
+

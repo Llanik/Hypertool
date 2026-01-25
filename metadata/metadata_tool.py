@@ -584,25 +584,8 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
         self.textEdit_metadata.setStyleSheet("QTextEdit  { color: black; }")
         key = (self.comboBox_metadata.currentText() or "").strip()
         if not key:
-            key = "cubeinfo"
-
-        # --- pseudo-key : cubeinfo (ne pas chercher dans metadata_temp) ---
-        if key.lower() == "cubeinfo":
-            ci = getattr(self, "cube_info", None)
-            if ci is None:
-                self.label_metadata.setText("<b>Cube info not available</b>")
-                return
-
-            st = (
-                f"<b>File:</b> {getattr(ci, 'filepath', '')}<br>"
-                f"<b>Type:</b> {getattr(ci, 'cube_type', '')}<br>"
-                f"<b>Sensor:</b> {getattr(ci, 'sensor', '')}<br>"
-            )
-            self.label_metadata.setText(st)
-            self.textEdit_metadata.setText(st.replace("<br>", "\n"))  # optionnel
             return
 
-        # --- accès robuste aux metadata temporaires ---
         meta = getattr(self.cube_info, "metadata_temp", {}) or {}
         raw = meta.get(key, None)
         if raw is None:

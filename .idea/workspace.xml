@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[illumination] :&#10;- small buggs fixed">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[data_viz and metadata] :&#10;- small buggs fixed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_vizualisation/data_vizualisation_tool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/log/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/log/error.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/metadata/metadata_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_tool.py" afterDir="false" />
     </list>
@@ -137,14 +137,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00142" summary="[UNMIX] : &#10;- ADD one FTIR spectrum to an hypercube OK&#10;- Select good sample if csv with multiple samples">
-      <option name="closed" value="true" />
-      <created>1764243956820</created>
-      <option name="number" value="00142" />
-      <option name="presentableId" value="LOCAL-00142" />
-      <option name="project" value="LOCAL" />
-      <updated>1764243956820</updated>
     </task>
     <task id="LOCAL-00143" summary="[UNMIX] : &#10;- added conversion tool from cm-1 to nm">
       <option name="closed" value="true" />
@@ -530,7 +522,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769243323960</updated>
     </task>
-    <option name="localTasksCounter" value="191" />
+    <task id="LOCAL-00191" summary="[data_viz and metadata] :&#10;- small buggs fixed">
+      <option name="closed" value="true" />
+      <created>1769279368655</created>
+      <option name="number" value="00191" />
+      <option name="presentableId" value="LOCAL-00191" />
+      <option name="project" value="LOCAL" />
+      <updated>1769279368655</updated>
+    </task>
+    <option name="localTasksCounter" value="192" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -582,7 +582,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[IDENTIFICATION] : &#10;- tool_tips added&#10;[GT] : &#10;- tab coherent&#10;[UNMIX] : &#10;- tab coherent" />
     <MESSAGE value="[GNL] : &#10;- tool_tips &#10;[REGISTRATION] : &#10;- fixed interferences rectangle_move keypoint" />
     <MESSAGE value="[GNL] : &#10;- global activation of tool_tips" />
     <MESSAGE value="[GNL] : &#10;- tool_tips" />
@@ -607,6 +606,7 @@
     <MESSAGE value="[unmixing] :&#10;- small buggs fixed" />
     <MESSAGE value="[metadata] :&#10;- small buggs fixed&#10;[fileBrowser] :&#10;- small buggs fixed" />
     <MESSAGE value="[illumination] :&#10;- small buggs fixed" />
-    <option name="LAST_COMMIT_MESSAGE" value="[illumination] :&#10;- small buggs fixed" />
+    <MESSAGE value="[data_viz and metadata] :&#10;- small buggs fixed" />
+    <option name="LAST_COMMIT_MESSAGE" value="[data_viz and metadata] :&#10;- small buggs fixed" />
   </component>
 </project>
