@@ -768,7 +768,7 @@ Controls blending between the hyperspectral RGB display and the GT class-color o
          <item>
           <widget class="QCheckBox" name="checkBox_live_spectra">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Live spectrum tracking&lt;/span&gt;&lt;br/&gt;When enabled, moving the mouse over the left image updates the pixel spectrum in real time (will disabled drag mode on cube representation).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Tip: middle-click toggles this checkbox when not in selection mode.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Live spectrum tracking&lt;/span&gt;&lt;br/&gt;When enabled, moving the mouse over the left image updates the pixel spectrum in real time (will disabled drag mode on cube representation).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;Tip: middle-click toggles this checkbox when not in selection mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string>Live</string>

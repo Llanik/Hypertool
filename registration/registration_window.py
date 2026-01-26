@@ -436,9 +436,7 @@ class Ui_MainWindow(object):
         self.pushButton_getFeatures.setToolTip(_translate("MainWindow", "Detect features\n"
 "Compute keypoints and matches between fixed and moving images (using the selected detector), then immediately runs registration using the current settings."))
         self.pushButton_getFeatures.setText(_translate("MainWindow", "Get features"))
-        self.checkBox_autorize_modify.setToolTip(_translate("MainWindow", "Authorize modifying registered cube\n"
-"Safety lock. This must be enabled to run feature detection / registration.\n"
-"Disabling it prevents further modifications and preserves the current “parent cube” logic used for minicube extraction."))
+        self.checkBox_autorize_modify.setToolTip(_translate("MainWindow", "<html><head/><body><p>Authorize modifying registered cube</p><p>Safety lock. This must be enabled to run feature detection / registration.</p></body></html>"))
         self.checkBox_autorize_modify.setText(_translate("MainWindow", "Autorize modifying registered cube"))
         self.transform_selector.setToolTip(_translate("MainWindow", "Transform model\n"
 "Choose the geometric model used to align the moving cube:\n"
@@ -457,20 +455,19 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">Matching Method</p></body></html>"))
         self.pushButton_register.setToolTip(_translate("MainWindow", "<html><head/><body><p>Register (apply transform)</p><p>Estimate the selected transform using the currently retained matches, warp the moving image, and warp every spectral band to build the aligned cube.</p></body></html>"))
         self.pushButton_register.setText(_translate("MainWindow", "Re-register"))
-        self.method_selector.setToolTip(_translate("MainWindow", "Feature detector\n"
-"Choose the OpenCV detector used to extract and match features: ORB, AKAZE, or SIFT."))
+        self.method_selector.setToolTip(_translate("MainWindow", "<html><head/><body><p>Feature detector</p><p>Choose the algorithm used to extract and match features.</p></body></html>"))
         self.method_selector.setItemText(0, _translate("MainWindow", "AKAZE"))
         self.method_selector.setItemText(1, _translate("MainWindow", "ORB"))
         self.groupBox_Visualization.setTitle(_translate("MainWindow", "Visualization"))
         self.label_3.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">features per packet</p></body></html>"))
         self.spinBox_keypointPerPacket.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Matches per page</span></p><p>Number of matches displayed at once when “View Matches” is selected.</p></body></html>"))
         self.label_5.setText(_translate("MainWindow", "Results view :"))
-        self.overlay_selector.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Aligned view mode</span></p><p><br/></p><p>Choose how the aligned result is displayed:</p><p><br/></p><p>Color: fixed vs aligned channel blend (pseudo-color overlay)</p><p><br/></p><p>Checkboard: alternating tiles from fixed and aligned</p><p><br/></p><p>View Matches: display match lines and indices</p><p><br/></p><p>Only aligned: show aligned image only</p></body></html>"))
+        self.overlay_selector.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Aligned view mode</span></p><p>Choose how the aligned result is displayed:</p><p><span style=\" font-weight:600;\">Color</span>: fixed vs aligned channel blend (pseudo-color overlay)</p><p><span style=\" font-weight:600;\">Checkboard</span>: alternating tiles from fixed and aligned</p><p><span style=\" font-weight:600;\">View Matches</span>: display match lines and indices</p><p>Only aligned: show aligned image only</p></body></html>"))
         self.overlay_selector.setItemText(0, _translate("MainWindow", "Checkboard"))
         self.overlay_selector.setItemText(1, _translate("MainWindow", "Color"))
         self.overlay_selector.setItemText(2, _translate("MainWindow", "View Matches"))
         self.overlay_selector.setItemText(3, _translate("MainWindow", "Only aligned"))
-        self.horizontalSlider_keyPacketToShow.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Match page index</span><br/>Select which match packet/page to display (packet size = “Matches per page / features per packet”). </p></body></html>"))
+        self.horizontalSlider_keyPacketToShow.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Match page index</span><br/>Select which match packet/page of features to display</p></body></html>"))
         self.pushButton_reset.setToolTip(_translate("MainWindow", "<html><head/><body><p>Clear loaded cubes, images, matches, selected rectangles, and restore default UI state. This cannot be undone.</p></body></html>"))
         self.pushButton_reset.setText(_translate("MainWindow", "Reset All"))
         self.label_packetToShow.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Displayed match range</span><br/>Shows the feature index interval currently displayed and the total number of matches. Turns red if the packet index exceeds the fraction currently kept by the “Keep best matches” slider.</p></body></html>"))

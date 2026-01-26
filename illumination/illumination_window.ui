@@ -153,6 +153,9 @@
             </item>
             <item row="5" column="0" colspan="2">
              <widget class="QPushButton" name="pushButton_Compute">
+              <property name="toolTip">
+               <string>Click to compute simulated colored image</string>
+              </property>
               <property name="text">
                <string>Compute RGB Image</string>
               </property>

@@ -1,7 +1,7 @@
 # cd C:\Users\Usuario\Documents\GitHub\Hypertool
 # python MainWindow.py
 # sys.excepthook = excepthook #set the exception handler
-# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination" --add-data "unmixing/data:unmixing/data"  MainWindow.py
+# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface/url_form.txt" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination" --add-data "unmixing/data:unmixing/data"  MainWindow.py
 # C:\Envs\py37test\Scripts\activate
 
 # GUI Qt
@@ -702,7 +702,6 @@ class MainApp(QtWidgets.QMainWindow):
 
         if show_tab:
             self.meta_dock.raise_()
-
 
     def _send_to_gt(self,filepath,show_tab=True):
         widget = self.gt_dock.widget()

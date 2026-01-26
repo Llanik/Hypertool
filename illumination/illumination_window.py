@@ -115,6 +115,7 @@ class Ui_IlluminationWidget(object):
         self.label_Gamma.setToolTip(_translate("IlluminationWidget", "<html><head/><body><p>Value for sRGB gamma correction.</p><p>Default: 2,20.</p></body></html>"))
         self.label_Gamma.setText(_translate("IlluminationWidget", "Gamma"))
         self.doubleSpinBox_D.setToolTip(_translate("IlluminationWidget", "<html><head/><body><p>Chromatic adaptation degree.</p><p>Default: 0,90.</p></body></html>"))
+        self.pushButton_Compute.setToolTip(_translate("IlluminationWidget", "Click to compute simulated colored image"))
         self.pushButton_Compute.setText(_translate("IlluminationWidget", "Compute RGB Image"))
         self.label_D.setToolTip(_translate("IlluminationWidget", "<html><head/><body><p>Chromatic adaptation degree.</p><p>Default: 0,90.</p></body></html>"))
         self.label_D.setText(_translate("IlluminationWidget", "D"))

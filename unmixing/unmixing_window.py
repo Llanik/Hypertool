@@ -205,7 +205,7 @@ class Ui_GroundTruthWidget(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollArea_2.setObjectName("scrollArea_2")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 98, 28))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 408, 113))
         self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -774,7 +774,7 @@ class Ui_GroundTruthWidget(object):
         self.stackedWidget.setCurrentIndex(0)
         self.stackedWidget_3.setCurrentIndex(0)
         self.stackedWidget_4.setCurrentIndex(0)
-        self.tabWidget_Image.setCurrentIndex(0)
+        self.tabWidget_Image.setCurrentIndex(1)
         self.stackedWidget_2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(GroundTruthWidget)
 
@@ -786,15 +786,11 @@ class Ui_GroundTruthWidget(object):
         self.load_btn.setText(_translate("GroundTruthWidget", "Load Cube"))
         self.label_cube_file.setToolTip(_translate("GroundTruthWidget", "Cube filename"))
         self.label_cube_file.setText(_translate("GroundTruthWidget", "No Cube File"))
-        self.pushButton_load_one_spectrum.setToolTip(_translate("GroundTruthWidget", "Load one spectrum\n"
-"\n"
-"Load a single spectrum file and display it in the spectrum panel for quick comparison with endmembers. This does not modify the cube."))
+        self.pushButton_load_one_spectrum.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Load one spectrum</p><p><br/></p><p>Load a single spectrum file to perform unmixing.</p></body></html>"))
         self.pushButton_load_one_spectrum.setText(_translate("GroundTruthWidget", "Load One Spectrum"))
         self.label_one_spectrum.setToolTip(_translate("GroundTruthWidget", "Name of the sample loaded"))
         self.label_one_spectrum.setText(_translate("GroundTruthWidget", "No sample"))
-        self.pushButton_load_FTIR.setToolTip(_translate("GroundTruthWidget", "Load FTIR reference\n"
-"\n"
-"Load an FTIR spectrum to compare its shape against hyperspectral endmembers / pixel spectra. The tool can optionally convert wavenumber↔wavelength for plotting."))
+        self.pushButton_load_FTIR.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Load FTIR reference</p><p><br/></p><p>Load a new FTIR spectrum to fuse with with the spectrum loaded when clicking on &quot;Load One Spectrum&quot;. </p></body></html>"))
         self.pushButton_load_FTIR.setText(_translate("GroundTruthWidget", "Add FTIR spectrum"))
         self.label_ftir_file.setToolTip(_translate("GroundTruthWidget", "FTIR spectrum filename"))
         self.label_ftir_file.setText(_translate("GroundTruthWidget", "No FTIR File"))
@@ -808,76 +804,36 @@ class Ui_GroundTruthWidget(object):
 "- endmember labels and wavelengths (when saved)\n"
 "Loaded jobs are inserted into the job table and can be visualized like any other model."))
         self.pushButton_load_map.setText(_translate("GroundTruthWidget", "Load Map"))
-        self.pushButton_reset.setToolTip(_translate("GroundTruthWidget", "Reset all\n"
-"\n"
-"Clear the loaded cube, manual/auto/library endmembers, selections, FTIR/one-spectrum data, and the unmixing job queue/results.\n"
-"\n"
-"Note: the spectral library content may be kept depending on your current implementation."))
+        self.pushButton_reset.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Reset all</p><p><br/></p><p>Clear the loaded cube, manual/auto/library endmembers, selections, FTIR/one-spectrum data, and the unmixing job queue/results.</p></body></html>"))
         self.pushButton_reset.setText(_translate("GroundTruthWidget", "Reset all"))
-        self.tabWidget.setToolTip(_translate("GroundTruthWidget", "Workspace tabs\n"
-"\n"
-"Switch between:\n"
-"- Endmembers (Manual / Auto / Library)\n"
-"- Unmixing settings + job queue\n"
-"- Visualization tools\n"
-"\n"
-"Tip: settings are read from the currently active tab/controls when you add a job to the queue."))
-        self.comboBox_endmembers_get.setToolTip(_translate("GroundTruthWidget", "Endmember source tab\n"
-"\n"
-"Choose which endmember source you are editing:\n"
-"- Manual: spectra extracted from user-selected pixels/regions\n"
-"- Auto: spectra computed by an automatic extraction method\n"
-"- From library: spectra loaded from an external CSV library\n"
-"\n"
-"This choice affects which class list and parameters are shown in the form."))
+        self.tabWidget.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Workspace tabs</p><p><br/></p><p>Switch between:</p><p>- Endmembers (Manual / Auto / Library)</p><p>- Unmixing settings</p><p>- Unmixing job queue</p><p><br/></p></body></html>"))
+        self.comboBox_endmembers_get.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Endmember source tab</p><p><br/></p><p>Choose which endmember source you are editing:</p><p>- Manual: spectra extracted from user-selected pixels/regions</p><p>- Auto: spectra computed by an automatic extraction method</p><p>- From library: spectra loaded from an external CSV library</p></body></html>"))
         self.comboBox_endmembers_get.setItemText(0, _translate("GroundTruthWidget", "From library"))
         self.comboBox_endmembers_get.setItemText(1, _translate("GroundTruthWidget", "Manual"))
         self.comboBox_endmembers_get.setItemText(2, _translate("GroundTruthWidget", "Auto"))
+        self.label_n_EM.setToolTip(_translate("GroundTruthWidget", "  "))
         self.label_n_EM.setText(_translate("GroundTruthWidget", "# Endmembers:"))
-        self.nclass_box.setToolTip(_translate("GroundTruthWidget", "Number of classes (p)\n"
-"\n"
-"Sets how many endmember classes you manage in the current source (Manual/Auto/Library).\n"
-"This primarily drives the UI (class list size, colors/labels). The effective number of endmembers used in unmixing depends on:\n"
-"- how many spectra exist per class, and\n"
-"- whether “Merge endmember groups” is enabled."))
+        self.nclass_box.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Number of classes</p><p>Sets how many endmember classes you manage in the current source (Manual/Auto/Library).</p></body></html>"))
         self.pushButton_class_name_assign.setToolTip(_translate("GroundTruthWidget", "Rename class\n"
 "\n"
 "Assign a human-readable name to the selected class (used in legends, exports, and job labels)."))
         self.pushButton_class_name_assign.setText(_translate("GroundTruthWidget", "Class name assign"))
-        self.pushButton_save_EM.setToolTip(_translate("GroundTruthWidget", "Save endmembers\n"
-"\n"
-"Export the current endmembers (Manual/Auto/Library) to disk for reuse. The saved file typically includes wavelengths and spectra."))
+        self.pushButton_save_EM.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Save endmembers</p><p><br/></p><p>Export the current endmembers (Manual/Auto/Library) to disk as CSV for reuse.</p></body></html>"))
         self.pushButton_save_EM.setText(_translate("GroundTruthWidget", "Save active endmembers"))
-        self.pushButton_load_EM.setToolTip(_translate("GroundTruthWidget", "Load endmembers\n"
-"\n"
-"Import endmembers from a file and populate the current source (Manual/Auto/Library), depending on your workflow."))
+        self.pushButton_load_EM.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Load endmembers</p><p><br/></p><p>Import endmembers from a CSV file and populate the current source.</p></body></html>"))
         self.pushButton_load_EM.setText(_translate("GroundTruthWidget", "Load Endmembers"))
-        self.pushButton_add_EM.setToolTip(_translate("GroundTruthWidget", "Add endmember (manual)\n"
-"\n"
-"Compute and add an endmember spectrum from the current pixel selection to the active Manual class.\n"
-"Multiple selections can be added per class to capture variability."))
+        self.pushButton_add_EM.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Add endmember (manual)</p><p><br/></p><p>Compute and add an endmember spectrum from the Manual library.</p></body></html>"))
         self.pushButton_add_EM.setText(_translate("GroundTruthWidget", "Add manual endmembers"))
-        self.pushButton_remove_EM.setToolTip(_translate("GroundTruthWidget", "Remove endmember\n"
-"\n"
-"Remove the currently selected endmember spectrum from the active class/source."))
+        self.pushButton_remove_EM.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Remove endmember</p><p><br/></p><p>Remove the endmember spectrum from the library.</p></body></html>"))
         self.pushButton_remove_EM.setText(_translate("GroundTruthWidget", "Remove endmembers"))
-        self.pushButton_wavenumber_to_wavelength.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Convert axis (FTIR)</p><p><br/></p><p>Convert FTIR spectra of a csv file from </p><p>Wavenumber (cm⁻¹) to Wavelength (nm).</p></body></html>"))
+        self.pushButton_wavenumber_to_wavelength.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Convert axis (FTIR)</p><p>Convert FTIR spectra of a csv file from </p><p>Wavenumber (cm⁻¹) to Wavelength (nm).</p></body></html>"))
         self.pushButton_wavenumber_to_wavelength.setText(_translate("GroundTruthWidget", "Convert FTIR file"))
         self.label_selec_mode.setText(_translate("GroundTruthWidget", "Select mode"))
-        self.pushButton_erase_selected_pix.setToolTip(_translate("GroundTruthWidget", "Erase selection\n"
-"\n"
-"Enable erase mode: selected pixels are removed from the current class selection (useful to refine manual endmembers)."))
+        self.pushButton_erase_selected_pix.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Erase selection</p><p><br/></p><p>Enable erase mode: selected pixels will be removed.</p></body></html>"))
         self.pushButton_erase_selected_pix.setText(_translate("GroundTruthWidget", "Erase Selected"))
-        self.pushButton_class_selection.setToolTip(_translate("GroundTruthWidget", "Select pixels for class\n"
-"\n"
-"Enable pixel/region selection on the left viewer. The selected pixels are assigned to the currently active class for endmember extraction."))
+        self.pushButton_class_selection.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Select pixels for class</p><p><br/></p><p>Enable pixel/region selection on the left viewer.</p></body></html>"))
         self.pushButton_class_selection.setText(_translate("GroundTruthWidget", "Start selection"))
-        self.comboBox_pixel_selection_mode.setToolTip(_translate("GroundTruthWidget", "Pixel selection mode\n"
-"\n"
-"Select how pixels are collected when you interact with the left viewer:\n"
-"- Rectangle / Ellipse: drag a region\n"
-"- Pixel: click multiple pixels (optionally close path to fill inside)\n"
-"This selection is used to extract manual endmembers and to inspect spectra."))
+        self.comboBox_pixel_selection_mode.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Pixel selection mode</p><p><br/></p><p>Select how pixels are collected when you interact with the left viewer:</p><p>- Rectangle / Ellipse: drag a region</p><p>- Pixel: select multiple pixels (optionally close path to fill inside) by dragging the mouse when clicking</p></body></html>"))
         self.comboBox_pixel_selection_mode.setItemText(0, _translate("GroundTruthWidget", "rectangle"))
         self.comboBox_pixel_selection_mode.setItemText(1, _translate("GroundTruthWidget", "ellipse"))
         self.comboBox_pixel_selection_mode.setItemText(2, _translate("GroundTruthWidget", "pixel"))
@@ -924,12 +880,7 @@ class Ui_GroundTruthWidget(object):
 "\n"
 "Disabling ASC allows the total abundance to vary (useful when illumination/scale effects exist)."))
         self.checkBox_unmix_ASC.setText(_translate("GroundTruthWidget", "ASC"))
-        self.checkBox_unmix_merge_EM_groups.setToolTip(_translate("GroundTruthWidget", "Merge endmember groups\n"
-"\n"
-"If enabled, endmembers belonging to the same class/group are averaged before unmixing.\n"
-"This reduces the number of endmembers (p) and often stabilizes solutions when you have multiple spectra per class.\n"
-"\n"
-"If disabled, all spectra are used independently (higher p, more flexibility)."))
+        self.checkBox_unmix_merge_EM_groups.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Merge endmember groups</p><p><br/></p><p>If enabled, endmembers belonging to the same class/group are averaged before unmixing.</p><p><br/></p><p>If disabled, all spectra are used independently.</p></body></html>"))
         self.checkBox_unmix_merge_EM_groups.setText(_translate("GroundTruthWidget", "Merge EM groups"))
         self.comboBox_endmembers_use_for_unmixing.setToolTip(_translate("GroundTruthWidget", "Endmembers used for unmixing\n"
 "\n"
@@ -942,29 +893,26 @@ class Ui_GroundTruthWidget(object):
         self.comboBox_endmembers_use_for_unmixing.setItemText(0, _translate("GroundTruthWidget", "From library"))
         self.comboBox_endmembers_use_for_unmixing.setItemText(1, _translate("GroundTruthWidget", "Manual"))
         self.comboBox_endmembers_use_for_unmixing.setItemText(2, _translate("GroundTruthWidget", "Auto"))
+        self.label_EM_choose.setToolTip(_translate("GroundTruthWidget", "  "))
         self.label_EM_choose.setText(_translate("GroundTruthWidget", "<html><head/><body><p><span style=\" font-weight:600; text-decoration: underline; color:#ffffff;\">ENDMEMBERS SOURCES :</span></p></body></html>"))
+        self.label_normalisation_unmix.setToolTip(_translate("GroundTruthWidget", "  "))
         self.label_normalisation_unmix.setText(_translate("GroundTruthWidget", "Normalisation :"))
-        self.comboBox_normalisation_unmix.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Spectral normalization</p><p><br/></p><p>Select how spectra are normalized before unmixing.</p><p><br/></p><p>• L2 (Euclidean)</p><p>  Each spectrum is normalized by its L2 norm</p><p>  (square root of the sum of squared values).</p><p>  Preserves spectral shape while reducing sensitivity to absolute intensity.</p><p>  Common default for least-squares-based methods.</p><p><br/></p><p>• L1 (Sum = 1)</p><p>  Each spectrum is normalized so that the sum of its values equals 1.</p><p>  Emphasizes relative band contributions.</p><p>  Often used when comparing proportions or compositional spectra.</p><p><br/></p><p>• None</p><p>  No normalization is applied.</p><p>  Use only if spectra are already calibrated and comparable in magnitude.</p><p><br/></p></body></html>"))
+        self.comboBox_normalisation_unmix.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Spectral normalization</p><p>Select how spectra are normalized before unmixing.</p><p>• L2 (Euclidean)</p><p>Each spectrum is normalized by its L2 norm</p><p>(square root of the sum of squared values).</p><p>Preserves spectral shape while reducing sensitivity to absolute intensity.</p><p>Common default for least-squares-based methods.</p><p><br/></p><p>• L1 (Sum = 1)</p><p>Each spectrum is normalized so that the sum of its values equals 1.</p><p>Emphasizes relative band contributions.</p><p>Often used when comparing proportions or compositional spectra.</p><p>• None</p><p>No normalization is applied.</p><p>Use only if spectra are already calibrated and comparable in magnitude.<br/></p></body></html>"))
         self.comboBox_normalisation_unmix.setItemText(0, _translate("GroundTruthWidget", "L2 (Euclidian)"))
         self.comboBox_normalisation_unmix.setItemText(1, _translate("GroundTruthWidget", "L1 (Sum=1)"))
         self.comboBox_normalisation_unmix.setItemText(2, _translate("GroundTruthWidget", "None"))
-        self.comboBox_preprocess.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Preprocess spectra for unmixing</p><p><br/></p><p>Choose how spectra are transformed before unmixing:</p><p>- Raw: reflectance without derivative</p><p>- 1st derivative: emphasize slopes, reduce baseline effects</p><p>- 2nd derivative: emphasize narrow features, stronger noise amplification</p><p><br/></p><p>The same preprocessing is applied to both endmembers E and pixel spectra Y for consistency.</p></body></html>"))
+        self.comboBox_preprocess.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Preprocess spectra for unmixing<br/></p><p>Choose how spectra are transformed before unmixing:</p><p>- Raw: reflectance without derivative</p><p>- 1st derivative: emphasize slopes, reduce baseline effects</p><p>- 2nd derivative: emphasize narrow features, stronger noise amplification</p><p><br/></p></body></html>"))
         self.comboBox_preprocess.setItemText(0, _translate("GroundTruthWidget", "RAW Spectrum "))
         self.comboBox_preprocess.setItemText(1, _translate("GroundTruthWidget", "First derivative"))
         self.comboBox_preprocess.setItemText(2, _translate("GroundTruthWidget", "Second derivative"))
-        self.doubleSpinBox_unmix_lambda_2.setToolTip(_translate("GroundTruthWidget", "Tolerance (tol) as 10^x\n"
-"\n"
-"This control stores the exponent x used to compute:\n"
-"  tol = 10^x\n"
-"\n"
-"tol is used as a stopping criterion for iterative solvers (e.g., metric-based unmixing and SUnSAL variants): smaller tol → more iterations / potentially better convergence; larger tol → faster but less precise."))
+        self.doubleSpinBox_unmix_lambda_2.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Tolerance (tol) as 10^x</p><p><br/></p><p>This control stores the exponent x used to compute:</p><p>  tol = 10^x</p><p><br/></p><p>tol is used as a stopping criterion : smaller tol → more iterations / potentially better convergence; larger tol → faster but less precise.</p></body></html>"))
         self.label_unmix_maxiter.setText(_translate("GroundTruthWidget", "Maximum iterations :"))
         self.spinBox.setToolTip(_translate("GroundTruthWidget", "Maximum iterations\n"
 "\n"
 "Upper bound on the number of iterations for iterative unmixing solvers. If set too low, solutions may stop early; if set high, the solver can converge more fully but will take longer."))
         self.label_unmx_tolerance.setText(_translate("GroundTruthWidget", "Tolerance : 10^"))
         self.label_unmix_algorithm_choice.setText(_translate("GroundTruthWidget", "Unmixing algorithm :"))
-        self.comboBox_unmix_algorithm.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Unmixing algorithm</span></p><p>Select the algorithm used to estimate pixel abundances from endmember spectra. Least Squares (LS) methods minimize a Euclidean reconstruction error, while Metric-based methods optimize a spectral similarity measure.<br/></p><p>• UCLS (Unconstrained Least Squares)</p><p>Linear additive model.</p><p>Solves a least-squares problem without physical constraints.</p><p>Abundances may be negative or greater than 1.</p><p>Useful for diagnostics or when constraints are not desired.<br/></p><p>• NNLS (Non-Negative Least Squares)</p><p>Linear additive model with non-negativity constraint (ANC).</p><p>Enforces abundances ≥ 0, but does not enforce sum-to-one.</p><p>Common baseline method for physically meaningful abundances.</p><p><br/></p><p>• FCLS (Fully Constrained Least Squares)</p><p>Linear additive model with both Non-negativity constraint (ANC) and Sum-to-one constraint (ASC)</p><p>Abundances are physically interpretable as proportions.<br/></p><p>• Metric (cGFC)</p><p>Additive linear model optimized using a spectral similarity metric</p><p>instead of a pure least-squares error.</p><p>Finds the linear combination of endmembers that best matches the</p><p>observed spectrum according to the selected metric.</p><p>Useful when spectral shape is more important than absolute magnitude.<br/></p><p>• SUnSAL</p><p>Sparse unmixing using augmented Lagrangian optimization.</p><p>Linear additive model with sparsity regularization.</p><p>Encourages solutions using fewer endmembers per pixel.</p><p>Parameters (lambda, rho, tolerance) control sparsity and convergence.<br/></p></body></html>"))
+        self.comboBox_unmix_algorithm.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Unmixing algorithm</span></p><p>Select the algorithm used to estimate pixel abundances from endmember spectra. Least Squares (LS) methods minimize a Euclidean reconstruction error, while Metric-based methods optimize a spectral similarity measure.<br/></p><p>• UCLS (Unconstrained Least Squares)</p><p>Linear additive model.</p><p>Solves a least-squares problem without physical constraints.</p><p>Abundances may be negative or greater than 1.</p><p>Useful for quick diagnostics or when constraints are not desired.<br/>• NNLS (Non-Negative Least Squares)</p><p>Linear additive model with non-negativity constraint (ANC).</p><p>Enforces abundances ≥ 0, but does not enforce sum-to-one.</p><p>Common baseline method for physically meaningful abundances.<br/>• FCLS (Fully Constrained Least Squares)</p><p>Linear additive model with both Non-negativity constraint (ANC) and Sum-to-one constraint (ASC)</p><p>Abundances are physically interpretable as proportions.</p><p>• Metric (cGFC)</p><p>Additive linear model optimized using a spectral similarity metric</p><p>instead of a pure least-squares error.</p><p>Finds the linear combination of endmembers that best matches the</p><p>observed spectrum according to the cGFC metric.</p><p>• SUnSAL</p><p>Sparse unmixing using augmented Lagrangian optimization.</p><p>Linear additive model with sparsity regularization.</p><p>Encourages solutions using fewer endmembers per pixel.</p><p>Parameters (lambda, rho, tolerance) control sparsity and convergence.<br/></p></body></html>"))
         self.comboBox_unmix_algorithm.setItemText(0, _translate("GroundTruthWidget", "UCLS"))
         self.comboBox_unmix_algorithm.setItemText(1, _translate("GroundTruthWidget", "NNLS"))
         self.comboBox_unmix_algorithm.setItemText(2, _translate("GroundTruthWidget", "FCLS"))
@@ -978,18 +926,10 @@ class Ui_GroundTruthWidget(object):
 "- current preprocessing/normalization choices\n"
 "The job is added to the table and can be executed later (or in batch)."))
         self.pushButton_add_queue_unmixing.setText(_translate("GroundTruthWidget", "Add to queue"))
-        self.doubleSpinBox_unmix_lambda_3.setToolTip(_translate("GroundTruthWidget", "Regularization (λ) as 10^x\n"
-"\n"
-"This control stores the exponent x used to compute:\n"
-"  λ = 10^x\n"
-"\n"
-"λ is used by regularized solvers (notably SUnSAL) to trade off data fidelity vs. regularization. Larger λ typically enforces stronger regularization (often sparser / smoother solutions depending on backend)."))
+        self.doubleSpinBox_unmix_lambda_3.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Regularization (λ) as 10^x</p><p><br/></p><p>This control stores the exponent x used to compute:</p><p>  λ = 10^x</p><p><br/></p><p>λ is used to trade off data fidelity vs. regularization. Larger λ typically enforces stronger regularization (often sparser / smoother solutions depending on backend).</p></body></html>"))
         self.label_unmix_lambda.setText(_translate("GroundTruthWidget", "Lambda : 10^"))
         self.label_unmix_lambda_2.setText(_translate("GroundTruthWidget", "Rho : 10^"))
-        self.doubleSpinBox_unmix_lambda_4.setToolTip(_translate("GroundTruthWidget", "ρ / step parameter\n"
-"\n"
-"This parameter is passed to iterative solvers that require an additional scale/step (commonly noted ρ).\n"
-"Its exact effect depends on the selected algorithm; in general it controls the aggressiveness of updates and may affect convergence speed/stability."))
+        self.doubleSpinBox_unmix_lambda_4.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>ρ / step parameter</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("GroundTruthWidget", "Unmixing parameters"))
         self.tableWidget_classificationList.setToolTip(_translate("GroundTruthWidget", "Unmixing job table\n"
 "\n"
@@ -1109,13 +1049,7 @@ class Ui_GroundTruthWidget(object):
         self.comboBox_viz_show_EM.setToolTip(_translate("GroundTruthWidget", "Endmember to visualize\n"
 "\n"
 "Select which endmember (class) to display when viewing abundance maps. The chosen endmember changes the displayed abundance layer and its statistics."))
-        self.pushButton_save_map.setToolTip(_translate("GroundTruthWidget", "Save unmixing result\n"
-"\n"
-"Export the currently selected unmixing job to disk (HDF5). Typically includes:\n"
-"- abundance matrix A\n"
-"- E used and wavelength axis (if available)\n"
-"- labels and parameters\n"
-"This allows reproducibility and later re-loading via “Load unmixing result”."))
+        self.pushButton_save_map.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Save unmixing result</p><p><br/></p><p>Export the currently selected unmixing job to disk (HDF5). Typically includes:</p><p>- abundance matrix A</p><p>- E used and wavelength axis</p><p>- labels and parameters</p><p>This allows reproducibility and later re-loading via “Load unmixing result”.</p></body></html>"))
         self.pushButton_save_map.setText(_translate("GroundTruthWidget", "Save map(s)"))
         self.radioButton_norm_show_abundance_global.setToolTip(_translate("GroundTruthWidget", "Abundance normalization: Global\n"
 "\n"
@@ -1139,27 +1073,17 @@ class Ui_GroundTruthWidget(object):
 "\n"
 "Toggle the display of the legend (endmember colors/labels) on the visualization panel."))
         self.checkBox_showLegend.setText(_translate("GroundTruthWidget", "Show legend"))
-        self.comboBox_endmembers_spectra.setToolTip(_translate("GroundTruthWidget", "Spectrum to plot\n"
-"\n"
-"Choose which spectrum to display in the plot:\n"
-"- endmember mean / individual spectra\n"
-"- a selected pixel/region spectrum\n"
-"- loaded “one spectrum” / FTIR reference"))
+        self.comboBox_endmembers_spectra.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Spectrum of endmembers to plot</p><p><br/></p></body></html>"))
         self.comboBox_endmembers_spectra.setItemText(0, _translate("GroundTruthWidget", "From library"))
         self.comboBox_endmembers_spectra.setItemText(1, _translate("GroundTruthWidget", "Manual"))
         self.comboBox_endmembers_spectra.setItemText(2, _translate("GroundTruthWidget", "Auto"))
-        self.pushButton_band_selection.setToolTip(_translate("GroundTruthWidget", "Band selection\n"
-"\n"
-"Enter band-selection mode to choose a subset of wavelengths to use for unmixing and/or visualization.\n"
-"This is useful to test robustness or remove noisy/irrelevant spectral regions."))
+        self.pushButton_band_selection.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Band selection</p><p><br/></p><p>Enter band-selection mode to choose a subset of wavelengths to use for unmixing.</p><p>This is useful to test robustness or remove noisy/irrelevant spectral regions.</p></body></html>"))
         self.pushButton_band_selection.setText(_translate("GroundTruthWidget", "Band selection"))
         self.checkBox_see_job_bands.setToolTip(_translate("GroundTruthWidget", "Show job bands\n"
 "\n"
 "If enabled, the spectrum plot highlights the wavelength bands saved with the selected job (when available)."))
         self.checkBox_see_job_bands.setText(_translate("GroundTruthWidget", "See job bands"))
-        self.checkBox_showGraph.setToolTip(_translate("GroundTruthWidget", "Show spectra panel\n"
-"\n"
-"Toggle the spectrum plot panel (endmembers, pixel spectra, FTIR). Disabling it frees space for images."))
+        self.checkBox_showGraph.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Show spectra panel</p><p><br/></p><p>Toggle the spectrum plot panel.</p><p>Disabling it frees space for images.</p></body></html>"))
         self.checkBox_showGraph.setText(_translate("GroundTruthWidget", "Show graph"))
         self.checkBox_see_actual_bands.setToolTip(_translate("GroundTruthWidget", "Show current bands\n"
 "\n"

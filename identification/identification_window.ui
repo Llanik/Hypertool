@@ -45,7 +45,7 @@
           <string>Binarization Substrate/Inks</string>
          </attribute>
          <attribute name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;the workflow is : Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose step of process. &lt;br/&gt;&lt;br/&gt;The workflow is : Binarization -&amp;gt; Classification -&amp;gt; Cleaning (optional)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
@@ -715,7 +715,7 @@ color: rgb(255, 255, 255);</string>
       <item>
        <widget class="QTabWidget" name="tabWidget_Image">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabWidgetPage1_2">
          <attribute name="title">
@@ -968,8 +968,7 @@ color: rgb(255, 255, 255);</string>
             <item row="1" column="3" colspan="2">
              <widget class="QPushButton" name="pushButton_show_all">
               <property name="toolTip">
-               <string>Open a summary window showing all available classification results at once.
-Each row displays the model name, the raw map, and (when available) the cleaned map for quick visual comparison.</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open a summary window showing &lt;span style=&quot; font-weight:600;&quot;&gt;all available classification results&lt;/span&gt; at once.&lt;br/&gt;Each row displays the model name, the &lt;span style=&quot; font-weight:600;&quot;&gt;raw map&lt;/span&gt;, and (when available) the &lt;span style=&quot; font-weight:600;&quot;&gt;cleaned map&lt;/span&gt; for quick visual comparison.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>Show All</string>
@@ -979,7 +978,7 @@ Each row displays the model name, the raw map, and (when available) the cleaned 
             <item row="2" column="3" colspan="2">
              <widget class="QPushButton" name="pushButton_save_map">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open a summary window showing &lt;span style=&quot; font-weight:600;&quot;&gt;all available classification results&lt;/span&gt; at once.&lt;br/&gt;Each row displays the model name, the &lt;span style=&quot; font-weight:600;&quot;&gt;raw map&lt;/span&gt;, and (when available) the &lt;span style=&quot; font-weight:600;&quot;&gt;cleaned map&lt;/span&gt; for quick visual comparison.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to choose the results that you want to export on your disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>Save map(s)</string>
@@ -1086,7 +1085,7 @@ Left view: false RGB image with the selected map overlaid (alpha).</string>
                <item>
                 <widget class="QRadioButton" name="radioButton_clean_show_cleaned">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display the CLEANED classification map (if available).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Right view&lt;/span&gt;: cleaned class map.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Left view&lt;/span&gt;: false RGB image with the selected map overlaid (alpha).&lt;/p&gt;&lt;p&gt;If a cleaned map does not exist yet, the raw map is shown and the UI indicates that cleaning has not been done.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display the CLEANED classification map (if available).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Right view&lt;/span&gt;: cleaned class map.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Left view&lt;/span&gt;: false RGB image with the selected map overlaid (alpha).&lt;/p&gt;&lt;p&gt;If a cleaned map does not exist yet, the raw map is shown and the UI indicates that cleaning has not been done.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Cleaned</string>
@@ -1251,9 +1250,6 @@ A warning style is shown if cleaning has not been computed yet.</string>
              <enum>Qt::Horizontal</enum>
             </property>
             <widget class="QWidget" name="viewer_right_grp" native="true">
-             <property name="toolTip">
-              <string>Promote to ZoomableGraphicsView</string>
-             </property>
              <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0">
               <item>
                <widget class="QLabel" name="label_viewer_right">
@@ -1284,9 +1280,6 @@ A warning style is shown if cleaning has not been computed yet.</string>
              </layout>
             </widget>
             <widget class="QWidget" name="viewer_left_grp" native="true">
-             <property name="toolTip">
-              <string>Promote to ZoomableGraphicsView</string>
-             </property>
              <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0,0">
               <item>
                <widget class="QLabel" name="label_viewer_left">

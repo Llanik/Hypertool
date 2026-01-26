@@ -540,9 +540,7 @@ Compute keypoints and matches between fixed and moving images (using the selecte
                   <item row="0" column="2">
                    <widget class="QCheckBox" name="checkBox_autorize_modify">
                     <property name="toolTip">
-                     <string>Authorize modifying registered cube
-Safety lock. This must be enabled to run feature detection / registration.
-Disabling it prevents further modifications and preserves the current “parent cube” logic used for minicube extraction.</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Authorize modifying registered cube&lt;/p&gt;&lt;p&gt;Safety lock. This must be enabled to run feature detection / registration.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="text">
                      <string>Autorize modifying registered cube</string>
@@ -689,8 +687,7 @@ Lower values are more selective; higher values include more matches.</string>
                   <item row="2" column="0">
                    <widget class="QComboBox" name="method_selector">
                     <property name="toolTip">
-                     <string>Feature detector
-Choose the OpenCV detector used to extract and match features: ORB, AKAZE, or SIFT.</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Feature detector&lt;/p&gt;&lt;p&gt;Choose the algorithm used to extract and match features.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="currentText">
                      <string notr="true">AKAZE</string>
@@ -773,7 +770,7 @@ Choose the OpenCV detector used to extract and match features: ORB, AKAZE, or SI
                   <item row="3" column="1">
                    <widget class="QComboBox" name="overlay_selector">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Aligned view mode&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Choose how the aligned result is displayed:&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Color: fixed vs aligned channel blend (pseudo-color overlay)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Checkboard: alternating tiles from fixed and aligned&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;View Matches: display match lines and indices&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Only aligned: show aligned image only&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Aligned view mode&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Choose how the aligned result is displayed:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Color&lt;/span&gt;: fixed vs aligned channel blend (pseudo-color overlay)&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Checkboard&lt;/span&gt;: alternating tiles from fixed and aligned&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;View Matches&lt;/span&gt;: display match lines and indices&lt;/p&gt;&lt;p&gt;Only aligned: show aligned image only&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <item>
                      <property name="text">
@@ -800,7 +797,7 @@ Choose the OpenCV detector used to extract and match features: ORB, AKAZE, or SI
                   <item row="1" column="1">
                    <widget class="QSlider" name="horizontalSlider_keyPacketToShow">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Match page index&lt;/span&gt;&lt;br/&gt;Select which match packet/page to display (packet size = “Matches per page / features per packet”). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Match page index&lt;/span&gt;&lt;br/&gt;Select which match packet/page of features to display&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="pageStep">
                      <number>1</number>

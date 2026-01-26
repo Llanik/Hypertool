@@ -108,13 +108,11 @@ class MetadataTool(QWidget, Ui_Metadata_tool):
 
         self.pushButton_valid_all_changes.setToolTip(
             "Validate all metadata changes and emit them to the rest of the application.\n"
-            "This will notify other tools via the metadataChanged signal.\n"
-            "To save to disk, you will have to click on Save Cube."
+            "To save to disk, you will then have to click on Save Cube in the toolbar."
         )
 
         self.pushButton_load_cube.setToolTip(
-            "Open a cube and load its metadata into the Metadata tool.\n"
-            "This will also notify the manager via cubeLoaded so other tools can sync."
+            "Open a cube and load its metadata into the Metadata tool."
         )
 
     def ask_if_modif(self,index):

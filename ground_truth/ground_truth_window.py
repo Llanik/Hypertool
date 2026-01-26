@@ -493,7 +493,7 @@ class Ui_GroundTruthWidget(object):
         self.checkBox_see_selection_overlay.setToolTip(_translate("GroundTruthWidget", "Show / hide the manual selection mask over the current display (independent from the segmentation map)."))
         self.checkBox_see_selection_overlay.setText(_translate("GroundTruthWidget", "See selection"))
         self.groupBox_2.setTitle(_translate("GroundTruthWidget", "Spectra"))
-        self.checkBox_live_spectra.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Live spectrum tracking</span><br/>When enabled, moving the mouse over the left image updates the pixel spectrum in real time (will disabled drag mode on cube representation).</p><p><br/>Tip: middle-click toggles this checkbox when not in selection mode.</p><p><br/></p></body></html>"))
+        self.checkBox_live_spectra.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Live spectrum tracking</span><br/>When enabled, moving the mouse over the left image updates the pixel spectrum in real time (will disabled drag mode on cube representation).</p><p><br/>Tip: middle-click toggles this checkbox when not in selection mode.</p></body></html>"))
         self.checkBox_live_spectra.setText(_translate("GroundTruthWidget", "Live"))
         self.checkBox_seeGTspectra.setToolTip(_translate("GroundTruthWidget", "<html><head/><body><p>Show GT class spectra</p><p>Overlay class mean spectra with ±1 std envelope on the spectra plot.</p></body></html>"))
         self.checkBox_seeGTspectra.setText(_translate("GroundTruthWidget", "See GT spectra"))

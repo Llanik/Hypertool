@@ -534,7 +534,7 @@ class Ui_IdentificationWidget(object):
         self.retranslateUi(IdentificationWidget)
         self.tabWidget_Process.setCurrentIndex(0)
         self.comboBox_clean_preset.setCurrentIndex(1)
-        self.tabWidget_Image.setCurrentIndex(0)
+        self.tabWidget_Image.setCurrentIndex(1)
         self.tabWidget_info_classification.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(IdentificationWidget)
 
@@ -565,7 +565,7 @@ class Ui_IdentificationWidget(object):
         self.doubleSpinBox_bin_k.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">k — Threshold sensitivity</span></p><p>Controls how strongly the threshold adapts to local image statistics.</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Bradley</span>: adjusts the threshold relative to the local mean (<span style=\" font-family:\'Courier New\';\">mean × (1 − k)</span>).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Sauvola</span>: controls the influence of local contrast (standard deviation) on the threshold.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Wolf</span>: balances local mean, local contrast, and global minimum intensity.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Niblack</span>: scales the contribution of the local standard deviation.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Otsu</span>: not used.</li></ul></body></html>"))
         self.pushButton_reset_bin.setText(_translate("IdentificationWidget", "Reset Binarization"))
         self.tabWidget_Process.setTabText(self.tabWidget_Process.indexOf(self.tabWidgetPage2), _translate("IdentificationWidget", "Binarization Substrate/Inks"))
-        self.tabWidget_Process.setTabToolTip(self.tabWidget_Process.indexOf(self.tabWidgetPage2), _translate("IdentificationWidget", "<html><head/><body><p>Choose step of process. <br/><br/>the workflow is : Binarization -&gt; Classification -&gt; Cleaning (optional)</p></body></html>"))
+        self.tabWidget_Process.setTabToolTip(self.tabWidget_Process.indexOf(self.tabWidgetPage2), _translate("IdentificationWidget", "<html><head/><body><p>Choose step of process. <br/><br/>The workflow is : Binarization -&gt; Classification -&gt; Cleaning (optional)</p></body></html>"))
         self.label_clas_ink_model.setText(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Ink</span></p></body></html>"))
         self.comboBox_clas_ink_model.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p><span style=\" font-weight:600;\">Ink model (classifier)</span></p><p>Select the ink classifier to add as a <span style=\" font-style:italic;\">classification job</span>.</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Clicking <span style=\" font-weight:600;\">Add ink</span> will create a job using this model name.</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">If the current spectral range does not match the pretrained model, the job may require <span style=\" font-weight:600;\">training</span> first (prompted by the app).</li><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Add from disk...</span> loads an external <span style=\" font-family:\'Courier New\';\">.joblib</span> classifier; if compatible, you can rename it and it will be used directly.</li></ul></body></html>"))
         self.comboBox_clas_ink_model.setItemText(0, _translate("IdentificationWidget", "LDA"))
@@ -637,10 +637,9 @@ class Ui_IdentificationWidget(object):
         self.pushButton_flip_h.setToolTip(_translate("IdentificationWidget", "Flip cube hoizontaly"))
         self.pushButton_flip_h.setText(_translate("IdentificationWidget", "↔"))
         self.tabWidget_Image.setTabText(self.tabWidget_Image.indexOf(self.tabWidgetPage1_2), _translate("IdentificationWidget", "Image Adjustment"))
-        self.pushButton_show_all.setToolTip(_translate("IdentificationWidget", "Open a summary window showing all available classification results at once.\n"
-"Each row displays the model name, the raw map, and (when available) the cleaned map for quick visual comparison."))
+        self.pushButton_show_all.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Open a summary window showing <span style=\" font-weight:600;\">all available classification results</span> at once.<br/>Each row displays the model name, the <span style=\" font-weight:600;\">raw map</span>, and (when available) the <span style=\" font-weight:600;\">cleaned map</span> for quick visual comparison.</p></body></html>"))
         self.pushButton_show_all.setText(_translate("IdentificationWidget", "Show All"))
-        self.pushButton_save_map.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Open a summary window showing <span style=\" font-weight:600;\">all available classification results</span> at once.<br/>Each row displays the model name, the <span style=\" font-weight:600;\">raw map</span>, and (when available) the <span style=\" font-weight:600;\">cleaned map</span> for quick visual comparison.</p></body></html>"))
+        self.pushButton_save_map.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Click to choose the results that you want to export on your disk.</p></body></html>"))
         self.pushButton_save_map.setText(_translate("IdentificationWidget", "Save map(s)"))
         self.radioButton_overlay_binary.setToolTip(_translate("IdentificationWidget", "Show the Binary map results.\n"
 "\n"
@@ -661,7 +660,7 @@ class Ui_IdentificationWidget(object):
 "\n"
 "Left view: false RGB image with the selected map overlaid (alpha)."))
         self.radioButton_clean_show_raw.setText(_translate("IdentificationWidget", "Raw"))
-        self.radioButton_clean_show_cleaned.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Display the CLEANED classification map (if available).</p><p><br/></p><p><span style=\" font-weight:600;\">Right view</span>: cleaned class map.</p><p><span style=\" font-weight:600;\">Left view</span>: false RGB image with the selected map overlaid (alpha).</p><p>If a cleaned map does not exist yet, the raw map is shown and the UI indicates that cleaning has not been done.</p></body></html>"))
+        self.radioButton_clean_show_cleaned.setToolTip(_translate("IdentificationWidget", "<html><head/><body><p>Display the CLEANED classification map (if available).</p><p><span style=\" font-weight:600;\">Right view</span>: cleaned class map.</p><p><span style=\" font-weight:600;\">Left view</span>: false RGB image with the selected map overlaid (alpha).</p><p>If a cleaned map does not exist yet, the raw map is shown and the UI indicates that cleaning has not been done.</p></body></html>"))
         self.radioButton_clean_show_cleaned.setText(_translate("IdentificationWidget", "Cleaned"))
         self.radioButton_clean_show_both.setToolTip(_translate("IdentificationWidget", "Compare RAW vs CLEANED maps side-by-side (no overlay).\n"
 "\n"
@@ -679,9 +678,7 @@ class Ui_IdentificationWidget(object):
         self.pushButton_load_map.setText(_translate("IdentificationWidget", "Load map"))
         self.tabWidget_info_classification.setTabText(self.tabWidget_info_classification.indexOf(self.tab_legend), _translate("IdentificationWidget", "Info"))
         self.tabWidget_info_classification.setTabText(self.tabWidget_info_classification.indexOf(self.tab_statistics), _translate("IdentificationWidget", "Statistics"))
-        self.viewer_right_grp.setToolTip(_translate("IdentificationWidget", "Promote to ZoomableGraphicsView"))
         self.label_viewer_right.setText(_translate("IdentificationWidget", "Map"))
-        self.viewer_left_grp.setToolTip(_translate("IdentificationWidget", "Promote to ZoomableGraphicsView"))
         self.label_viewer_left.setText(_translate("IdentificationWidget", "False RGB"))
 
 

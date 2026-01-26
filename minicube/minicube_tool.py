@@ -42,8 +42,8 @@ class MiniCubeTool(QWidget, Ui_Form):
 
         # Connect load and previous next
         self.pushButton_open_hypercube.clicked.connect(self.load_cube)
-        self.pushButton_next_cube.clicked.connect(lambda: self.change_hyp_quick(-1))
-        self.pushButton_prev_cube.clicked.connect(lambda: self.change_hyp_quick(+1))
+        # self.pushButton_next_cube.clicked.connect(lambda: self.change_hyp_quick(-1))
+        # self.pushButton_prev_cube.clicked.connect(lambda: self.change_hyp_quick(+1))
 
         # Connect RGB controls
         for slider, spin in zip(

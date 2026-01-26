@@ -2078,8 +2078,7 @@ class HDF5BrowserWidget(QWidget, Ui_HDF5BrowserWidget):
             )
 
         self.btn_ok.setToolTip(
-            "Validate the selected paths and emit them as CubeInfoTemp (accepted).\n"
-            "This updates how the cube is parsed/loaded by the rest of the application."
+            "Validate the selected paths and emit them to the rest of the application."
         )
 
         self.btn_cancel.setToolTip(

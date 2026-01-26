@@ -278,33 +278,7 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0" colspan="2">
-        <widget class="QPushButton" name="pushButton_open_hypercube">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open a hyperspectral cube (.h5, .mat, .hdr) to display it and extract a minicube ROI.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="text">
-          <string>Open Cubes</string>
-         </property>
-         <property name="autoExclusive">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="pushButton_next_cube">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Next cube (same folder)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Load the next available cube in the same directory (skips files with the same numeric prefix and non-cube extensions).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
+       <item row="1" column="0" colspan="2">
         <widget class="QPushButton" name="pushButton_save_minicube">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save minicube&lt;/span&gt;&lt;br/&gt;Crop the currently selected ROI and save it as a new cube. A metadata dialog is shown before writing the file. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -314,13 +288,19 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="pushButton_prev_cube">
+       <item row="0" column="0" colspan="2">
+        <widget class="QPushButton" name="pushButton_open_hypercube">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Previous cube (same folder)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Load the previous available cube in the same directory (skips files with the same numeric prefix and non-cube extensions).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open a hyperspectral cube (.h5, .mat, .hdr) to display it and extract a minicube ROI.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
          </property>
          <property name="text">
-          <string>&lt;</string>
+          <string>Open Cube</string>
+         </property>
+         <property name="autoExclusive">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
