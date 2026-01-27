@@ -730,20 +730,11 @@ class Data_Viz_Window(QWidget,Ui_DataVizualisation):
 
         # Valeur par défaut si rien n'est sélectionné
         if not key:
-            key = "cubeinfo"
-
-        # Cas spécial: cubeinfo n'est pas dans hyp.metadata
-        if key.lower() == "cubeinfo":
-            ci = getattr(hyp, "cubeinfo", None)
-            if ci is None:
-                self.label_metadata.setText("<b>Cube info not available</b>")
+            if hyp.metadata:
+                key = next(iter(hyp.metadata.keys()))
+            else:
+                self.label_metadata.setText("<b>No metadata available</b>")
                 return
-
-            # Adapte ce texte à ce que tu veux afficher
-            st =
-                "No cubeinfo metadata yet"
-            self.label_metadata.setText(st)
-            return
 
         # Accès sécurisé aux métadonnées (évite KeyError)
         raw = hyp.metadata.get(key, None)
