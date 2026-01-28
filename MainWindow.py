@@ -1,10 +1,17 @@
 # cd C:\Users\Usuario\Documents\GitHub\Hypertool
+# set HYPERDOC_EDITION=light
+#
 # python MainWindow.py
 # sys.excepthook = excepthook #set the exception handler
-# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface/url_form.txt" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination" --add-data "unmixing/data:unmixing/data"  MainWindow.py
+# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination" --add-data "unmixing/data:unmixing/data"  MainWindow.py
+# if IS_LIGHT
+# pyinstaller  --name "HyperdocApp_light" --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --exclude-module unmixing --exclude-module identification --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination"   MainWindow.py
+
 # C:\Envs\py37test\Scripts\activate
 
 # GUI Qt
+
+
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer, QUrl
@@ -15,6 +22,10 @@ from PyQt5.QtWidgets import (QStyleFactory, QAction, QSizePolicy,QPushButton,
 ## Python import
 import traceback
 import logging
+import os
+
+APP_EDITION = os.environ.get("HYPERDOC_EDITION", "full").strip().lower()
+IS_LIGHT = (APP_EDITION == "light")
 
 ## bloc non important warning
 import warnings
@@ -28,12 +39,33 @@ from interface.hypercube_manager import HypercubeManager
 from metadata.metadata_tool import MetadataTool
 from ground_truth.ground_truth_tool import GroundTruthWidget
 from minicube.minicube_tool import MiniCubeTool
-from identification.identification_tool import IdentificationWidget
 from illumination.illumination_tool import IlluminationWidget
-from unmixing.unmixing_tool import UnmixingTool
+
+if not IS_LIGHT:
+    from identification.identification_tool import IdentificationWidget
+    from unmixing.unmixing_tool import UnmixingTool
+else:
+    IdentificationWidget = None
+    UnmixingTool = None
 
 # grafics to control changes
 import matplotlib.pyplot as plt
+
+class NotAvailableToolWidget(QWidget):
+    def __init__(self, tool_name: str, parent=None):
+        super().__init__(parent)
+        lay = QVBoxLayout(self)
+        lab = QLabel(
+            "This tool is not available on the light version of the app.\n"
+            "If you want to use it, please download the full version."
+        )
+        lab.setAlignment(Qt.AlignCenter)
+        lab.setWordWrap(True)
+        lay.addStretch(1)
+        lay.addWidget(QLabel(f"<b>{tool_name}</b>"), alignment=Qt.AlignCenter)
+        lay.addSpacing(8)
+        lay.addWidget(lab)
+        lay.addStretch(1)
 
 def apply_fusion_border_highlight(app,
                                   border_color: str = "#888888",
@@ -279,7 +311,10 @@ class GlobalToolTipFilter(QtCore.QObject):
 class MainApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("HyperdocApp")
+        if IS_LIGHT:
+            self.setWindowTitle("HyperdocApp_Light")
+        else:
+            self.setWindowTitle("HyperdocApp")
         self.resize(1200, 800)
         self.setCentralWidget(QtWidgets.QWidget())
 
@@ -325,8 +360,21 @@ class MainApp(QtWidgets.QMainWindow):
         self.reg_dock=self._add_dock("Registration",   RegistrationApp,     QtCore.Qt.RightDockWidgetArea)
         self.gt_dock=self._add_dock("Ground Truth",   GroundTruthWidget,     QtCore.Qt.RightDockWidgetArea)
         self.minicube_dock=self._add_dock("Minicube Extract",   MiniCubeTool,     QtCore.Qt.RightDockWidgetArea)
-        self.identification_dock=self._add_dock("Identification", IdentificationWidget, QtCore.Qt.RightDockWidgetArea)
-        self.unmixing_dock=self._add_dock("Unmixing", UnmixingTool, QtCore.Qt.RightDockWidgetArea)
+
+        if IS_LIGHT:
+            self.identification_dock = self._add_dock("Identification",
+                                                      lambda parent=None: NotAvailableToolWidget("Identification",
+                                                                                                 parent),
+                                                      QtCore.Qt.RightDockWidgetArea)
+            self.unmixing_dock = self._add_dock("Unmixing",
+                                                lambda parent=None: NotAvailableToolWidget("Unmixing", parent),
+                                                QtCore.Qt.RightDockWidgetArea)
+        else:
+            self.identification_dock = self._add_dock("Identification", IdentificationWidget,
+                                                      QtCore.Qt.RightDockWidgetArea)
+            self.unmixing_dock = self._add_dock("Unmixing", UnmixingTool, QtCore.Qt.RightDockWidgetArea)
+
+
         self.illumination_dock=self._add_dock("Illumination", IlluminationWidget, QtCore.Qt.RightDockWidgetArea)
         self.tabifyDockWidget(self.reg_dock, self.gt_dock)
         self.tabifyDockWidget(self.reg_dock, self.data_viz_dock)
@@ -415,6 +463,7 @@ class MainApp(QtWidgets.QMainWindow):
 
         # Checkbox "Show tooltips" dans la toolbar (à droite, près de SUGGESTIONS)
         self.checkBox_show_tooltips = QCheckBox("Show Tooltips for help")
+        self.checkBox_show_tooltips.setChecked(False)
         self.checkBox_show_tooltips.setToolTip("Enable/disable all tooltips in the application")
 
         tooltips_action = QWidgetAction(self)
@@ -527,7 +576,7 @@ class MainApp(QtWidgets.QMainWindow):
         self.hypercube_manager.metadata_updated.emit(updated_ci)
 
     def _add_dock(self, title, WidgetClass, area):
-        widget = WidgetClass(parent=self)
+        widget = WidgetClass(parent=self) if callable(WidgetClass) else WidgetClass(parent=self)
         dock   =  QtWidgets.QDockWidget(title, self)
         # dock.setTitleBarWidget(CustomDockTitleBar(dock))
         dock.setTitleBarWidget(CustomDockTitleBar(dock, style=self.title_bar_style))
@@ -689,6 +738,17 @@ class MainApp(QtWidgets.QMainWindow):
         hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
         hc.calibrating_from_image_extract()
 
+    def _premium_block(self, tool_name: str) -> bool:
+        if not IS_LIGHT:
+            return False
+        QMessageBox.information(
+            self,
+            tool_name,
+            "This tool is not available on the light version of the app. "
+            "If you want to use it, please download the full version."
+        )
+        return True
+
     def _send_to_metadata(self,filepath,show_tab=True):
         widget = self.meta_dock.widget()
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
@@ -753,6 +813,11 @@ class MainApp(QtWidgets.QMainWindow):
             widget.load_cube(filepath=ci.filepath,cube_info=ci,i_mov=imov,cube=hc)
 
     def _send_to_identification(self,filepath,icube,show_tab=True):
+        if self._premium_block("Identification"):
+            if show_tab:
+                self.identification_dock.raise_()
+            return
+
         widget = self.identification_dock.widget()
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
         hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)
@@ -772,6 +837,10 @@ class MainApp(QtWidgets.QMainWindow):
         pass
 
     def _send_to_unmix(self,filepath,icube,show_tab=True):
+        if self._premium_block("Identification"):
+            if show_tab:
+                self.identification_dock.raise_()
+            return
         widget = self.unmixing_dock.widget()
         ci = self.hypercube_manager.add_or_sync_cube(filepath)
         hc = self.hypercube_manager.get_loaded_cube(filepath, cube_info=ci)

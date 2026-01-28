@@ -4,23 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[Main] :&#10;- tooltips&#10;- url of form accessible depuis l'exterieur">
+    <list default="true" id="d582d865-26c1-4224-a66c-1fa3811218c4" name="Changes" comment="[data viz] :&#10;- small bugg fixed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MainWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/ground_truth/ground_truth_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hypercubes/hypercube.py" beforeDir="false" afterPath="$PROJECT_DIR$/hypercubes/hypercube.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identification/identification_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/identification/identification_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/illumination/illumination_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/illumination/illumination_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata/metadata_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/metadata/metadata_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minicube/extract_minicube_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/minicube/extract_minicube_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minicube/extract_minicube_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/minicube/extract_minicube_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/minicube/minicube_tool.py" beforeDir="false" afterPath="$PROJECT_DIR$/minicube/minicube_tool.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration/registration_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/registration/registration_window.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unmixing/unmixing_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/unmixing/unmixing_window.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MainWindow.spec" beforeDir="false" afterPath="$PROJECT_DIR$/MainWindow.spec" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,30 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1744020944801</updated>
-    </task>
-    <task id="LOCAL-00145" summary="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM&#10;- unique spectra from csv file added">
-      <option name="closed" value="true" />
-      <created>1764344046092</created>
-      <option name="number" value="00145" />
-      <option name="presentableId" value="LOCAL-00145" />
-      <option name="project" value="LOCAL" />
-      <updated>1764344046092</updated>
-    </task>
-    <task id="LOCAL-00146" summary="[UNMIX] : &#10;- added conversion tool from cm-1 to nm&#10;- added toolbar for spectra graph&#10;- to visualize : if visible, default rgb visible&#10;- band selection has been added to default&#10;- more robust band selection with intersection between wl cube and EM&#10;- unique spectra from csv file added">
-      <option name="closed" value="true" />
-      <created>1764581879095</created>
-      <option name="number" value="00146" />
-      <option name="presentableId" value="LOCAL-00146" />
-      <option name="project" value="LOCAL" />
-      <updated>1764581879095</updated>
-    </task>
-    <task id="LOCAL-00147" summary="[UNMIX] : &#10;- bugg of empty EM combobox fixed&#10;- save and load results OK">
-      <option name="closed" value="true" />
-      <created>1764596140855</created>
-      <option name="number" value="00147" />
-      <option name="presentableId" value="LOCAL-00147" />
-      <option name="project" value="LOCAL" />
-      <updated>1764596140857</updated>
     </task>
     <task id="LOCAL-00148" summary="[UNMIX] : &#10;- ctrl+clic gauche OK pour selectionner&#10;[GROUND TRUTH] : &#10;- IDEM avec ctrl+clic gauche">
       <option name="closed" value="true" />
@@ -542,7 +505,31 @@
       <option name="project" value="LOCAL" />
       <updated>1769439746855</updated>
     </task>
-    <option name="localTasksCounter" value="194" />
+    <task id="LOCAL-00194" summary="[All] :&#10;- tooltips">
+      <option name="closed" value="true" />
+      <created>1769443415637</created>
+      <option name="number" value="00194" />
+      <option name="presentableId" value="LOCAL-00194" />
+      <option name="project" value="LOCAL" />
+      <updated>1769443415637</updated>
+    </task>
+    <task id="LOCAL-00195" summary="[data viz] :&#10;- small bugg fixed">
+      <option name="closed" value="true" />
+      <created>1769543933582</created>
+      <option name="number" value="00195" />
+      <option name="presentableId" value="LOCAL-00195" />
+      <option name="project" value="LOCAL" />
+      <updated>1769543933582</updated>
+    </task>
+    <task id="LOCAL-00196" summary="[data viz] :&#10;- small bugg fixed">
+      <option name="closed" value="true" />
+      <created>1769545608141</created>
+      <option name="number" value="00196" />
+      <option name="presentableId" value="LOCAL-00196" />
+      <option name="project" value="LOCAL" />
+      <updated>1769545608144</updated>
+    </task>
+    <option name="localTasksCounter" value="197" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -594,8 +581,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="[GNL] : &#10;- global activation of tool_tips" />
-    <MESSAGE value="[GNL] : &#10;- tool_tips" />
     <MESSAGE value="[Main] : &#10;- added send to ident and unmix if send to all&#10;[Illum]:&#10;- error message plus precis" />
     <MESSAGE value="Implementing multiple progress bar for some task :&#10;-&gt; EM extrat&#10;-&gt; Unmixing loading cube" />
     <MESSAGE value="-&gt; Unmixing loading cube with progress bar OK" />
@@ -619,6 +604,8 @@
     <MESSAGE value="[illumination] :&#10;- small buggs fixed" />
     <MESSAGE value="[data_viz and metadata] :&#10;- small buggs fixed" />
     <MESSAGE value="[Main] :&#10;- tooltips&#10;- url of form accessible depuis l'exterieur" />
-    <option name="LAST_COMMIT_MESSAGE" value="[Main] :&#10;- tooltips&#10;- url of form accessible depuis l'exterieur" />
+    <MESSAGE value="[All] :&#10;- tooltips" />
+    <MESSAGE value="[data viz] :&#10;- small bugg fixed" />
+    <option name="LAST_COMMIT_MESSAGE" value="[data viz] :&#10;- small bugg fixed" />
   </component>
 </project>
