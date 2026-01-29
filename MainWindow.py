@@ -1,15 +1,13 @@
 # cd C:\Users\Usuario\Documents\GitHub\Hypertool
 # python MainWindow.py
 # sys.excepthook = excepthook #set the exception handler
-# pyinstaller  --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination" --add-data "unmixing/data:unmixing/data"  MainWindow.py
+# pyinstaller  --name "HyperdocApp_full" --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination" --add-data "unmixing/data:unmixing/data"  MainWindow.py
 # IS_LIGHT=True
 # pyinstaller  --name "HyperdocApp_light" --noconfirm --noconsole --exclude-module tensorflow --exclude-module torch --exclude-module matlab --exclude-module unmixing --exclude-module identification --icon="interface/icons/hyperdoc_logo_transparente.ico" --add-data "interface/icons:Hypertool/interface/icons" --add-data "interface/url_form.txt:Hypertool/interface" --add-data "hypercubes/white_ref_reflectance_data:hypercubes/white_ref_reflectance_data" --add-data "ground_truth/Materials labels and palette assignation - Materials_labels_palette.csv:ground_truth"  --add-data "data_vizualisation/Spatially registered minicubes equivalence.csv:data_vizualisation" --add-data "illumination/Illuminants.csv:illumination"   MainWindow.py
 
 # C:\Envs\py37test\Scripts\activate
 
 # GUI Qt
-
-
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QTimer, QUrl
@@ -24,6 +22,7 @@ import os
 
 APP_EDITION = os.environ.get("HYPERDOC_EDITION", "full").strip().lower()
 IS_LIGHT = (APP_EDITION == "light")
+IS_LIGHT=True # comment if full version
 
 ## bloc non important warning
 import warnings
@@ -1207,8 +1206,6 @@ def check_resolution_change():
             last_width = current_width
 
 if __name__ == "__main__":
-
-    IS_LIGHT=True
 
     sys.excepthook = excepthook #set the exception handler
 
