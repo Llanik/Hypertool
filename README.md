@@ -6,6 +6,10 @@
 > This project is source-available for academic, research, and educational use only.  
 > Commercial use is strictly prohibited.
 
+You will find here the scientific publications related to the Hyperdoc project:
+https://colorimaginglab.ugr.es/pages/hyperdoc/publications
+
+
 ---
 
 ## 📚 Table of Contents
