@@ -34,6 +34,10 @@ https://colorimaginglab.ugr.es/pages/hyperdoc/publications
 <a id="launching"></a>
 ## 🧑‍💻 Launching the Application and Overview
 
+The application is available in two versions:
+- **Full version**: includes all tools (~3.1 GB)  
+- **Light version**: excludes the Identification and Unmixing tools (~228 MB)
+
 The simplest way for windows : 
 - To download the .zip file, please fill in the following form:  [Link to download form](https://docs.google.com/forms/u/1/d/1Gga7ZenYweVdifhYfSwW6Ro48kt7LjFG3XKhPcctLyc/edit?usp=drivesdk)
 - Extract it on your disk
