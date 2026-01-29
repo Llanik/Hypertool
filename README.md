@@ -31,12 +31,13 @@ https://colorimaginglab.ugr.es/pages/hyperdoc/publications
 <a id="launching"></a>
 ## 🧑‍💻 Launching the Application and Overview
 
-**(Add link to video)**
-
 The simplest way for windows : 
 - To download the .zip file, please fill in the following form:  [Link to download form](https://docs.google.com/forms/u/1/d/1Gga7ZenYweVdifhYfSwW6Ro48kt7LjFG3XKhPcctLyc/edit?usp=drivesdk)
 - Extract it on your disk
-- Lauch the .exe file
+- Launch the .exe file
+
+> **🎥 Video Tutorials**  
+> Watch step-by-step video tutorials for HyperdocApp here: [HyperdocApp tutorials](https://youtube.com/playlist?list=PLZ3I2ygGBU3Jcj_D8jwjva1HvlTM514KF&si=8Cizrt1jmEF74hPN)
 
 For MAC or Linux users, they will have to use python to run the application. 
 You may try to copy/paste these lines and adapt them to your OS if needed : 
